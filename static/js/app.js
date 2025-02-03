@@ -304,10 +304,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${event.description ? `<p>${event.description}</p>` : ''}
                 <p><strong>Start:</strong> ${formatDateTime(event.start_time)}</p>
                 <p><strong>End:</strong> ${formatDateTime(event.end_time)}</p>
-                ${event.location ? `<p><strong>Location:</strong> ${event.location}</p>` : ''}
+                ${event.location ? `<p><strong>Location:</strong> <a href="${getMapsLink(event.location)}" target="_blank">${event.location}</a></p>` : ''}
             `;
             eventsDisplay.appendChild(eventElement);
         });
+
+        function getMapsLink(location) {
+            const isAppleDevice = /iPhone|iPad|iPod|Mac/.test(navigator.userAgent);
+            const encodedLocation = encodeURIComponent(location);
+            return isAppleDevice ? 
+                `maps://?q=${encodedLocation}` : 
+                `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+        }
 
         // Ensure the events display is visible
         eventsDisplay.classList.remove('hidden');
