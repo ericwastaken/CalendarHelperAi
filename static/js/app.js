@@ -293,7 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>${event.description}</p>
                 <p><strong>Start:</strong> ${formatDateTime(event.start_time)}</p>
                 <p><strong>End:</strong> ${formatDateTime(event.end_time)}</p>
-                ${event.location ? `<p><strong>Location:</strong> ${event.location}</p>` : ''}
+                ${event.location_name ? `<p><strong>Location:</strong> ${event.location_name}</p>` : ''}
+                ${event.location_address ? `<p><strong>Address:</strong> ${event.location_address}</p>` : ''}
             `;
             eventsDisplay.appendChild(eventElement);
         });

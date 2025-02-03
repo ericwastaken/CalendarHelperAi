@@ -136,8 +136,8 @@ Always lookup the addresses for all event locations."""
         # Only lookup addresses for initial event creation, not corrections
         if not existing_events and events:
             for event in events:
-                if event.get('location'):
-                    address_details = lookup_address_details(event['location'])
+                if event.get('location_address'):
+                    address_details = lookup_address_details(event['location_address'])
                     if address_details:
                         event['location_details'] = address_details
                         # Format address on new line after location name
