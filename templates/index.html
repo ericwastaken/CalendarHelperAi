@@ -97,3 +97,20 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
+        <!-- Error Modal -->
+        <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        We've detected an error. Please try again in a few seconds.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="button" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>

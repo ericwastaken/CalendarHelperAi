@@ -38,7 +38,8 @@ def lookup_address_details(location):
         return None
 
 def process_image_and_text(image_data=None, text=None, existing_events=None, timezone=None):
-    messages = []
+    try:
+        messages = []
     current_dt = datetime.now()
     if timezone:
         from zoneinfo import ZoneInfo
@@ -170,8 +171,9 @@ Always lookup the addresses for all event locations."""
                 # Do address lookup if we have a location to process
                 if event['location_name'] or event['location_address']:
                     location_query = f"{event['location_name']} {event['location_address']}".strip()
-                    address_details = lookup_address_details(location_query)
-                    if address_details:
+                    try:
+                        address_details = lookup_address_details(location_query)
+                        if address_details:
                         event['location_details'] = address_details
                         # Always update the location address with full details
                         full_address_parts = [
@@ -192,10 +194,16 @@ Always lookup the addresses for all event locations."""
                     event['location'] = event['location_address']
                 else:
                     event['location'] = ''
+                    except Exception as e:
+                        logging.error(f"Address lookup failed for {location_query}: {str(e)}")
+                        raise Exception("address_lookup_failed")
 
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
     except (json.JSONDecodeError, KeyError) as e:
         error_msg = f"Error parsing OpenAI response: {e}"
-        debug_log(error_msg)
-        raise Exception("Failed to parse the AI response")
+        logging.error(error_msg)
+        raise Exception("initial_process_failed")
+    except Exception as e:
+        logging.error(f"Unexpected error in initial process: {str(e)}")
+        raise Exception("initial_process_failed")

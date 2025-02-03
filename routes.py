@@ -42,9 +42,15 @@ def process():
             'events': events
         })
     except Exception as e:
+        error_type = str(e)
+        if error_type in ["initial_process_failed", "address_lookup_failed"]:
+            return jsonify({
+                'success': False,
+                'error_type': error_type
+            }), 400
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error_type': 'unknown_error'
         }), 400
 
 @app.route('/correct', methods=['POST'])
@@ -65,9 +71,15 @@ def correct():
             'events': updated_events
         })
     except Exception as e:
+        error_type = str(e)
+        if error_type in ["initial_process_failed", "address_lookup_failed"]:
+            return jsonify({
+                'success': False,
+                'error_type': error_type
+            }), 400
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error_type': 'unknown_error'
         }), 400
 
 @app.route('/download-ics', methods=['POST'])
@@ -85,9 +97,15 @@ def download_ics():
             'ics_content': ics_content
         })
     except Exception as e:
+        error_type = str(e)
+        if error_type in ["initial_process_failed", "address_lookup_failed"]:
+            return jsonify({
+                'success': False,
+                'error_type': error_type
+            }), 400
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error_type': 'unknown_error'
         }), 400
 
 @app.route('/clear-session', methods=['POST'])

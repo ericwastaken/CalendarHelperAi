@@ -188,7 +188,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 processButton.disabled = false;
             }
         } catch (error) {
-            addSystemMessage('Error processing the request: ' + error.message);
+            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            errorModal.show();
             processButton.disabled = false;
         } finally {
             processingIndicator.style.display = 'none';
