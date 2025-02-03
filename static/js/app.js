@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show events display
                 eventsDisplay.classList.remove('hidden');
                 displayEvents(data.events);
-                addSystemMessage('Events have been processed. You can make corrections using the chat below.');
+                addSystemMessage('Events have been processed.');
 
                 // Hide upload section and show chat section
                 uploadSection.classList.add('hidden');

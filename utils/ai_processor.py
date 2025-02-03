@@ -24,6 +24,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
 
     system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
     debug_log(f"System prompt: {system_message}")
+    debug_log(f"Current date values - Year: {current_year}, Month: {current_month}, Day: {current_day}")
 
     if not system_message:
         debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
