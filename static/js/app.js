@@ -143,8 +143,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
-            const data = await response.json();
-            if (data.success) {
+            let data;
+            try {
+                data = await response.json();
+            } catch (error) {
+                addSystemMessage('Error parsing server response');
+                return;
+            }
+            
+            if (data && data.success) {
                 // Display original input in Calendar Request section
                 if (imageFile) {
                     const imageUrl = URL.createObjectURL(imageFile);
