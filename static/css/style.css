@@ -304,3 +304,10 @@ body {
     color: var(--primary-color);
     margin-bottom: 1rem;
 }
+
+.upload-instruction {
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    text-align: center;
+}

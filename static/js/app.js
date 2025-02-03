@@ -20,6 +20,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Modal functionality
     function toggleModal(modal, show) {
+        if (show) {
+            // Load terms content if it hasn't been loaded yet
+            const termsContent = document.getElementById('termsContent');
+            if (!termsContent.innerHTML) {
+                fetch('/static/terms.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        termsContent.innerHTML = html;
+                    })
+                    .catch(error => console.error('Error loading terms:', error));
+            }
+        }
         modal.style.display = show ? 'block' : 'none';
     }
 

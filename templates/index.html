@@ -20,20 +20,17 @@
             <div class="modal-content">
                 <span class="close-modal" id="closeDataModal">&times;</span>
                 <h2>Terms of Service</h2>
-                <div class="modal-body">
-                    <p>We do not store your image or text! By using this service you grant permission to analyze and process your image and text in order to create calendar items and a calendar file. Your image and text are only used for the session and not stored or logged on the server. The text and image information are sent to OpenAI for intepretation. The image is loaded only into server memory and displayed back to you using browser in-memory and not stored server-side. The ICS calendar file is generated on-demand and is not stored on the server. If you have any questions or concerns, please contact <a href="mailto:hello@ericsoto.net">hello@ericsoto.net</a>.</p>
-                </div>
+                <div id="termsContent"></div>
             </div>
         </div>
 
         <section class="upload-section" id="uploadSection">
             <form id="uploadForm" class="text-center">
+                <p class="upload-instruction">Upload an image (optional) and provide text instructions for one or more calendar items.</p>
                 <div class="mb-3">
-                    <label for="image" class="form-label">Upload Image (Optional)</label>
                     <input type="file" class="form-control" id="image" name="image" accept="image/*">
                 </div>
                 <div class="mb-3">
-                    <label for="text" class="form-label">Text Instructions</label>
                     <textarea class="form-control" id="text" name="text" rows="3" 
                               placeholder="Enter event details or instructions..."></textarea>
                 </div>
