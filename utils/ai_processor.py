@@ -20,12 +20,12 @@ def lookup_address_details(location):
     """Look up detailed address information using OpenAI."""
     if not location or location.lower() == 'unknown':
         return None
-        
+
     messages = [
         {"role": "system", "content": "You are a location lookup assistant. For the given location, return the full address in JSON format with these fields: street_address, city, state, country, postal_code. Use null for unknown fields."},
         {"role": "user", "content": f"Look up the full address for: {location}"}
     ]
-    
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -43,7 +43,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
     if timezone:
         from zoneinfo import ZoneInfo
         current_dt = datetime.now(ZoneInfo(timezone))
-    
+
     current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
 - If the month is not provided, use month {current_dt.month}.
 - If the day is not provided, use day {current_dt.day}.
@@ -54,7 +54,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
     if system_message:
         # Handle date prompt
         system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
-        
+
         # Handle location prompt from session
         from flask import session
         location = session.get('location', {})
@@ -63,7 +63,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
 - If an event country is not provided, assume: '{location.get('country', 'unknown')}'
 Always lookup the addresses for all event locations."""
         system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
-        
+
     debug_log(f"System prompt: {system_message}")
     debug_log(f"Current date and location prompts applied")
 
@@ -132,9 +132,9 @@ Always lookup the addresses for all event locations."""
 
     try:
         events = json.loads(response_content)['events']
-        
-        # Only lookup addresses for initial event creation, not corrections
-        if not existing_events and events:
+
+        # Process locations for both initial creation and corrections
+        if events:
             for event in events:
                 location_query = f"{event.get('location_name', '')} {event.get('location_address', '')}".strip()
                 if location_query:
@@ -159,7 +159,7 @@ Always lookup the addresses for all event locations."""
                             if full_address:
                                 location_parts.append(full_address)
                             event['location'] = ' - '.join(location_parts)
-        
+
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
     except (json.JSONDecodeError, KeyError) as e:
