@@ -36,13 +36,16 @@ def get_current_datetime_prompt():
 
 def process_image_and_text(image_data=None, text=None, existing_events=None):
     try:
+        if not text and not image_data:
+            raise ValueError("Either text or image data must be provided")
+
         messages = []
 
         # Get the base system prompt from environment
         base_system_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
         if not base_system_prompt:
             debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
-            raise Exception("System prompt not configured")
+            raise ValueError("System prompt not configured")
 
         # Insert current date/time information
         current_date_info = get_current_datetime_prompt()
@@ -67,17 +70,15 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
                     }
                 ]
             })
-        elif text:
+        else:
+            # Text-only processing
+            content = text
             if existing_events:
-                messages.append({
-                    "role": "user",
-                    "content": f"Update these events based on the correction: {json.dumps(existing_events)}\nCorrection: {text}"
-                })
-            else:
-                messages.append({
-                    "role": "user",
-                    "content": f"Extract calendar events from this text: {text}"
-                })
+                content = f"Update these events based on the correction:\n{json.dumps(existing_events, indent=2)}\n\nCorrection: {text}"
+            messages.append({
+                "role": "user",
+                "content": content
+            })
 
         debug_log("Sending messages to OpenAI:")
         debug_log(json.dumps(messages, indent=2))
@@ -89,17 +90,46 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
         )
 
         response_content = response.choices[0].message.content
-        debug_log(f"OpenAI response: {response_content}")
+        debug_log(f"OpenAI response content: {response_content}")
 
         try:
-            events = json.loads(response_content)['events']
-            debug_log(f"Parsed events: {json.dumps(events, indent=2)}")
+            parsed_response = json.loads(response_content)
+            debug_log(f"Parsed JSON response: {json.dumps(parsed_response, indent=2)}")
+
+            if not isinstance(parsed_response, dict):
+                raise ValueError("Response is not a dictionary")
+
+            if 'events' not in parsed_response:
+                raise ValueError("Response missing 'events' key")
+
+            events = parsed_response['events']
+            if not isinstance(events, list):
+                raise ValueError("Events must be a list")
+
+            if not events:
+                raise ValueError("No events were extracted")
+
+            # Validate each event has required fields
+            for event in events:
+                required_fields = ['title', 'description', 'start_time', 'end_time']
+                missing_fields = [field for field in required_fields if field not in event]
+                if missing_fields:
+                    raise ValueError(f"Event missing required fields: {', '.join(missing_fields)}")
+
+            debug_log(f"Successfully parsed {len(events)} events")
             return events
-        except (json.JSONDecodeError, KeyError) as e:
-            error_msg = f"Error parsing OpenAI response: {e}"
+
+        except json.JSONDecodeError as e:
+            error_msg = f"Failed to parse OpenAI response as JSON: {str(e)}"
             debug_log(error_msg)
-            raise Exception("Failed to parse the AI response")
+            debug_log(f"Raw response content: {response_content}")
+            raise ValueError(error_msg)
+
+        except Exception as e:
+            error_msg = f"Error processing OpenAI response: {str(e)}"
+            debug_log(error_msg)
+            raise ValueError(error_msg)
 
     except Exception as e:
         debug_log(f"Error in process_image_and_text: {str(e)}")
-        raise
+        raise ValueError(str(e))
