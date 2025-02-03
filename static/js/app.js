@@ -284,13 +284,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function displayEvents(events) {
+        if (!events || !Array.isArray(events)) {
+            console.error('Invalid events data:', events);
+            addSystemMessage('Error: Invalid event data received');
+            return;
+        }
+
         eventsDisplay.innerHTML = '';
         events.forEach(event => {
+            if (!event || typeof event !== 'object') {
+                console.error('Invalid event:', event);
+                return;
+            }
+
             const eventElement = document.createElement('div');
             eventElement.className = 'event-card fade-in';
             eventElement.innerHTML = `
-                <h3>${event.title}</h3>
-                <p>${event.description}</p>
+                <h3>${event.title || 'Untitled Event'}</h3>
+                ${event.description ? `<p>${event.description}</p>` : ''}
                 <p><strong>Start:</strong> ${formatDateTime(event.start_time)}</p>
                 <p><strong>End:</strong> ${formatDateTime(event.end_time)}</p>
                 ${event.location_name ? `<p><strong>Location:</strong> ${event.location_name}</p>` : ''}
@@ -298,6 +309,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             eventsDisplay.appendChild(eventElement);
         });
+
+        // Ensure the events display is visible
+        eventsDisplay.classList.remove('hidden');
     }
 
     function addUserMessage(message) {

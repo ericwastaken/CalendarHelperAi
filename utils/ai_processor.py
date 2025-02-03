@@ -136,11 +136,12 @@ Always lookup the addresses for all event locations."""
         # Only lookup addresses for initial event creation, not corrections
         if not existing_events and events:
             for event in events:
-                if event.get('location_address'):
-                    address_details = lookup_address_details(event['location_address'])
+                location_query = f"{event.get('location_name', '')} {event.get('location_address', '')}".strip()
+                if location_query:
+                    address_details = lookup_address_details(location_query)
                     if address_details:
                         event['location_details'] = address_details
-                        # Format address on new line after location name
+                        # Update only the location_address field
                         full_address_parts = [
                             address_details.get('street_address'),
                             address_details.get('city'),
@@ -150,8 +151,7 @@ Always lookup the addresses for all event locations."""
                         ]
                         full_address = ', '.join(filter(None, full_address_parts))
                         if full_address:
-                            original_location = event['location']
-                            event['location'] = f"{original_location}\n{full_address}"
+                            event['location_address'] = full_address
         
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
