@@ -108,16 +108,9 @@ Always lookup the addresses for all event locations."""
         })
     elif text:
         if existing_events:
-            # Ensure we preserve location structure in corrections
-            correction_prompt = (
-                "Update these events based on the correction. "
-                "Maintain separate location_name and location_address fields in your response. "
-                f"Current events: {json.dumps(existing_events)}\n"
-                f"Correction: {text}"
-            )
             messages.append({
                 "role": "user",
-                "content": correction_prompt
+                "content": f"Update these events based on the correction: {json.dumps(existing_events)}\nCorrection: {text}"
             })
         else:
             messages.append({
@@ -128,28 +121,17 @@ Always lookup the addresses for all event locations."""
     debug_log("Sending messages to OpenAI:")
     debug_log(json.dumps(messages, indent=2))
 
-    try:
-        debug_log("Making API call to OpenAI...")
-        response = client.chat.completions.create(
-            model="gpt-4",  # Changed from gpt-4o to gpt-4 as that model doesn't exist
-            messages=messages,
-            response_format={"type": "json_object"}
-        )
-        debug_log("OpenAI API call completed")
-        
-        response_content = response.choices[0].message.content
-        debug_log(f"OpenAI response content: {response_content}")
-    except Exception as e:
-        debug_log(f"Error during OpenAI API call: {str(e)}")
-        raise Exception(f"OpenAI API error: {str(e)}")
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        response_format={"type": "json_object"}
+    )
+
+    response_content = response.choices[0].message.content
+    debug_log(f"OpenAI response: {response_content}")
 
     try:
-        parsed_response = json.loads(response_content)
-        debug_log(f"Parsed JSON response: {json.dumps(parsed_response, indent=2)}")
-        if 'events' not in parsed_response:
-            debug_log("No 'events' key in response")
-            raise KeyError("Missing 'events' in response")
-        events = parsed_response['events']
+        events = json.loads(response_content)['events']
 
         # Process and validate dates for all events
         if events:
@@ -166,32 +148,31 @@ Always lookup the addresses for all event locations."""
                     debug_log(f"Invalid date format: start={start_time}, end={end_time}")
                     raise Exception("Invalid date format received from AI")
 
-            # Process locations only for initial creation, not corrections
-            if not existing_events:
-                for event in events:
-                    if event.get('location_name'):
-                        location_query = f"{event['location_name']} {event.get('location_address', '')}".strip()
-                        address_details = lookup_address_details(location_query)
-                        if address_details:
-                            event['location_details'] = address_details
-                            full_address_parts = [
-                                address_details.get('street_address'),
-                                address_details.get('city'),
-                                address_details.get('state'),
-                                address_details.get('postal_code'),
-                                address_details.get('country')
-                            ]
-                            event['location_address'] = ', '.join(filter(None, full_address_parts))
-                            
-            # Always maintain separate location fields and create combined display version
+            # Process locations for both initial creation and corrections
             for event in events:
-                if event.get('location_name') or event.get('location_address'):
-                    location_parts = []
-                    if event.get('location_name'):
-                        location_parts.append(event['location_name'])
-                    if event.get('location_address'):
-                        location_parts.append(event['location_address'])
-                    event['location'] = ' - '.join(location_parts)
+                location_query = f"{event.get('location_name', '')} {event.get('location_address', '')}".strip()
+                if location_query:
+                    address_details = lookup_address_details(location_query)
+                    if address_details:
+                        event['location_details'] = address_details
+                        # Update only the location_address field
+                        full_address_parts = [
+                            address_details.get('street_address'),
+                            address_details.get('city'),
+                            address_details.get('state'),
+                            address_details.get('postal_code'),
+                            address_details.get('country')
+                        ]
+                        full_address = ', '.join(filter(None, full_address_parts))
+                        if full_address:
+                            event['location_address'] = full_address
+                            # Combine location name and address
+                            location_parts = []
+                            if event.get('location_name'):
+                                location_parts.append(event['location_name'])
+                            if full_address:
+                                location_parts.append(full_address)
+                            event['location'] = ' - '.join(location_parts)
 
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
