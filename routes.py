@@ -52,9 +52,10 @@ def correct():
     try:
         correction = request.json.get('correction')
         events = session.get('current_events', [])
+        timezone = request.headers.get('X-Timezone', 'UTC')
 
         # Process correction with AI
-        updated_events = process_image_and_text(None, correction, events)
+        updated_events = process_image_and_text(None, correction, events, timezone)
 
         # Update session
         session['current_events'] = updated_events

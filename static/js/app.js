@@ -252,7 +252,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/correct', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
                 },
                 body: JSON.stringify({ correction: message })
             });
