@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Existing elements
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
     const eventsDisplay = document.getElementById('eventsDisplay');
@@ -11,12 +12,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatSection = document.getElementById('chatSection');
     const actionButtons = document.getElementById('actionButtons');
 
+    // New elements for Calendar Request section
+    const calendarRequest = document.getElementById('calendarRequest');
+    const originalImageContainer = document.getElementById('originalImageContainer');
+    const originalTextContainer = document.getElementById('originalTextContainer');
+    const originalImage = document.getElementById('originalImage');
+    const originalText = document.getElementById('originalText');
+    const imageModal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const closeModal = document.querySelector('.close-modal');
+
+    let sessionTimeout;
+
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(uploadForm);
 
         try {
+            // Store original input
+            const imageFile = formData.get('image');
+            const textInput = formData.get('text');
+
             // Disable process button and show processing indicator
             processButton.disabled = true;
             processingIndicator.style.display = 'block';
@@ -28,6 +45,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             if (data.success) {
+                // Display original input in Calendar Request section
+                if (imageFile) {
+                    const imageUrl = URL.createObjectURL(imageFile);
+                    originalImage.src = imageUrl;
+                    modalImage.src = imageUrl;
+                    originalImageContainer.classList.remove('hidden');
+                }
+
+                if (textInput) {
+                    originalText.textContent = textInput;
+                    originalTextContainer.classList.remove('hidden');
+                }
+
+                // Show calendar request section
+                calendarRequest.classList.remove('hidden');
+
                 // Show events display
                 eventsDisplay.classList.remove('hidden');
                 displayEvents(data.events);
@@ -39,20 +72,76 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Show action buttons
                 actionButtons.style.display = 'flex';
+
+                // Set 1-hour timeout
+                clearTimeout(sessionTimeout);
+                sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
             } else {
                 addSystemMessage('Error: ' + data.error);
-                // Re-enable process button on error
                 processButton.disabled = false;
             }
         } catch (error) {
             addSystemMessage('Error processing the request: ' + error.message);
-            // Re-enable process button on error
             processButton.disabled = false;
         } finally {
             processingIndicator.style.display = 'none';
         }
     });
 
+    // Image modal functionality
+    originalImage.addEventListener('click', function() {
+        imageModal.style.display = 'block';
+    });
+
+    closeModal.addEventListener('click', function() {
+        imageModal.style.display = 'none';
+    });
+
+    imageModal.addEventListener('click', function(e) {
+        if (e.target === imageModal) {
+            imageModal.style.display = 'none';
+        }
+    });
+
+    // Handle clear session
+    async function clearSession() {
+        try {
+            const response = await fetch('/clear-session', {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Reset UI state
+                eventsDisplay.innerHTML = '';
+                eventsDisplay.classList.add('hidden');
+                chatMessages.innerHTML = '';
+                uploadForm.reset();
+                processButton.disabled = false;
+
+                // Clear original input display
+                originalImage.src = '';
+                originalText.textContent = '';
+                calendarRequest.classList.add('hidden');
+                originalImageContainer.classList.add('hidden');
+                originalTextContainer.classList.add('hidden');
+
+                // Show upload section and hide chat section
+                uploadSection.classList.remove('hidden');
+                chatSection.classList.add('hidden');
+
+                // Hide action buttons
+                actionButtons.style.display = 'none';
+
+                // Clear timeout
+                clearTimeout(sessionTimeout);
+            }
+        } catch (error) {
+            addSystemMessage('Error clearing session: ' + error.message);
+        }
+    }
+
+    clearButton.addEventListener('click', clearSession);
     // Handle chat corrections
     chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -87,33 +176,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle clear session
-    clearButton.addEventListener('click', async function() {
-        try {
-            const response = await fetch('/clear-session', {
-                method: 'POST'
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                // Reset UI state
-                eventsDisplay.innerHTML = '';
-                eventsDisplay.classList.add('hidden');
-                chatMessages.innerHTML = '';
-                uploadForm.reset();
-                processButton.disabled = false;
-
-                // Show upload section and hide chat section
-                uploadSection.classList.remove('hidden');
-                chatSection.classList.add('hidden');
-
-                // Hide action buttons
-                actionButtons.style.display = 'none';
-            }
-        } catch (error) {
-            addSystemMessage('Error clearing session: ' + error.message);
-        }
-    });
 
     // Handle ICS download
     downloadButton.addEventListener('click', async function() {

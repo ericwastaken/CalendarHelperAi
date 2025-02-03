@@ -36,6 +36,26 @@
             </form>
         </section>
 
+        <section class="calendar-request hidden" id="calendarRequest">
+            <h3>Calendar Request</h3>
+            <div class="request-details">
+                <div class="original-image-container hidden" id="originalImageContainer">
+                    <h4>Uploaded Image</h4>
+                    <div class="image-preview">
+                        <img id="originalImage" src="" alt="Uploaded image" class="thumbnail">
+                        <div class="image-modal" id="imageModal">
+                            <span class="close-modal">&times;</span>
+                            <img id="modalImage" src="" alt="Full size image">
+                        </div>
+                    </div>
+                </div>
+                <div class="original-text-container hidden" id="originalTextContainer">
+                    <h4>Original Text</h4>
+                    <p id="originalText"></p>
+                </div>
+            </div>
+        </section>
+
         <section class="chat-section hidden" id="chatSection">
             <p class="text-muted">Use this chat to make corrections to the events</p>
             <div class="chat-messages" id="chatMessages">
