@@ -15,7 +15,7 @@
             <p class="lead">Create calendar events from images and text using AI interpretation</p>
         </header>
 
-        <section class="upload-section">
+        <section class="upload-section" id="uploadSection">
             <form id="uploadForm">
                 <div class="mb-3">
                     <label for="image" class="form-label">Upload Image (Optional)</label>
@@ -26,7 +26,13 @@
                     <textarea class="form-control" id="text" name="text" rows="3" 
                               placeholder="Enter event details or instructions..."></textarea>
                 </div>
-                <button type="submit" class="button">Process</button>
+                <button type="submit" class="button" id="processButton">Process</button>
+                <div class="processing-indicator" id="processingIndicator">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <span class="ms-2">Processing your request...</span>
+                </div>
             </form>
         </section>
 
@@ -34,8 +40,9 @@
             <!-- Events will be displayed here -->
         </section>
 
-        <section class="chat-section">
+        <section class="chat-section hidden" id="chatSection">
             <h3>Chat Interface</h3>
+            <p class="text-muted">Use this chat to make corrections to the events</p>
             <div class="chat-messages" id="chatMessages">
                 <!-- Chat messages will appear here -->
             </div>
@@ -51,12 +58,6 @@
         <div class="d-flex justify-content-between mt-4">
             <button id="clearButton" class="button button-danger">Clear Session</button>
             <button id="downloadButton" class="button">Download ICS</button>
-        </div>
-
-        <div class="loading-spinner" id="loadingSpinner">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
         </div>
     </div>
 

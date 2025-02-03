@@ -87,6 +87,17 @@ body {
     border-radius: 4px;
 }
 
+.processing-indicator {
+    display: none;
+    text-align: center;
+    margin: 1rem 0;
+    color: var(--secondary-color);
+}
+
+.hidden {
+    display: none !important;
+}
+
 .loading-spinner {
     display: none;
     text-align: center;

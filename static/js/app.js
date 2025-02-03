@@ -6,30 +6,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearButton = document.getElementById('clearButton');
     const downloadButton = document.getElementById('downloadButton');
     const loadingSpinner = document.getElementById('loadingSpinner');
+    const processButton = document.getElementById('processButton');
+    const processingIndicator = document.getElementById('processingIndicator');
+    const uploadSection = document.getElementById('uploadSection');
+    const chatSection = document.getElementById('chatSection');
 
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(uploadForm);
-        
+
         try {
-            showLoading(true);
+            // Disable process button and show processing indicator
+            processButton.disabled = true;
+            processingIndicator.style.display = 'block';
+
             const response = await fetch('/process', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const data = await response.json();
             if (data.success) {
                 displayEvents(data.events);
                 addSystemMessage('Events have been processed. You can make corrections using the chat below.');
+
+                // Hide upload section and show chat section
+                uploadSection.classList.add('hidden');
+                chatSection.classList.remove('hidden');
             } else {
                 addSystemMessage('Error: ' + data.error);
+                // Re-enable process button on error
+                processButton.disabled = false;
             }
         } catch (error) {
             addSystemMessage('Error processing the request: ' + error.message);
+            // Re-enable process button on error
+            processButton.disabled = false;
         } finally {
-            showLoading(false);
+            processingIndicator.style.display = 'none';
         }
     });
 
@@ -37,12 +52,12 @@ document.addEventListener('DOMContentLoaded', function() {
     chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const message = document.getElementById('chatInput').value;
-        
+
         if (!message.trim()) return;
-        
+
         addUserMessage(message);
         document.getElementById('chatInput').value = '';
-        
+
         try {
             showLoading(true);
             const response = await fetch('/correct', {
@@ -52,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({ correction: message })
             });
-            
+
             const data = await response.json();
             if (data.success) {
                 displayEvents(data.events);
@@ -73,11 +88,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/clear-session', {
                 method: 'POST'
             });
-            
+
             const data = await response.json();
             if (data.success) {
+                // Reset UI state
                 eventsDisplay.innerHTML = '';
                 chatMessages.innerHTML = '';
+                uploadForm.reset();
+                processButton.disabled = false;
+
+                // Show upload section and hide chat section
+                uploadSection.classList.remove('hidden');
+                chatSection.classList.add('hidden');
+
                 addSystemMessage('Session cleared. You can start a new analysis.');
             }
         } catch (error) {
