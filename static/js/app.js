@@ -12,6 +12,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatSection = document.getElementById('chatSection');
     const actionButtons = document.getElementById('actionButtons');
 
+    // New elements for modals
+    const dataModal = document.getElementById('dataModal');
+    const readMoreLink = document.getElementById('readMoreLink');
+    const termsLink = document.getElementById('termsLink');
+    const closeDataModal = document.getElementById('closeDataModal');
+
+    // Modal functionality
+    function openModal(modal) {
+        modal.style.display = 'block';
+    }
+
+    function closeModal(modal) {
+        modal.style.display = 'none';
+    }
+
+    readMoreLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal(dataModal);
+    });
+
+    termsLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal(dataModal);
+    });
+
+    closeDataModal.addEventListener('click', function() {
+        closeModal(dataModal);
+    });
+
+    window.addEventListener('click', function(e) {
+        if (e.target === dataModal) {
+            closeModal(dataModal);
+        }
+    });
     // New elements for Calendar Request section
     const calendarRequest = document.getElementById('calendarRequest');
     const originalImageContainer = document.getElementById('originalImageContainer');
