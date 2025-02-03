@@ -9,8 +9,7 @@ import uuid
 @app.route('/')
 def index():
     session['session_id'] = str(uuid.uuid4())
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    return render_template('index.html', client_ip=client_ip)
+    return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -25,14 +24,10 @@ def process():
         else:
             image_data = None
 
-        # Get timezone and location data
+        # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
-        latitude = request.form.get('latitude')
-        longitude = request.form.get('longitude')
-        location_data = {'latitude': latitude, 'longitude': longitude} if latitude and longitude else None
-        
         # Process with AI
-        events = process_image_and_text(image_data, text, None, timezone, location_data)
+        events = process_image_and_text(image_data, text, None, timezone)
 
         # Store in session
         session['current_events'] = events

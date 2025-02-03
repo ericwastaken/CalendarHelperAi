@@ -84,39 +84,25 @@ document.addEventListener('DOMContentLoaded', function() {
     let sessionTimeout;
 
     // Image modal functionality
-    if (originalImage) {
-        originalImage.addEventListener('click', function() {
-            imageModal.style.display = 'block';
-        });
-    }
+    originalImage.addEventListener('click', function() {
+        imageModal.style.display = 'block';
+    });
 
-    if (closeImageModalBtn) {
-        closeImageModalBtn.addEventListener('click', function() {
+    closeImageModalBtn.addEventListener('click', function() {
+        imageModal.style.display = 'none';
+    });
+
+    imageModal.addEventListener('click', function(e) {
+        if (e.target === imageModal) {
             imageModal.style.display = 'none';
-        });
-    }
-
-    if (imageModal) {
-        imageModal.addEventListener('click', function(e) {
-            if (e.target === imageModal) {
-                imageModal.style.display = 'none';
-            }
-        });
-    }
+        }
+    });
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(uploadForm);
-        
-        // Show processing indicator and disable button
-        processButton.disabled = true;
-        processingIndicator.style.display = 'block';
-        
-        try {
-            // Disable process button and show processing indicator
-            processButton.disabled = true;
-            processingIndicator.style.display = 'block';
 
+        try {
             // Store original input
             const imageFile = formData.get('image');
             const textInput = formData.get('text');
@@ -171,7 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 processButton.disabled = false;
             }
         } catch (error) {
-            console.error('Processing error:', error);
             addSystemMessage('Error processing the request: ' + error.message);
             processButton.disabled = false;
         } finally {
