@@ -45,7 +45,6 @@
                 </div>
                 <div class="text-center">
                     <button type="submit" class="button" id="processButton">Process</button>
-                    <p class="terms-text">Using this service constitutes acceptance of our <a href="#" id="termsLink">Terms of Service</a></p>
                 </div>
                 <div class="processing-indicator" id="processingIndicator">
                 </div>
@@ -93,6 +92,10 @@
             <button id="downloadButton" class="button">Download Calendar File</button>
         </div>
     </div>
+
+    <footer class="terms-footer">
+        <p class="terms-text">Using this service constitutes acceptance of our <a href="#" id="termsLink">Terms of Service</a></p>
+    </footer>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
