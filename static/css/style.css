@@ -167,9 +167,9 @@ body {
 
 .request-details {
     display: flex;
-    flex-direction: row;
-    gap: 2rem;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
 }
 
 .original-image-container,
@@ -177,15 +177,25 @@ body {
     padding: 1rem;
     background: var(--background-color);
     border-radius: 4px;
+    width: 100%;
 }
 
-.original-image-container {
-    flex: 0 0 auto;
-}
+@media (min-width: 768px) {
+    .request-details {
+        flex-direction: row;
+        gap: 2rem;
+        align-items: flex-start;
+    }
 
-.original-text-container {
-    flex: 1;
-    min-width: 0;
+    .original-image-container {
+        flex: 0 0 auto;
+        width: auto;
+    }
+
+    .original-text-container {
+        flex: 1;
+        min-width: 0;
+    }
 }
 
 .image-preview {
