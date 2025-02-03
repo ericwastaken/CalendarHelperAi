@@ -16,37 +16,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const dataModal = document.getElementById('dataModal');
     const readMoreLink = document.getElementById('readMoreLink');
     const termsLink = document.getElementById('termsLink');
-    const closeDataModal = document.getElementById('closeDataModal');
+    const closeDataModalBtn = document.getElementById('closeDataModal');
 
     // Modal functionality
-    function openModal(modal) {
-        modal.style.display = 'block';
-    }
-
-    function closeModal(modal) {
-        modal.style.display = 'none';
+    function toggleModal(modal, show) {
+        modal.style.display = show ? 'block' : 'none';
     }
 
     readMoreLink.addEventListener('click', function(e) {
         e.preventDefault();
-        openModal(dataModal);
+        toggleModal(dataModal, true);
     });
 
     termsLink.addEventListener('click', function(e) {
         e.preventDefault();
-        openModal(dataModal);
+        toggleModal(dataModal, true);
     });
 
-    closeDataModal.addEventListener('click', function() {
-        closeModal(dataModal);
+    closeDataModalBtn.addEventListener('click', function() {
+        toggleModal(dataModal, false);
     });
 
     window.addEventListener('click', function(e) {
         if (e.target === dataModal) {
-            closeModal(dataModal);
+            toggleModal(dataModal, false);
         }
     });
-    // New elements for Calendar Request section
+
+    // Calendar Request section elements
     const calendarRequest = document.getElementById('calendarRequest');
     const originalImageContainer = document.getElementById('originalImageContainer');
     const originalTextContainer = document.getElementById('originalTextContainer');
@@ -54,10 +51,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalText = document.getElementById('originalText');
     const imageModal = document.getElementById('imageModal');
     const modalImage = document.getElementById('modalImage');
-    const closeModal = document.querySelector('.close-modal');
+    const closeImageModalBtn = document.querySelector('.close-modal');
 
     let sessionTimeout;
 
+    // Image modal functionality
+    originalImage.addEventListener('click', function() {
+        imageModal.style.display = 'block';
+    });
+
+    closeImageModalBtn.addEventListener('click', function() {
+        imageModal.style.display = 'none';
+    });
+
+    imageModal.addEventListener('click', function(e) {
+        if (e.target === imageModal) {
+            imageModal.style.display = 'none';
+        }
+    });
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -122,20 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Image modal functionality
-    originalImage.addEventListener('click', function() {
-        imageModal.style.display = 'block';
-    });
-
-    closeModal.addEventListener('click', function() {
-        imageModal.style.display = 'none';
-    });
-
-    imageModal.addEventListener('click', function(e) {
-        if (e.target === imageModal) {
-            imageModal.style.display = 'none';
-        }
-    });
 
     // Handle clear session
     async function clearSession() {
