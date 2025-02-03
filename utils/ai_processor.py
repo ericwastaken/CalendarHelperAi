@@ -3,7 +3,6 @@ import logging
 from openai import OpenAI
 import json
 from datetime import datetime
-import pytz
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
@@ -17,108 +16,82 @@ def debug_log(message):
     if DEBUG_LOGGING:
         logging.debug(message)
 
-def get_current_datetime_prompt():
-    # Get current time in ET
-    et_timezone = pytz.timezone('US/Eastern')
-    current_time = datetime.now(et_timezone)
-
-    # Format the date components
-    current_date_str = current_time.strftime("%-m/%-d/%Y")  # e.g., 2/3/2025
-    current_time_str = current_time.strftime("%-I:%M%p ET")  # e.g., 11:36PM ET
-
-    return (
-        f"Today's date is {current_date_str}. "
-        f"The current time is {current_time_str}. "
-        f"If the year is not provided, assume current year ({current_time.year}). "
-        f"If the month is not provided, assume current month ({current_time.month}). "
-        f"If the day is not provided, assume current day ({current_time.day})"
-    )
-
 def process_image_and_text(image_data=None, text=None, existing_events=None):
-    try:
-        if not text and not image_data:
-            raise ValueError("Either text or image data must be provided")
+    messages = []
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    current_day = datetime.now().day
 
-        messages = []
+    system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
+    debug_log(f"System prompt: {system_message}")
+    debug_log(f"Current date values - Year: {current_year}, Month: {current_month}, Day: {current_day}")
 
-        # Get the base system prompt from environment
-        base_system_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
-        if not base_system_prompt:
-            debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
-            raise ValueError("System prompt not configured")
+    if not system_message:
+        debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
+        system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
+        Extract event details including title, description, start time, end time, and location. 
+        Whenever a date is incomplete, make assumptions based on the following rules:
+        - The current year is {current_year}. If the year is not provided, use {current_year}.
+        - The current month is {current_month}. If the month is not provided, use month {current_month}.
+        - The current day is {current_day}. If the day is not provided, use day {current_day}.
+        Respond with JSON in the format:
+        {{
+            "events": [
+                {{
+                    "title": "string",
+                    "description": "string",
+                    "start_time": "ISO datetime",
+                    "end_time": "ISO datetime",
+                    "location": "string"
+                }}
+            ]
+        }}"""
 
-        # Insert current date/time information
-        current_date_info = get_current_datetime_prompt()
-        system_message = base_system_prompt.format(current_date_prompt=current_date_info)
+    messages.append({"role": "system", "content": system_message})
 
-        debug_log(f"System prompt: {system_message}")
-        messages.append({"role": "system", "content": system_message})
-
-        # Format user message based on input type
-        if image_data and text:
+    if image_data and text:
+        messages.append({
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Extract calendar events from this image and text: {text}"
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
+                }
+            ]
+        })
+    elif text:
+        if existing_events:
             messages.append({
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"Extract calendar events from this image and text: {text}"
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
-                    }
-                ]
+                "content": f"Update these events based on the correction: {json.dumps(existing_events)}\nCorrection: {text}"
             })
         else:
-            content = text
-            if existing_events:
-                content = f"Update these events based on the correction:\n{json.dumps(existing_events, indent=2)}\n\nCorrection: {text}"
             messages.append({
                 "role": "user",
-                "content": content
+                "content": f"Extract calendar events from this text: {text}"
             })
 
-        debug_log("Sending request to OpenAI with messages:")
-        debug_log(json.dumps(messages, indent=2))
+    debug_log("Sending messages to OpenAI:")
+    debug_log(json.dumps(messages, indent=2))
 
-        # Make API request
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            response_format={"type": "json_object"}
-        )
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        response_format={"type": "json_object"}
+    )
 
-        response_content = response.choices[0].message.content
-        debug_log(f"Received response from OpenAI: {response_content}")
+    response_content = response.choices[0].message.content
+    debug_log(f"OpenAI response: {response_content}")
 
-        # Parse and validate response
-        try:
-            data = json.loads(response_content)
-            if not isinstance(data, dict) or 'events' not in data:
-                raise ValueError("Invalid response format - missing 'events' key")
-
-            events = data['events']
-            if not isinstance(events, list):
-                raise ValueError("Events must be a list")
-
-            if not events:
-                raise ValueError("No events were extracted")
-
-            # Validate each event
-            for event in events:
-                required = ['title', 'description', 'start_time', 'end_time']
-                missing = [field for field in required if field not in event]
-                if missing:
-                    raise ValueError(f"Event missing required fields: {', '.join(missing)}")
-
-            debug_log(f"Successfully extracted {len(events)} events")
-            return events
-
-        except json.JSONDecodeError as e:
-            debug_log(f"JSON parsing error: {str(e)}")
-            debug_log(f"Raw response: {response_content}")
-            raise ValueError("Failed to parse AI response")
-
-    except Exception as e:
-        debug_log(f"Error in process_image_and_text: {str(e)}")
-        raise ValueError(str(e))
+    try:
+        events = json.loads(response_content)['events']
+        debug_log(f"Parsed events: {json.dumps(events, indent=2)}")
+        return events
+    except (json.JSONDecodeError, KeyError) as e:
+        error_msg = f"Error parsing OpenAI response: {e}"
+        debug_log(error_msg)
+        raise Exception("Failed to parse the AI response")

@@ -16,5 +16,4 @@ dependencies = [
     "openai>=1.61.0",
     "icalendar>=6.1.1",
     "python-dotenv>=1.0.1",
-    "pytz>=2025.1",
 ]

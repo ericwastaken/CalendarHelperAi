@@ -103,6 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(uploadForm);
 
         try {
+            // Store original input
+            const imageFile = formData.get('image');
+            const textInput = formData.get('text');
+
             // Disable process button and show processing indicator
             processButton.disabled = true;
             processingIndicator.style.display = 'block';
@@ -113,54 +117,46 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const data = await response.json();
-            if (!data.success) {
-                throw new Error(data.error || 'Failed to process events');
+            if (data.success) {
+                // Display original input in Calendar Request section
+                if (imageFile) {
+                    const imageUrl = URL.createObjectURL(imageFile);
+                    originalImage.src = imageUrl;
+                    modalImage.src = imageUrl;
+                    originalImageContainer.classList.remove('hidden');
+                }
+
+                if (textInput) {
+                    originalText.textContent = textInput;
+                    originalTextContainer.classList.remove('hidden');
+                }
+
+                // Show calendar request section
+                calendarRequest.classList.remove('hidden');
+
+                // Show events display
+                eventsDisplay.classList.remove('hidden');
+                displayEvents(data.events);
+                addSystemMessage('Events have been processed.');
+
+                // Hide upload section and show chat section
+                uploadSection.classList.add('hidden');
+                chatSection.classList.remove('hidden');
+
+                // Show action buttons
+                actionButtons.style.display = 'flex';
+
+                // Set 1-hour timeout
+                clearTimeout(sessionTimeout);
+                sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
+            } else {
+                addSystemMessage('Error: ' + data.error);
+                processButton.disabled = false;
             }
-
-            if (!data.events || !Array.isArray(data.events)) {
-                throw new Error('Invalid response format from server');
-            }
-    
-            // Store original input
-            const imageFile = formData.get('image');
-            const textInput = formData.get('text');
-
-            // Display original input in Calendar Request section
-            if (imageFile) {
-                const imageUrl = URL.createObjectURL(imageFile);
-                originalImage.src = imageUrl;
-                modalImage.src = imageUrl;
-                originalImageContainer.classList.remove('hidden');
-            }
-
-            if (textInput) {
-                originalText.textContent = textInput;
-                originalTextContainer.classList.remove('hidden');
-            }
-
-            // Show calendar request section
-            calendarRequest.classList.remove('hidden');
-
-            // Show events display
-            eventsDisplay.classList.remove('hidden');
-            displayEvents(data.events);
-            addSystemMessage('Events have been processed.');
-
-            // Hide upload section and show chat section
-            uploadSection.classList.add('hidden');
-            chatSection.classList.remove('hidden');
-
-            // Show action buttons
-            actionButtons.style.display = 'flex';
-
-            // Set 1-hour timeout
-            clearTimeout(sessionTimeout);
-            sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
         } catch (error) {
-            console.error('Processing error:', error);
-            addSystemMessage('Error: ' + error.message);
-        } finally {
+            addSystemMessage('Error processing the request: ' + error.message);
             processButton.disabled = false;
+        } finally {
             processingIndicator.style.display = 'none';
         }
     });
