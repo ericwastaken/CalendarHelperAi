@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        eventsDisplay.innerHTML = '';
+        eventsDisplay.innerHTML = '<div class="alert alert-warning mb-4">Verify all the information extracted from your image and prompt, especially addresses.</div>';
         events.forEach(event => {
             if (!event || typeof event !== 'object') {
                 console.error('Invalid event:', event);
