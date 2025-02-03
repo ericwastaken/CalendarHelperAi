@@ -17,18 +17,22 @@ def debug_log(message):
     if DEBUG_LOGGING:
         logging.debug(message)
 
-def get_current_datetime_info():
+def get_current_datetime_prompt():
     # Get current time in ET
     et_timezone = pytz.timezone('US/Eastern')
     current_time = datetime.now(et_timezone)
 
-    return f"""
-    - Today's date is {current_time.strftime('%-m/%-d/%Y')}
-    - Current time is {current_time.strftime('%-I:%M%p ET')}
-    - Current year is {current_time.year}
-    - Current month is {current_time.month}
-    - Current day is {current_time.day}
-    """
+    # Format the date components
+    current_date_str = current_time.strftime("%-m/%-d/%Y")  # e.g., 2/3/2025
+    current_time_str = current_time.strftime("%-I:%M%p ET")  # e.g., 11:36PM ET
+
+    return (
+        f"Today's date is {current_date_str}. "
+        f"The current time is {current_time_str}. "
+        f"If the year is not provided, assume current year ({current_time.year}). "
+        f"If the month is not provided, assume current month ({current_time.month}). "
+        f"If the day is not provided, assume current day ({current_time.day})"
+    )
 
 def process_image_and_text(image_data=None, text=None, existing_events=None):
     try:
@@ -37,20 +41,20 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
 
         messages = []
 
-        # Get and format system prompt
-        base_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
-        if not base_prompt:
+        # Get the base system prompt from environment
+        base_system_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
+        if not base_system_prompt:
             debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
             raise ValueError("System prompt not configured")
 
-        # Get current date info and format system message
-        date_info = get_current_datetime_info()
-        system_message = base_prompt.format(date_info=date_info)
+        # Insert current date/time information
+        current_date_info = get_current_datetime_prompt()
+        system_message = base_system_prompt.format(current_date_prompt=current_date_info)
 
-        debug_log(f"Using system prompt: {system_message}")
+        debug_log(f"System prompt: {system_message}")
         messages.append({"role": "system", "content": system_message})
 
-        # Format user message
+        # Format user message based on input type
         if image_data and text:
             messages.append({
                 "role": "user",
