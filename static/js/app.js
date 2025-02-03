@@ -109,8 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Hide action buttons
                 actionButtons.style.display = 'none';
-
-                addSystemMessage('Session cleared. You can start a new analysis.');
             }
         } catch (error) {
             addSystemMessage('Error clearing session: ' + error.message);

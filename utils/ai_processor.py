@@ -12,6 +12,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 def process_image_and_text(image_data=None, text=None, existing_events=None):
     messages = []
     current_year = datetime.now().year
+    current_month = datetime.now().month
+    current_day = datetime.now().day
 
     system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
     logging.debug(f"System prompt: {system_message}")
@@ -22,8 +24,8 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
         Extract event details including title, description, start time, end time, and location. 
         Whenever a date is incomplete, make assumptions based on the following rules:
         - The current year is {current_year}. If the year is not provided, use {current_year}.
-        - If the month is not provided, assume current month.
-        - If the day is not provided, assume current day.
+        - The current month is {current_month}. If the month is not provided, use month {current_month}.
+        - The current day is {current_day}. If the day is not provided, use day {current_day}.
         Respond with JSON in the format:
         {{
             "events": [
