@@ -109,15 +109,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Image modal functionality
     originalImage.addEventListener('click', function() {
         imageModal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
     });
 
-    closeImageModalBtn.addEventListener('click', function() {
-        imageModal.style.display = 'none';
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            imageModal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
     });
 
     imageModal.addEventListener('click', function(e) {
         if (e.target === imageModal) {
             imageModal.style.display = 'none';
+            document.body.style.overflow = '';
         }
     });
     // Handle file and text upload
