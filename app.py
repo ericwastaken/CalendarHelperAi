@@ -1,9 +1,27 @@
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask
 
+# Create logs directory if it doesn't exist
+log_dir = 'logs'
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 # Setup logging
-logging.basicConfig(level=logging.DEBUG)
+log_file = os.path.join(log_dir, 'app.log')
+handler = RotatingFileHandler(
+    log_file,
+    maxBytes=100 * 1024 * 1024,  # 100MB
+    backupCount=1,  # Keep one backup file
+)
+handler.setFormatter(logging.Formatter(
+    '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+))
+logging.basicConfig(
+    level=logging.DEBUG if os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true' else logging.INFO,
+    handlers=[handler]
+)
 
 app = Flask(__name__)
 
