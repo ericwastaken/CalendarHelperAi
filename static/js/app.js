@@ -150,7 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                addSystemMessage(errorData.user_message || 'There was an error. Please try again in a few seconds.');
+                const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
                 processButton.disabled = false;
                 return;
             }

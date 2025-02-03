@@ -43,16 +43,10 @@ def process():
         })
     except Exception as e:
         error_type = str(e)
-        app.logger.error(f"Process error: {error_type}", exc_info=True)
-        if error_type in ["initial_process_failed", "address_lookup_failed"]:
-            return jsonify({
-                'success': False,
-                'error_type': error_type,
-                'user_message': 'There was an error. Please try again in a few seconds.'
-            }), 400
+        app.logger.error(f"Process error in session {session.get('session_id', 'unknown')}: {error_type}", exc_info=True)
         return jsonify({
             'success': False,
-            'error_type': 'unknown_error',
+            'error_type': error_type,
             'user_message': 'There was an error. Please try again in a few seconds.'
         }), 400
 
