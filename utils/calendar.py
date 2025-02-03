@@ -23,15 +23,9 @@ def generate_ics(events):
             event.add('dtstart', start)
             event.add('dtend', end)
 
-            # Add location if available
-            location = []
-            if event_data.get('location_name'):
-                location.append(event_data['location_name'])
-            if event_data.get('location_address'):
-                location.append(event_data['location_address'])
-            
-            if location:
-                event.add('location', ' - '.join(location))
+            # Use combined location field
+            if event_data.get('location'):
+                event.add('location', event_data['location'])
 
             cal.add_component(event)
         except (ValueError, KeyError) as e:

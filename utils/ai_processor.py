@@ -152,6 +152,13 @@ Always lookup the addresses for all event locations."""
                         full_address = ', '.join(filter(None, full_address_parts))
                         if full_address:
                             event['location_address'] = full_address
+                            # Combine location name and address
+                            location_parts = []
+                            if event.get('location_name'):
+                                location_parts.append(event['location_name'])
+                            if full_address:
+                                location_parts.append(full_address)
+                            event['location'] = ' - '.join(location_parts)
         
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
