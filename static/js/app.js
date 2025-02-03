@@ -28,11 +28,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(response => response.text())
                     .then(html => {
                         termsContent.innerHTML = html;
+                        // Reset scroll position when content is loaded
+                        const modalContent = modal.querySelector('.modal-content');
+                        if (modalContent) {
+                            modalContent.scrollTop = 0;
+                        }
                     })
                     .catch(error => console.error('Error loading terms:', error));
+            } else {
+                // Reset scroll position when reopening
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.scrollTop = 0;
+                }
             }
         }
         modal.style.display = show ? 'block' : 'none';
+        if (show) {
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        } else {
+            document.body.style.overflow = ''; // Restore scrolling
+        }
     }
 
     readMoreLink?.addEventListener('click', function(e) {
