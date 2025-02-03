@@ -31,8 +31,9 @@ def process():
         # Process with AI
         events = process_image_and_text(image_data, text)
 
-        if not events:
-            raise ValueError("No events could be extracted from the provided input")
+        # Validate events
+        if not events or not isinstance(events, list):
+            raise ValueError("No valid events could be extracted from the provided input")
 
         # Store in session
         session['current_events'] = events
@@ -42,6 +43,7 @@ def process():
             'success': True,
             'events': events
         })
+
     except Exception as e:
         logging.error(f"Error in process route: {str(e)}", exc_info=True)
         return jsonify({
