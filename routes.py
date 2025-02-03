@@ -43,14 +43,17 @@ def process():
         })
     except Exception as e:
         error_type = str(e)
+        app.logger.error(f"Process error: {error_type}", exc_info=True)
         if error_type in ["initial_process_failed", "address_lookup_failed"]:
             return jsonify({
                 'success': False,
-                'error_type': error_type
+                'error_type': error_type,
+                'user_message': 'There was an error. Please try again in a few seconds.'
             }), 400
         return jsonify({
             'success': False,
-            'error_type': 'unknown_error'
+            'error_type': 'unknown_error',
+            'user_message': 'There was an error. Please try again in a few seconds.'
         }), 400
 
 @app.route('/correct', methods=['POST'])
@@ -72,14 +75,17 @@ def correct():
         })
     except Exception as e:
         error_type = str(e)
+        app.logger.error(f"Correction error: {error_type}", exc_info=True)
         if error_type in ["initial_process_failed", "address_lookup_failed"]:
             return jsonify({
                 'success': False,
-                'error_type': error_type
+                'error_type': error_type,
+                'user_message': 'There was an error. Please try again in a few seconds.'
             }), 400
         return jsonify({
             'success': False,
-            'error_type': 'unknown_error'
+            'error_type': 'unknown_error',
+            'user_message': 'There was an error. Please try again in a few seconds.'
         }), 400
 
 @app.route('/download-ics', methods=['POST'])
@@ -98,14 +104,17 @@ def download_ics():
         })
     except Exception as e:
         error_type = str(e)
+        app.logger.error(f"Download ICS error: {error_type}", exc_info=True)
         if error_type in ["initial_process_failed", "address_lookup_failed"]:
             return jsonify({
                 'success': False,
-                'error_type': error_type
+                'error_type': error_type,
+                'user_message': 'There was an error. Please try again in a few seconds.'
             }), 400
         return jsonify({
             'success': False,
-            'error_type': 'unknown_error'
+            'error_type': 'unknown_error',
+            'user_message': 'There was an error. Please try again in a few seconds.'
         }), 400
 
 @app.route('/clear-session', methods=['POST'])

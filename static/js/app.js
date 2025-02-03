@@ -143,15 +143,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
-            let data;
-            try {
-                data = await response.json();
-            } catch (error) {
-                addSystemMessage('Error parsing server response');
+            if (!response.ok) {
+                const errorData = await response.json();
+                addSystemMessage(errorData.user_message || 'There was an error. Please try again in a few seconds.');
+                processButton.disabled = false;
                 return;
             }
-            
-            if (data && data.success) {
+
+            const data = await response.json();
+            if (data.success) {
                 // Display original input in Calendar Request section
                 if (imageFile) {
                     const imageUrl = URL.createObjectURL(imageFile);
@@ -266,15 +266,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ correction: message })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                addSystemMessage('There was an error. Please try again in a few seconds.');
+                return;
+            }
+
             const data = await response.json();
             if (data.success) {
                 displayEvents(data.events);
                 addSystemMessage('Events have been updated based on your correction.');
             } else {
-                addSystemMessage('Error: ' + data.error);
+                addSystemMessage('There was an error. Please try again in a few seconds.');
             }
         } catch (error) {
-            addSystemMessage('Error processing the correction: ' + error.message);
+            console.error('Correction error:', error);
+            addSystemMessage('There was an error. Please try again in a few seconds.');
         } finally {
             showLoading(false);
             // Re-enable input and button
