@@ -132,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Disable process button and show processing indicator
             processButton.disabled = true;
+            processButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing events...';
             processingIndicator.style.display = 'block';
 
             const response = await fetch('/process', {
@@ -184,6 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             processButton.disabled = false;
         } finally {
             processingIndicator.style.display = 'none';
+            processButton.innerHTML = 'Process';
         }
     });
 
@@ -243,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Disable input and button while processing
         chatInput.disabled = true;
         sendButton.disabled = true;
-        sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+        sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Correcting...';
 
         try {
             showLoading(true);
