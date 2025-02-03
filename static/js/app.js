@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(uploadForm);
-        
+
         // Handle precise location if enabled
         const preciseLocationCheckbox = document.getElementById('preciseLocation');
         if (preciseLocationCheckbox.checked) {
@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 processButton.disabled = false;
             }
         } catch (error) {
+            console.error('Processing error:', error);
             addSystemMessage('Error processing the request: ' + error.message);
             processButton.disabled = false;
         } finally {
