@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Disable input and button while processing
         chatInput.disabled = true;
         sendButton.disabled = true;
-        sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Correcting...';
+        sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing events...';
 
         try {
             showLoading(true);
