@@ -16,6 +16,27 @@ def debug_log(message):
     if DEBUG_LOGGING:
         logging.debug(message)
 
+def lookup_address_details(location):
+    """Look up detailed address information using OpenAI."""
+    if not location or location.lower() == 'unknown':
+        return None
+        
+    messages = [
+        {"role": "system", "content": "You are a location lookup assistant. For the given location, return the full address in JSON format with these fields: street_address, city, state, country, postal_code. Use null for unknown fields."},
+        {"role": "user", "content": f"Look up the full address for: {location}"}
+    ]
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+        return json.loads(response.choices[0].message.content)
+    except Exception as e:
+        debug_log(f"Error looking up address: {e}")
+        return None
+
 def process_image_and_text(image_data=None, text=None, existing_events=None, timezone=None):
     messages = []
     current_dt = datetime.now()
@@ -109,7 +130,27 @@ Always lookup the addresses for all event locations."""
 
     try:
         events = json.loads(response_content)['events']
-        debug_log(f"Parsed events: {json.dumps(events, indent=2)}")
+        
+        # Only lookup addresses for initial event creation, not corrections
+        if not existing_events and events:
+            for event in events:
+                if event.get('location'):
+                    address_details = lookup_address_details(event['location'])
+                    if address_details:
+                        event['location_details'] = address_details
+                        # Update the location field with the full address if available
+                        full_address_parts = [
+                            address_details.get('street_address'),
+                            address_details.get('city'),
+                            address_details.get('state'),
+                            address_details.get('postal_code'),
+                            address_details.get('country')
+                        ]
+                        full_address = ', '.join(filter(None, full_address_parts))
+                        if full_address:
+                            event['location'] = full_address
+        
+        debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
     except (json.JSONDecodeError, KeyError) as e:
         error_msg = f"Error parsing OpenAI response: {e}"
