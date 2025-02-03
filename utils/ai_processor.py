@@ -150,29 +150,36 @@ Always lookup the addresses for all event locations."""
 
             # Process locations for both initial creation and corrections
             for event in events:
-                location_query = f"{event.get('location_name', '')} {event.get('location_address', '')}".strip()
-                if location_query:
+                # Ensure both fields exist
+                event['location_name'] = event.get('location_name', '').strip()
+                event['location_address'] = event.get('location_address', '').strip()
+
+                # Only do address lookup if we have a location to process
+                if event['location_name'] or event['location_address']:
+                    location_query = f"{event['location_name']} {event['location_address']}".strip()
                     address_details = lookup_address_details(location_query)
                     if address_details:
                         event['location_details'] = address_details
-                        # Update only the location_address field
-                        full_address_parts = [
-                            address_details.get('street_address'),
-                            address_details.get('city'),
-                            address_details.get('state'),
-                            address_details.get('postal_code'),
-                            address_details.get('country')
-                        ]
-                        full_address = ', '.join(filter(None, full_address_parts))
-                        if full_address:
-                            event['location_address'] = full_address
-                            # Combine location name and address
-                            location_parts = []
-                            if event.get('location_name'):
-                                location_parts.append(event['location_name'])
-                            if full_address:
-                                location_parts.append(full_address)
-                            event['location'] = ' - '.join(location_parts)
+                        # Update only the location_address if not in a correction
+                        if not isinstance(existing_events, list):
+                            full_address_parts = [
+                                address_details.get('street_address'),
+                                address_details.get('city'),
+                                address_details.get('state'),
+                                address_details.get('postal_code'),
+                                address_details.get('country')
+                            ]
+                            event['location_address'] = ', '.join(filter(None, full_address_parts))
+
+                # Always create combined display version
+                if event['location_name'] and event['location_address']:
+                    event['location'] = f"{event['location_name']} - {event['location_address']}"
+                elif event['location_name']:
+                    event['location'] = event['location_name']
+                elif event['location_address']:
+                    event['location'] = event['location_address']
+                else:
+                    event['location'] = ''
 
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
