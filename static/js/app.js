@@ -234,8 +234,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!message.trim()) return;
 
+        const sendButton = chatForm.querySelector('button[type="submit"]');
+        const chatInput = document.getElementById('chatInput');
+        
         addUserMessage(message);
-        document.getElementById('chatInput').value = '';
+        chatInput.value = '';
+        
+        // Disable input and button while processing
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
 
         try {
             showLoading(true);
@@ -258,6 +266,12 @@ document.addEventListener('DOMContentLoaded', function() {
             addSystemMessage('Error processing the correction: ' + error.message);
         } finally {
             showLoading(false);
+            // Re-enable input and button
+            const sendButton = chatForm.querySelector('button[type="submit"]');
+            const chatInput = document.getElementById('chatInput');
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            sendButton.innerHTML = 'Send';
         }
     });
 
