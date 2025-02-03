@@ -3,6 +3,7 @@ import logging
 from openai import OpenAI
 import json
 from datetime import datetime
+import pytz
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
@@ -16,36 +17,35 @@ def debug_log(message):
     if DEBUG_LOGGING:
         logging.debug(message)
 
+def get_current_datetime_prompt():
+    # Get current time in ET
+    et_timezone = pytz.timezone('US/Eastern')
+    current_time = datetime.now(et_timezone)
+
+    # Format the date components
+    current_date_str = current_time.strftime("%-m/%-d/%Y")  # e.g., 2/3/2025
+    current_time_str = current_time.strftime("%-I:%M%p ET")  # e.g., 11:36PM ET
+
+    return (
+        f"Today's date is {current_date_str}. "
+        f"The current time is {current_time_str}. "
+        f"If the year is not provided, assume current year ({current_time.year}). "
+        f"If the month is not provided, assume current month ({current_time.month}). "
+        f"If the day is not provided, assume current day ({current_time.day})"
+    )
+
 def process_image_and_text(image_data=None, text=None, existing_events=None):
     messages = []
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-    current_day = datetime.now().day
 
-    system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
+    # Get the base system prompt from environment
+    base_system_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
+
+    # Insert current date/time information
+    system_message = base_system_prompt.format(
+        current_date_prompt=get_current_datetime_prompt()
+    )
+
     debug_log(f"System prompt: {system_message}")
-    debug_log(f"Current date values - Year: {current_year}, Month: {current_month}, Day: {current_day}")
-
-    if not system_message:
-        debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
-        system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
-        Extract event details including title, description, start time, end time, and location. 
-        Whenever a date is incomplete, make assumptions based on the following rules:
-        - The current year is {current_year}. If the year is not provided, use {current_year}.
-        - The current month is {current_month}. If the month is not provided, use month {current_month}.
-        - The current day is {current_day}. If the day is not provided, use day {current_day}.
-        Respond with JSON in the format:
-        {{
-            "events": [
-                {{
-                    "title": "string",
-                    "description": "string",
-                    "start_time": "ISO datetime",
-                    "end_time": "ISO datetime",
-                    "location": "string"
-                }}
-            ]
-        }}"""
 
     messages.append({"role": "system", "content": system_message})
 
