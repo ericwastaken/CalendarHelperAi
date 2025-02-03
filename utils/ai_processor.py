@@ -133,8 +133,22 @@ Always lookup the addresses for all event locations."""
     try:
         events = json.loads(response_content)['events']
 
-        # Process locations for both initial creation and corrections
+        # Process and validate dates for all events
         if events:
+            for event in events:
+                try:
+                    # Ensure proper ISO format for dates
+                    start_time = event.get('start_time', '')
+                    end_time = event.get('end_time', '')
+                    
+                    # Convert to datetime objects to validate
+                    datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                    datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                except (ValueError, AttributeError):
+                    debug_log(f"Invalid date format: start={start_time}, end={end_time}")
+                    raise Exception("Invalid date format received from AI")
+
+            # Process locations for both initial creation and corrections
             for event in events:
                 location_query = f"{event.get('location_name', '')} {event.get('location_address', '')}".strip()
                 if location_query:
