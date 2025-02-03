@@ -108,9 +108,22 @@ Always lookup the addresses for all event locations."""
         })
     elif text:
         if existing_events:
+            # Ensure all event fields are explicitly included
+            formatted_events = []
+            for event in existing_events:
+                formatted_event = {
+                    "title": event.get('title', ''),
+                    "description": event.get('description', ''),
+                    "start_time": event.get('start_time', ''),
+                    "end_time": event.get('end_time', ''),
+                    "location_name": event.get('location_name', ''),
+                    "location_address": event.get('location_address', '')
+                }
+                formatted_events.append(formatted_event)
+            
             messages.append({
                 "role": "user",
-                "content": f"Update these events based on the correction: {json.dumps(existing_events)}\nCorrection: {text}"
+                "content": f"Here are the current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}\n\nRespond with the complete updated events including all fields."
             })
         else:
             messages.append({
