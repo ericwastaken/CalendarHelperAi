@@ -65,6 +65,8 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease, opacity 0.3s ease;
+    margin: 0 auto;
+    display: block;
 }
 
 .button:hover {
