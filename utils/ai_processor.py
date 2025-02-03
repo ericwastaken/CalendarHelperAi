@@ -9,8 +9,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 def process_image_and_text(image_data=None, text=None, existing_events=None):
     messages = []
-    
-    system_message = """You are an AI assistant specialized in interpreting calendar events. 
+
+    system_message = os.environ.get('OPENAI_SYSTEM_PROMPT', """You are an AI assistant specialized in interpreting calendar events. 
     Extract event details including title, description, start time, end time, and location. 
     Respond with JSON in the format:
     {
@@ -23,10 +23,10 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
                 "location": "string"
             }
         ]
-    }"""
-    
+    }""")
+
     messages.append({"role": "system", "content": system_message})
-    
+
     if image_data and text:
         messages.append({
             "role": "user",
