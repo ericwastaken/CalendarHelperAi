@@ -138,7 +138,7 @@ Always lookup the addresses for all event locations."""
                     address_details = lookup_address_details(event['location'])
                     if address_details:
                         event['location_details'] = address_details
-                        # Keep original location name and append full address
+                        # Format address on new line after location name
                         full_address_parts = [
                             address_details.get('street_address'),
                             address_details.get('city'),
@@ -149,7 +149,7 @@ Always lookup the addresses for all event locations."""
                         full_address = ', '.join(filter(None, full_address_parts))
                         if full_address:
                             original_location = event['location']
-                            event['location'] = f"{original_location} ({full_address})"
+                            event['location'] = f"{original_location}\n{full_address}"
         
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
