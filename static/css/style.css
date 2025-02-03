@@ -193,6 +193,33 @@ body {
     display: inline-block;
 }
 
+
+.example-response,
+.example-corrections,
+.example-final {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.correction-text {
+    background: #f5f5f5;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-style: italic;
+}
+
+.example-modal-content .event-card {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+.example-modal-content h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
 .thumbnail {
     max-width: 300px;
     max-height: 200px;
