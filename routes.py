@@ -15,7 +15,9 @@ def index():
 def process():
     try:
         image = request.files.get('image')
-        text = request.form.get('text', '')
+        text = request.form.get('text', '').strip()
+        if not text:
+            text = "Extract the events in this image."
 
         if image:
             image_data = base64.b64encode(image.read()).decode('utf-8')

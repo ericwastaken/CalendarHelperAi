@@ -129,10 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     originalImageContainer.classList.remove('hidden');
                 }
 
-                if (textInput) {
-                    originalText.textContent = textInput;
-                    originalTextContainer.classList.remove('hidden');
-                }
+                const displayText = textInput || "Extract the events in this image.";
+                originalTextContainer.classList.remove('hidden');
+                originalText.textContent = displayText;
+
 
                 // Show calendar request section
                 calendarRequest.classList.remove('hidden');
