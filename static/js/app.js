@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const readMoreLink = document.getElementById('readMoreLink');
     const termsLink = document.getElementById('termsLink');
     const closeDataModalBtn = document.getElementById('closeDataModal');
+    const exampleLink = document.getElementById('exampleLink');
+    const exampleModal = document.getElementById('exampleModal');
+    const closeExampleModalBtn = document.getElementById('closeExampleModal');
 
     // Modal functionality
     function toggleModal(modal, show) {
@@ -69,6 +72,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target === dataModal) {
             toggleModal(dataModal, false);
         }
+        if (e.target === exampleModal) {
+            toggleModal(exampleModal, false);
+        }
+    });
+
+    exampleLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const exampleContent = document.getElementById('exampleContent');
+        if (!exampleContent.innerHTML) {
+            fetch('/static/example-images-and-prompts.html')
+                .then(response => response.text())
+                .then(html => {
+                    exampleContent.innerHTML = html;
+                });
+        }
+        toggleModal(exampleModal, true);
+    });
+
+    closeExampleModalBtn.addEventListener('click', function() {
+        toggleModal(exampleModal, false);
     });
 
     // Calendar Request section elements

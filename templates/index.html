@@ -26,7 +26,16 @@
 
         <section class="upload-section" id="uploadSection">
             <form id="uploadForm" class="text-center">
-                <p class="upload-instruction">Upload an image with event information and provide instructions for creating one or more calendar items. Note, the image can contain multiple events.</p>
+                <p class="upload-instruction">Upload an image with event information and provide instructions for creating one or more calendar items. Note, the image can contain multiple events. <a href="#" id="exampleLink">Example</a></p>
+
+                <!-- Example Modal -->
+                <div id="exampleModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-modal" id="closeExampleModal">&times;</span>
+                        <h2>Example</h2>
+                        <div id="exampleContent"></div>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <input type="file" class="form-control" id="image" name="image" accept="image/*">
                 </div>

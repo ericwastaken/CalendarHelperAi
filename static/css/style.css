@@ -371,3 +371,32 @@ body {
     font-size: 1.1rem;
     text-align: center;
 }
+
+.upload-instruction a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.upload-instruction a:hover {
+    text-decoration: underline;
+}
+
+.example-modal-content {
+    text-align: center;
+    padding: 1rem;
+}
+
+.example-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.example-prompt {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
