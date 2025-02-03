@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     const clearButton = document.getElementById('clearButton');
     const downloadButton = document.getElementById('downloadButton');
-    const loadingSpinner = document.getElementById('loadingSpinner');
     const processButton = document.getElementById('processButton');
     const processingIndicator = document.getElementById('processingIndicator');
     const uploadSection = document.getElementById('uploadSection');
     const chatSection = document.getElementById('chatSection');
+    const actionButtons = document.getElementById('actionButtons');
 
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
@@ -28,12 +28,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             if (data.success) {
+                // Show events display
+                eventsDisplay.classList.remove('hidden');
                 displayEvents(data.events);
                 addSystemMessage('Events have been processed. You can make corrections using the chat below.');
 
                 // Hide upload section and show chat section
                 uploadSection.classList.add('hidden');
                 chatSection.classList.remove('hidden');
+
+                // Show action buttons
+                actionButtons.style.display = 'flex';
             } else {
                 addSystemMessage('Error: ' + data.error);
                 // Re-enable process button on error
@@ -93,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 // Reset UI state
                 eventsDisplay.innerHTML = '';
+                eventsDisplay.classList.add('hidden');
                 chatMessages.innerHTML = '';
                 uploadForm.reset();
                 processButton.disabled = false;
@@ -100,6 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show upload section and hide chat section
                 uploadSection.classList.remove('hidden');
                 chatSection.classList.add('hidden');
+
+                // Hide action buttons
+                actionButtons.style.display = 'none';
 
                 addSystemMessage('Session cleared. You can start a new analysis.');
             }
@@ -115,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/download-ics', {
                 method: 'POST'
             });
-            
+
             const data = await response.json();
             if (data.success) {
                 downloadICSFile(data.ics_content);
@@ -162,7 +171,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showLoading(show) {
-        loadingSpinner.style.display = show ? 'block' : 'none';
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        if (loadingSpinner) {
+            loadingSpinner.style.display = show ? 'block' : 'none';
+        }
     }
 
     function formatDateTime(isoString) {

@@ -64,11 +64,17 @@ body {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
 }
 
 .button:hover {
     background-color: #2980b9;
+}
+
+.button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .button-danger {
@@ -142,4 +148,10 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.action-buttons {
+    display: none;
+    justify-content: space-between;
+    margin-top: 1rem;
 }
