@@ -283,7 +283,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             showLoading(true);
             const response = await fetch('/download-ics', {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
             });
 
             const data = await response.json();
