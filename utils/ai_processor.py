@@ -35,63 +35,71 @@ def get_current_datetime_prompt():
     )
 
 def process_image_and_text(image_data=None, text=None, existing_events=None):
-    messages = []
-
-    # Get the base system prompt from environment
-    base_system_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
-
-    # Insert current date/time information
-    system_message = base_system_prompt.format(
-        current_date_prompt=get_current_datetime_prompt()
-    )
-
-    debug_log(f"System prompt: {system_message}")
-
-    messages.append({"role": "system", "content": system_message})
-
-    if image_data and text:
-        messages.append({
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": f"Extract calendar events from this image and text: {text}"
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
-                }
-            ]
-        })
-    elif text:
-        if existing_events:
-            messages.append({
-                "role": "user",
-                "content": f"Update these events based on the correction: {json.dumps(existing_events)}\nCorrection: {text}"
-            })
-        else:
-            messages.append({
-                "role": "user",
-                "content": f"Extract calendar events from this text: {text}"
-            })
-
-    debug_log("Sending messages to OpenAI:")
-    debug_log(json.dumps(messages, indent=2))
-
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,
-        response_format={"type": "json_object"}
-    )
-
-    response_content = response.choices[0].message.content
-    debug_log(f"OpenAI response: {response_content}")
-
     try:
-        events = json.loads(response_content)['events']
-        debug_log(f"Parsed events: {json.dumps(events, indent=2)}")
-        return events
-    except (json.JSONDecodeError, KeyError) as e:
-        error_msg = f"Error parsing OpenAI response: {e}"
-        debug_log(error_msg)
-        raise Exception("Failed to parse the AI response")
+        messages = []
+
+        # Get the base system prompt from environment
+        base_system_prompt = os.environ.get('OPENAI_SYSTEM_PROMPT')
+        if not base_system_prompt:
+            debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
+            raise Exception("System prompt not configured")
+
+        # Insert current date/time information
+        current_date_info = get_current_datetime_prompt()
+        system_message = base_system_prompt.format(current_date_prompt=current_date_info)
+
+        debug_log(f"System prompt: {system_message}")
+        debug_log(f"Current date info: {current_date_info}")
+
+        messages.append({"role": "system", "content": system_message})
+
+        if image_data and text:
+            messages.append({
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"Extract calendar events from this image and text: {text}"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
+                    }
+                ]
+            })
+        elif text:
+            if existing_events:
+                messages.append({
+                    "role": "user",
+                    "content": f"Update these events based on the correction: {json.dumps(existing_events)}\nCorrection: {text}"
+                })
+            else:
+                messages.append({
+                    "role": "user",
+                    "content": f"Extract calendar events from this text: {text}"
+                })
+
+        debug_log("Sending messages to OpenAI:")
+        debug_log(json.dumps(messages, indent=2))
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+
+        response_content = response.choices[0].message.content
+        debug_log(f"OpenAI response: {response_content}")
+
+        try:
+            events = json.loads(response_content)['events']
+            debug_log(f"Parsed events: {json.dumps(events, indent=2)}")
+            return events
+        except (json.JSONDecodeError, KeyError) as e:
+            error_msg = f"Error parsing OpenAI response: {e}"
+            debug_log(error_msg)
+            raise Exception("Failed to parse the AI response")
+
+    except Exception as e:
+        debug_log(f"Error in process_image_and_text: {str(e)}")
+        raise
