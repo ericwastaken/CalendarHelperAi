@@ -150,13 +150,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearTimeout(sessionTimeout);
                 sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
             } else {
-                addSystemMessage('Error: ' + data.error);
-                processButton.disabled = false;
+                throw new Error(data.error || 'Failed to process events');
             }
         } catch (error) {
-            addSystemMessage('Error processing the request: ' + error.message);
-            processButton.disabled = false;
+            console.error('Processing error:', error);
+            addSystemMessage('Error: ' + error.message);
         } finally {
+            processButton.disabled = false;
             processingIndicator.style.display = 'none';
         }
     });
