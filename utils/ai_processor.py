@@ -38,7 +38,8 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         from flask import session
         location = session.get('location', {})
         current_location_prompt = f"""- city: {location.get('city', 'unknown')}
-- country: {location.get('country', 'unknown')}"""
+- country: {location.get('country', 'unknown')}
+- region: {location.get('region', 'unknown')}"""
         system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
         
     debug_log(f"System prompt: {system_message}")
