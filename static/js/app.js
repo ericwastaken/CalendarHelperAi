@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.style.display = show ? 'block' : 'none';
     }
 
-    readMoreLink.addEventListener('click', function(e) {
+    readMoreLink?.addEventListener('click', function(e) {
         e.preventDefault();
         toggleModal(dataModal, true);
     });
