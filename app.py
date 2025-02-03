@@ -34,4 +34,5 @@ app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secret-key-h
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Import routes after app initialization
+logging.info("Application starting up")
 from routes import *
