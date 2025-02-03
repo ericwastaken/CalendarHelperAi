@@ -16,10 +16,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
     current_day = datetime.now().day
 
     system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
-    logging.debug(f"System prompt: {system_message}")
-
     if not system_message:
-        logging.warning("OPENAI_SYSTEM_PROMPT not found in environment variables")
         system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
         Extract event details including title, description, start time, end time, and location. 
         Whenever a date is incomplete, make assumptions based on the following rules:
@@ -67,9 +64,6 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
                 "content": f"Extract calendar events from this text: {text}"
             })
 
-    logging.debug("Sending messages to OpenAI:")
-    logging.debug(json.dumps(messages, indent=2))
-
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=messages,
@@ -77,12 +71,9 @@ def process_image_and_text(image_data=None, text=None, existing_events=None):
     )
 
     response_content = response.choices[0].message.content
-    logging.debug(f"OpenAI response: {response_content}")
 
     try:
         events = json.loads(response_content)['events']
-        logging.debug(f"Parsed events: {json.dumps(events, indent=2)}")
         return events
     except (json.JSONDecodeError, KeyError) as e:
-        logging.error(f"Error parsing OpenAI response: {e}")
         raise Exception("Failed to parse the AI response")

@@ -4,7 +4,6 @@ from flask import request, jsonify, render_template, session
 from app import app
 from utils.ai_processor import process_image_and_text
 from utils.calendar import generate_ics
-from models import db, Event, Session
 import uuid
 
 @app.route('/')
@@ -17,7 +16,7 @@ def process():
     try:
         image = request.files.get('image')
         text = request.form.get('text', '')
-        
+
         if image:
             image_data = base64.b64encode(image.read()).decode('utf-8')
         else:
@@ -25,10 +24,10 @@ def process():
 
         # Process with AI
         events = process_image_and_text(image_data, text)
-        
+
         # Store in session
         session['current_events'] = events
-        
+
         return jsonify({
             'success': True,
             'events': events
@@ -44,13 +43,13 @@ def correct():
     try:
         correction = request.json.get('correction')
         events = session.get('current_events', [])
-        
+
         # Process correction with AI
         updated_events = process_image_and_text(None, correction, events)
-        
+
         # Update session
         session['current_events'] = updated_events
-        
+
         return jsonify({
             'success': True,
             'events': updated_events
@@ -67,9 +66,9 @@ def download_ics():
         events = session.get('current_events', [])
         if not events:
             return jsonify({'success': False, 'error': 'No events found'}), 400
-            
+
         ics_content = generate_ics(events)
-        
+
         return jsonify({
             'success': True,
             'ics_content': ics_content
