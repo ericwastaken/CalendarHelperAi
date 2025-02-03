@@ -2,6 +2,7 @@ import os
 import logging
 from openai import OpenAI
 import json
+from datetime import datetime
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
@@ -10,28 +11,31 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 def process_image_and_text(image_data=None, text=None, existing_events=None):
     messages = []
+    current_year = datetime.now().year
 
     system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
     logging.debug(f"System prompt: {system_message}")
 
     if not system_message:
         logging.warning("OPENAI_SYSTEM_PROMPT not found in environment variables")
-        system_message = """You are an AI assistant specialized in interpreting calendar events. 
+        system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
         Extract event details including title, description, start time, end time, and location. 
-        Whenever a date is incomplete, make assumptions. If the year is not provided, assume current year. 
-        If the month is not provided, assume current month. If the day is not provided, assume current day.
+        Whenever a date is incomplete, make assumptions based on the following rules:
+        - The current year is {current_year}. If the year is not provided, use {current_year}.
+        - If the month is not provided, assume current month.
+        - If the day is not provided, assume current day.
         Respond with JSON in the format:
-        {
+        {{
             "events": [
-                {
+                {{
                     "title": "string",
                     "description": "string",
                     "start_time": "ISO datetime",
                     "end_time": "ISO datetime",
                     "location": "string"
-                }
+                }}
             ]
-        }"""
+        }}"""
 
     messages.append({"role": "system", "content": system_message})
 
