@@ -31,9 +31,18 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
 
     system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
     if system_message:
+        # Handle date prompt
         system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
+        
+        # Handle location prompt from session
+        from flask import session
+        location = session.get('location', {})
+        current_location_prompt = f"""- city: {location.get('city', 'unknown')}
+- country: {location.get('country', 'unknown')}"""
+        system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
+        
     debug_log(f"System prompt: {system_message}")
-    debug_log(f"Current date prompt: {current_date_prompt}")
+    debug_log(f"Current date and location prompts applied")
 
     if not system_message:
         debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
