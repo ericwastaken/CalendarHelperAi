@@ -84,23 +84,33 @@ document.addEventListener('DOMContentLoaded', function() {
     let sessionTimeout;
 
     // Image modal functionality
-    originalImage.addEventListener('click', function() {
-        imageModal.style.display = 'block';
-    });
+    if (originalImage) {
+        originalImage.addEventListener('click', function() {
+            imageModal.style.display = 'block';
+        });
+    }
 
-    closeImageModalBtn.addEventListener('click', function() {
-        imageModal.style.display = 'none';
-    });
-
-    imageModal.addEventListener('click', function(e) {
-        if (e.target === imageModal) {
+    if (closeImageModalBtn) {
+        closeImageModalBtn.addEventListener('click', function() {
             imageModal.style.display = 'none';
-        }
-    });
+        });
+    }
+
+    if (imageModal) {
+        imageModal.addEventListener('click', function(e) {
+            if (e.target === imageModal) {
+                imageModal.style.display = 'none';
+            }
+        });
+    }
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(uploadForm);
+        
+        // Show processing indicator and disable button
+        processButton.disabled = true;
+        processingIndicator.style.display = 'block';
         
         try {
             // Disable process button and show processing indicator
