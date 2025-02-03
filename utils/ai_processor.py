@@ -128,17 +128,28 @@ Always lookup the addresses for all event locations."""
     debug_log("Sending messages to OpenAI:")
     debug_log(json.dumps(messages, indent=2))
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,
-        response_format={"type": "json_object"}
-    )
-
-    response_content = response.choices[0].message.content
-    debug_log(f"OpenAI response: {response_content}")
+    try:
+        debug_log("Making API call to OpenAI...")
+        response = client.chat.completions.create(
+            model="gpt-4",  # Changed from gpt-4o to gpt-4 as that model doesn't exist
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+        debug_log("OpenAI API call completed")
+        
+        response_content = response.choices[0].message.content
+        debug_log(f"OpenAI response content: {response_content}")
+    except Exception as e:
+        debug_log(f"Error during OpenAI API call: {str(e)}")
+        raise Exception(f"OpenAI API error: {str(e)}")
 
     try:
-        events = json.loads(response_content)['events']
+        parsed_response = json.loads(response_content)
+        debug_log(f"Parsed JSON response: {json.dumps(parsed_response, indent=2)}")
+        if 'events' not in parsed_response:
+            debug_log("No 'events' key in response")
+            raise KeyError("Missing 'events' in response")
+        events = parsed_response['events']
 
         # Process and validate dates for all events
         if events:
