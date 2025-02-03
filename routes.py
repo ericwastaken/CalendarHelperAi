@@ -4,11 +4,16 @@ from flask import request, jsonify, render_template, session
 from app import app
 from utils.ai_processor import process_image_and_text
 from utils.calendar import generate_ics
+from utils.location_service import get_client_ip, get_location_from_ip
 import uuid
 
 @app.route('/')
 def index():
     session['session_id'] = str(uuid.uuid4())
+    ip = get_client_ip()
+    location = get_location_from_ip(ip)
+    if location:
+        session['location'] = location
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
