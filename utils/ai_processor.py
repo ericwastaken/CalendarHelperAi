@@ -154,22 +154,21 @@ Always lookup the addresses for all event locations."""
                 event['location_name'] = event.get('location_name', '').strip()
                 event['location_address'] = event.get('location_address', '').strip()
 
-                # Only do address lookup if we have a location to process
+                # Do address lookup if we have a location to process
                 if event['location_name'] or event['location_address']:
                     location_query = f"{event['location_name']} {event['location_address']}".strip()
                     address_details = lookup_address_details(location_query)
                     if address_details:
                         event['location_details'] = address_details
-                        # Update only the location_address if not in a correction
-                        if not isinstance(existing_events, list):
-                            full_address_parts = [
-                                address_details.get('street_address'),
-                                address_details.get('city'),
-                                address_details.get('state'),
-                                address_details.get('postal_code'),
-                                address_details.get('country')
-                            ]
-                            event['location_address'] = ', '.join(filter(None, full_address_parts))
+                        # Always update the location address with full details
+                        full_address_parts = [
+                            address_details.get('street_address'),
+                            address_details.get('city'),
+                            address_details.get('state'),
+                            address_details.get('postal_code'),
+                            address_details.get('country')
+                        ]
+                        event['location_address'] = ', '.join(filter(None, full_address_parts))
 
                 # Always create combined display version
                 if event['location_name'] and event['location_address']:
