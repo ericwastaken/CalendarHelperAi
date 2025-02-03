@@ -101,22 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(uploadForm);
-
-        // Handle precise location if enabled
-        const preciseLocationCheckbox = document.getElementById('preciseLocation');
-        if (preciseLocationCheckbox.checked) {
-            try {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject);
-                });
-                formData.append('latitude', position.coords.latitude);
-                formData.append('longitude', position.coords.longitude);
-            } catch (error) {
-                console.log('Location access denied or error:', error);
-            }
-        }
-
+        
         try {
+            // Disable process button and show processing indicator
+            processButton.disabled = true;
+            processingIndicator.style.display = 'block';
+
             // Store original input
             const imageFile = formData.get('image');
             const textInput = formData.get('text');
