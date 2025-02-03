@@ -165,8 +165,9 @@ body {
 
 .request-details {
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    flex-direction: row;
+    gap: 2rem;
+    align-items: flex-start;
 }
 
 .original-image-container,
@@ -174,6 +175,15 @@ body {
     padding: 1rem;
     background: var(--background-color);
     border-radius: 4px;
+}
+
+.original-image-container {
+    flex: 0 0 auto;
+}
+
+.original-text-container {
+    flex: 1;
+    min-width: 0;
 }
 
 .image-preview {
