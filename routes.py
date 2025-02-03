@@ -76,7 +76,8 @@ def download_ics():
         if not events:
             return jsonify({'success': False, 'error': 'No events found'}), 400
 
-        ics_content = generate_ics(events)
+        timezone = request.headers.get('X-Timezone', 'UTC')
+        ics_content = generate_ics(events, timezone)
 
         return jsonify({
             'success': True,

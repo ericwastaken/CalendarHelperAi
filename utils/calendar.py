@@ -2,7 +2,7 @@
 from icalendar import Calendar, Event
 from datetime import datetime
 
-def generate_ics(events):
+def generate_ics(events, timezone='UTC'):
     cal = Calendar()
     cal.add('prodid', '-//Calendar App//mxm.dk//')
     cal.add('version', '2.0')
@@ -17,8 +17,9 @@ def generate_ics(events):
             start_str = event_data['start_time'].replace('Z', '+00:00') if 'Z' in event_data['start_time'] else event_data['start_time']
             end_str = event_data['end_time'].replace('Z', '+00:00') if 'Z' in event_data['end_time'] else event_data['end_time']
             
-            start = datetime.fromisoformat(start_str)
-            end = datetime.fromisoformat(end_str)
+            from zoneinfo import ZoneInfo
+            start = datetime.fromisoformat(start_str).replace(tzinfo=ZoneInfo(timezone))
+            end = datetime.fromisoformat(end_str).replace(tzinfo=ZoneInfo(timezone))
 
             event.add('dtstart', start)
             event.add('dtend', end)
