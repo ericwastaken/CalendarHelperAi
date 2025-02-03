@@ -1,0 +1,27 @@
+[2025-02-03 07:47:34,679] DEBUG in _trace: start_tls.started ssl_context=<ssl.SSLContext object at 0x7f065297fc80> server_hostname='api.openai.com' timeout=5.0
+[2025-02-03 07:47:34,693] DEBUG in _trace: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f0651585290>
+[2025-02-03 07:47:34,693] DEBUG in _trace: send_request_headers.started request=<Request [b'POST']>
+[2025-02-03 07:47:34,694] DEBUG in _trace: send_request_headers.complete
+[2025-02-03 07:47:34,694] DEBUG in _trace: send_request_body.started request=<Request [b'POST']>
+[2025-02-03 07:47:34,754] DEBUG in _trace: send_request_body.complete
+[2025-02-03 07:47:34,754] DEBUG in _trace: receive_response_headers.started request=<Request [b'POST']>
+[2025-02-03 07:47:35,325] DEBUG in _trace: receive_response_headers.complete return_value=(b'HTTP/1.1', 400, b'Bad Request', [(b'Date', b'Mon, 03 Feb 2025 07:47:35 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'217'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-r8fvvzrst5hfap7jphqbxk6c'), (b'openai-processing-ms', b'132'), (b'openai-version', b'2020-10-01'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-limit-tokens', b'80000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-remaining-tokens', b'78753'), (b'x-ratelimit-reset-requests', b'12ms'), (b'x-ratelimit-reset-tokens', b'935ms'), (b'x-request-id', b'req_39b3ead14f80b68e6a956a6266d0df4d'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=vbqM31n_TePViv7ZpgQC4t1xGGRsZhuphtZGByjV6x8-1738568855-1.0.1.1-kMFDoM8fL6rVmswTPYw0lvIvfurytUrRldZU2fvsVqn3wmCD.QL86ACItdvotEzdDYuQduXrCWUNEjNX5uuPMQ; path=/; expires=Mon, 03-Feb-25 08:17:35 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=vZOX5ZKtM9xfcqchZsxd18jvrj0D558ZsreuATi0czU-1738568855319-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'90c0d04ddb88addd-ATL'), (b'alt-svc', b'h3=":443"; ma=86400')])
+[2025-02-03 07:47:35,326] INFO in _client: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+[2025-02-03 07:47:35,326] DEBUG in _trace: receive_response_body.started request=<Request [b'POST']>
+[2025-02-03 07:47:35,327] DEBUG in _trace: receive_response_body.complete
+[2025-02-03 07:47:35,327] DEBUG in _trace: response_closed.started
+[2025-02-03 07:47:35,327] DEBUG in _trace: response_closed.complete
+[2025-02-03 07:47:35,327] DEBUG in _base_client: HTTP Response: POST https://api.openai.com/v1/chat/completions "400 Bad Request" Headers([('date', 'Mon, 03 Feb 2025 07:47:35 GMT'), ('content-type', 'application/json'), ('content-length', '217'), ('connection', 'keep-alive'), ('access-control-expose-headers', 'X-Request-ID'), ('openai-organization', 'user-r8fvvzrst5hfap7jphqbxk6c'), ('openai-processing-ms', '132'), ('openai-version', '2020-10-01'), ('x-ratelimit-limit-requests', '5000'), ('x-ratelimit-limit-tokens', '80000'), ('x-ratelimit-remaining-requests', '4999'), ('x-ratelimit-remaining-tokens', '78753'), ('x-ratelimit-reset-requests', '12ms'), ('x-ratelimit-reset-tokens', '935ms'), ('x-request-id', 'req_39b3ead14f80b68e6a956a6266d0df4d'), ('strict-transport-security', 'max-age=31536000; includeSubDomains; preload'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=vbqM31n_TePViv7ZpgQC4t1xGGRsZhuphtZGByjV6x8-1738568855-1.0.1.1-kMFDoM8fL6rVmswTPYw0lvIvfurytUrRldZU2fvsVqn3wmCD.QL86ACItdvotEzdDYuQduXrCWUNEjNX5uuPMQ; path=/; expires=Mon, 03-Feb-25 08:17:35 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('x-content-type-options', 'nosniff'), ('set-cookie', '_cfuvid=vZOX5ZKtM9xfcqchZsxd18jvrj0D558ZsreuATi0czU-1738568855319-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('server', 'cloudflare'), ('cf-ray', '90c0d04ddb88addd-ATL'), ('alt-svc', 'h3=":443"; ma=86400')])
+[2025-02-03 07:47:35,327] DEBUG in _base_client: request_id: req_39b3ead14f80b68e6a956a6266d0df4d
+[2025-02-03 07:47:35,327] DEBUG in _base_client: Encountered httpx.HTTPStatusError
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/openai/_base_client.py", line 1043, in _request
+    response.raise_for_status()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://api.openai.com/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+[2025-02-03 07:47:35,328] DEBUG in _base_client: Not retrying
+[2025-02-03 07:47:35,328] DEBUG in _base_client: Re-raising status error
+[2025-02-03 07:47:35,329] DEBUG in ai_processor: Error during OpenAI API call: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+[2025-02-03 07:47:35,330] INFO in _internal: 172.31.128.101 - - [03/Feb/2025 07:47:35] "[31m[1mPOST /process HTTP/1.1[0m" 400 -
