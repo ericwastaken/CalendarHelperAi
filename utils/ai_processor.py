@@ -70,11 +70,12 @@ Always lookup the addresses for all event locations."""
     if not system_message:
         debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
         system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
-        Extract event details including title, description, start time, end time, and location. 
+        Extract event details including title, description, start time, end time, location name, and location address. 
         Whenever a date is incomplete, make assumptions based on the following rules:
         - If the year is not provided, use {current_year}.
         - If the month is not provided, use month {current_month}.
         - If the day is not provided, use day {current_day}.
+        For locations, provide both the name of the location (e.g. 'Panera Bread') and its address separately.
         Respond with JSON in the format:
         {{
             "events": [
@@ -83,7 +84,8 @@ Always lookup the addresses for all event locations."""
                     "description": "string",
                     "start_time": "ISO datetime",
                     "end_time": "ISO datetime",
-                    "location": "string"
+                    "location_name": "string",
+                    "location_address": "string"
                 }}
             ]
         }}"""
