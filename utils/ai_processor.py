@@ -23,9 +23,9 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         from zoneinfo import ZoneInfo
         current_dt = datetime.now(ZoneInfo(timezone))
     
-    current_date_prompt = f"""- The current year is {current_dt.year}. If the year is not provided, use {current_dt.year}.
-- The current month is {current_dt.month}. If the month is not provided, use month {current_dt.month}.
-- The current day is {current_dt.day}. If the day is not provided, use day {current_dt.day}.
+    current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
+- If the month is not provided, use month {current_dt.month}.
+- If the day is not provided, use day {current_dt.day}.
 - The current time is {current_dt.strftime('%H:%M')}.
 - The current timezone is {timezone or 'UTC'}."""
 
@@ -37,9 +37,10 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         # Handle location prompt from session
         from flask import session
         location = session.get('location', {})
-        current_location_prompt = f"""- city: {location.get('city', 'unknown')}
-- country: {location.get('country', 'unknown')}
-- region: {location.get('region', 'unknown')}"""
+        current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
+- If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
+- If an event country is not provided, assume: '{location.get('country', 'unknown')}'
+Always lookup the addresses for all event locations."""
         system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
         
     debug_log(f"System prompt: {system_message}")
@@ -50,9 +51,9 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
         Extract event details including title, description, start time, end time, and location. 
         Whenever a date is incomplete, make assumptions based on the following rules:
-        - The current year is {current_year}. If the year is not provided, use {current_year}.
-        - The current month is {current_month}. If the month is not provided, use month {current_month}.
-        - The current day is {current_day}. If the day is not provided, use day {current_day}.
+        - If the year is not provided, use {current_year}.
+        - If the month is not provided, use month {current_month}.
+        - If the day is not provided, use day {current_day}.
         Respond with JSON in the format:
         {{
             "events": [
