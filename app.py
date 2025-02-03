@@ -1,7 +1,11 @@
 import os
+from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Create logs directory if it doesn't exist
 log_dir = 'logs'
