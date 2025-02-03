@@ -16,15 +16,24 @@ def debug_log(message):
     if DEBUG_LOGGING:
         logging.debug(message)
 
-def process_image_and_text(image_data=None, text=None, existing_events=None):
+def process_image_and_text(image_data=None, text=None, existing_events=None, timezone=None):
     messages = []
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-    current_day = datetime.now().day
+    current_dt = datetime.now()
+    if timezone:
+        from zoneinfo import ZoneInfo
+        current_dt = datetime.now(ZoneInfo(timezone))
+    
+    current_date_prompt = f"""- The current year is {current_dt.year}. If the year is not provided, use {current_dt.year}.
+- The current month is {current_dt.month}. If the month is not provided, use month {current_dt.month}.
+- The current day is {current_dt.day}. If the day is not provided, use day {current_dt.day}.
+- The current time is {current_dt.strftime('%H:%M')}.
+- The current timezone is {timezone or 'UTC'}."""
 
     system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
+    if system_message:
+        system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
     debug_log(f"System prompt: {system_message}")
-    debug_log(f"Current date values - Year: {current_year}, Month: {current_month}, Day: {current_day}")
+    debug_log(f"Current date prompt: {current_date_prompt}")
 
     if not system_message:
         debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")

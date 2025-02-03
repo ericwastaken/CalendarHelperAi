@@ -22,8 +22,10 @@ def process():
         else:
             image_data = None
 
+        # Get timezone from request
+        timezone = request.headers.get('X-Timezone', 'UTC')
         # Process with AI
-        events = process_image_and_text(image_data, text)
+        events = process_image_and_text(image_data, text, None, timezone)
 
         # Store in session
         session['current_events'] = events

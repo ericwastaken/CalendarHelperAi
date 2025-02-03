@@ -113,6 +113,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const response = await fetch('/process', {
                 method: 'POST',
+                headers: {
+                    'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
+                },
                 body: formData
             });
 
