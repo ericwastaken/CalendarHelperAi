@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (errorData.error_type === 'unsafe_prompt') {
                     const errorContainer = document.getElementById('promptErrorContainer');
                     const errorMessage = document.getElementById('promptErrorMessage');
-                    errorMessage.textContent = errorData.user_message + ' - ' + errorData.reason;
+                    errorMessage.textContent = errorData.error;
                     errorContainer.style.display = 'block';
                     processButton.disabled = false;
                     processButton.innerHTML = 'Process';
