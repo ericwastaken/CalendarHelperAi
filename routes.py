@@ -32,14 +32,23 @@ def process():
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
         # Process with AI
-        events = process_image_and_text(image_data, text, None, timezone)
+        result = process_image_and_text(image_data, text, None, timezone)
+        
+        # Check if there was a safety validation error
+        if isinstance(result, dict) and 'error' in result:
+            return jsonify({
+                'success': False,
+                'error_type': 'unsafe_prompt',
+                'user_message': result['error'],
+                'reason': result.get('reason', '')
+            }), 400
 
         # Store in session
-        session['current_events'] = events
+        session['current_events'] = result
 
         return jsonify({
             'success': True,
-            'events': events
+            'events': result
         })
     except Exception as e:
         error_type = str(e)

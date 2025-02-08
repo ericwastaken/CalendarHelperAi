@@ -10,6 +10,29 @@ from datetime import datetime
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+def validate_prompt_safety(text):
+    """Validate if the prompt is safe and calendar-related."""
+    messages = [
+        {"role": "system", "content": """You are a safety validation system. Your task is to determine if the given prompt is appropriate and related to calendar/event processing. 
+        Only return a JSON response with format: {"is_safe": true/false, "reason": "explanation"}
+        Approve ONLY calendar and event-related requests. Reject anything else."""},
+        {"role": "user", "content": f"Is this prompt safe and calendar-related? Prompt: {text}"}
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+        result = json.loads(response.choices[0].message.content)
+        debug_log(f"Safety validation result: {result}")
+        return result["is_safe"], result["reason"]
+    except Exception as e:
+        debug_log(f"Error in safety validation: {e}")
+        return False, "Safety validation failed"
+
+
 # Set up debug logging based on environment variable
 DEBUG_LOGGING = os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true'
 
@@ -40,6 +63,12 @@ def lookup_address_details(location):
 
 def process_image_and_text(image_data=None, text=None, existing_events=None, timezone=None):
     try:
+        # First validate the prompt safety
+        is_safe, reason = validate_prompt_safety(text)
+        if not is_safe:
+            debug_log(f"Unsafe prompt rejected: {reason}")
+            return {"error": "Your prompt is not supported", "reason": reason}
+            
         messages = []
         current_dt = datetime.now()
         if timezone:
