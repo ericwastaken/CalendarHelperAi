@@ -25,21 +25,22 @@ def process():
             text = "Extract the events in this image."
 
         if image:
-            # Validate file size (2MB)
+            from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
+            
+            # Validate file size
             image.seek(0, 2)  # Seek to end
             size = image.tell()
             image.seek(0)  # Reset file pointer
             
-            if size > 2 * 1024 * 1024:
+            if size > MAX_IMAGE_SIZE:
                 return jsonify({
                     'success': False,
                     'error_type': 'unsafe_prompt',
-                    'error': 'Please limit your image to 2mb'
+                    'error': 'Please limit your image to 4mb'
                 }), 400
 
             # Validate file type
-            allowed_types = {'image/jpeg', 'image/jpg', 'image/png', 'image/tiff'}
-            if image.content_type not in allowed_types:
+            if image.content_type not in ALLOWED_IMAGE_TYPES:
                 return jsonify({
                     'success': False,
                     'error_type': 'unsafe_prompt',

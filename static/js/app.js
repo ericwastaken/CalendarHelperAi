@@ -137,11 +137,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Validate image if one was uploaded
             if (imageFile) {
-                // Check file size (2MB = 2 * 1024 * 1024 bytes)
-                if (imageFile.size > 2 * 1024 * 1024) {
+                // Check file size (4MB = 4 * 1024 * 1024 bytes)
+                if (imageFile.size > 4 * 1024 * 1024) {
                     const errorContainer = document.getElementById('promptErrorContainer');
                     const errorMessage = document.getElementById('promptErrorMessage');
-                    errorMessage.textContent = "Please limit your image to 2mb";
+                    errorMessage.textContent = "Please limit your image to 4mb";
                     errorContainer.style.display = 'block';
                     processButton.disabled = false;
                     return;
