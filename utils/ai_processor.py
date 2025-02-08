@@ -1,4 +1,3 @@
-
 import os
 import logging
 from openai import OpenAI
@@ -75,7 +74,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
             return {"error": "Your prompt is not supported - The prompt is not related to calendar or event processing."}
-            
+
         messages = []
         current_dt = datetime.now()
         if timezone:
@@ -157,7 +156,7 @@ Always lookup the addresses for all event locations."""
                         "location_address": event.get('location_address', '')
                     }
                     formatted_events.append(formatted_event)
-                
+
                 messages.append({
                     "role": "user",
                     "content": f"Here are the current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}\n\nRespond with the complete updated events including all fields."
@@ -176,25 +175,25 @@ Always lookup the addresses for all event locations."""
             messages=messages,
             response_format={"type": "json_object"}
         )
-        
+
         if not response or not response.choices or not response.choices[0].message:
             debug_log("Invalid response structure from OpenAI")
             raise Exception("initial_process_failed")
-            
+
         response_content = response.choices[0].message.content
         if not response_content:
             debug_log("Empty response content from OpenAI")
-            raise Exception("initial_process_failed")
-            
+            raise Exception("no_events_found")
+
         debug_log(f"OpenAI response: {response_content}")
 
         parsed_response = json.loads(response_content)
         events = parsed_response.get('events', [])
-        
+
         if not events:
             debug_log("No events found in response")
             raise Exception("no_events_found")
-            
+
         # Process and validate dates for all events
         if events:
             for event in events:
@@ -202,7 +201,7 @@ Always lookup the addresses for all event locations."""
                     # Ensure proper ISO format for dates
                     start_time = event.get('start_time', '')
                     end_time = event.get('end_time', '')
-                    
+
                     # Convert to datetime objects to validate
                     datetime.fromisoformat(start_time.replace('Z', '+00:00'))
                     datetime.fromisoformat(end_time.replace('Z', '+00:00'))
