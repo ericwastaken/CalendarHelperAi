@@ -251,5 +251,10 @@ Always lookup the addresses for all event locations."""
         logging.error(error_msg)
         raise Exception("initial_process_failed")
     except Exception as e:
-        logging.error(f"Unexpected error in initial process: {str(e)}")
-        raise Exception("initial_process_failed")
+        error_type = str(e)
+        logging.error(f"Unexpected error in initial process: {error_type}")
+        # If it's our known error type, propagate it directly
+        if error_type in ["no_events_found", "address_lookup_failed"]:
+            raise
+        # Otherwise wrap unknown errors
+        raise Exception("initial_process_failed") from e
