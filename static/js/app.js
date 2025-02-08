@@ -390,9 +390,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     function displayEvents(events) {
-        if (!events || !Array.isArray(events)) {
-            console.error('Invalid events data:', events);
-            addSystemMessage('Error: Invalid event data received');
+        if (!events) {
+            addSystemMessage('Error: No event data received');
+            return;
+        }
+        if (!Array.isArray(events)) {
+            // Don't log error objects to console
+            addSystemMessage('Error: ' + (events.error || 'Invalid event data received'));
             return;
         }
 
