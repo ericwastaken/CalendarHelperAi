@@ -135,6 +135,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const imageFile = formData.get('image');
             const textInput = formData.get('text');
 
+            // Validate image if one was uploaded
+            if (imageFile) {
+                // Check file size (2MB = 2 * 1024 * 1024 bytes)
+                if (imageFile.size > 2 * 1024 * 1024) {
+                    const errorContainer = document.getElementById('promptErrorContainer');
+                    const errorMessage = document.getElementById('promptErrorMessage');
+                    errorMessage.textContent = "Please limit your image to 2mb";
+                    errorContainer.style.display = 'block';
+                    processButton.disabled = false;
+                    return;
+                }
+
+                // Check file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff'];
+                if (!validTypes.includes(imageFile.type)) {
+                    const errorContainer = document.getElementById('promptErrorContainer');
+                    const errorMessage = document.getElementById('promptErrorMessage');
+                    errorMessage.textContent = "Please use png, jpg, jpeg, or tiff images only";
+                    errorContainer.style.display = 'block';
+                    processButton.disabled = false;
+                    return;
+                }
+            }
+
             // Disable process button and show processing indicator
             processButton.disabled = true;
             processButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing events...';

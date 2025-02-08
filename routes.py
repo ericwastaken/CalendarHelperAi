@@ -25,6 +25,27 @@ def process():
             text = "Extract the events in this image."
 
         if image:
+            # Validate file size (2MB)
+            image.seek(0, 2)  # Seek to end
+            size = image.tell()
+            image.seek(0)  # Reset file pointer
+            
+            if size > 2 * 1024 * 1024:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Please limit your image to 2mb'
+                }), 400
+
+            # Validate file type
+            allowed_types = {'image/jpeg', 'image/jpg', 'image/png', 'image/tiff'}
+            if image.content_type not in allowed_types:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Please use png, jpg, jpeg, or tiff images only'
+                }), 400
+
             image_data = base64.b64encode(image.read()).decode('utf-8')
         else:
             image_data = None
