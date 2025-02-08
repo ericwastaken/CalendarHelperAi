@@ -5,7 +5,15 @@ from app import app
 from utils.ai_processor import process_image_and_text
 from utils.calendar import generate_ics
 from utils.location_service import get_client_ip, get_location_from_ip
+from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
 import uuid
+
+@app.route('/api/config')
+def get_config():
+    return jsonify({
+        'maxImageSize': MAX_IMAGE_SIZE,
+        'allowedImageTypes': list(ALLOWED_IMAGE_TYPES)
+    })
 
 @app.route('/')
 def index():
@@ -25,25 +33,102 @@ def process():
             text = "Extract the events in this image."
 
         if image:
+            from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
+
+            # Validate file size
+            image.seek(0, 2)  # Seek to end
+            size = image.tell()
+            image.seek(0)  # Reset file pointer
+
+            if size > MAX_IMAGE_SIZE:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Please limit your image to 4mb'
+                }), 400
+
+            # Validate file type
+            if image.content_type not in ALLOWED_IMAGE_TYPES:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Please use png, jpg, jpeg, or tiff images only'
+                }), 400
+
             image_data = base64.b64encode(image.read()).decode('utf-8')
         else:
             image_data = None
 
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
-        # Process with AI
-        events = process_image_and_text(image_data, text, None, timezone)
+        
+        try:
+            result = process_image_and_text(image_data, text, None, timezone)
+            
+            # Check if there was a safety validation error
+            if isinstance(result, dict) and 'error' in result:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'user_message': result['error'],
+                    'reason': result.get('reason', '')
+                }), 400
+
+            if not result or not isinstance(result, list):
+                raise Exception("invalid_result_format")
+
+            # Store in session and return success
+            session['current_events'] = result
+            return jsonify({
+                'success': True,
+                'events': result
+            })
+
+        except Exception as e:
+            error_type = str(e)
+            app.logger.error(f"Process error: {error_type}", exc_info=True)
+
+            error_messages = {
+                "no_events_found": {
+                    'error_type': 'no_events',
+                    'error': 'No events were found in the image. Please try with a different photo that contains calendar events.'
+                },
+                "invalid_result_format": {
+                    'error_type': 'processing_error',
+                    'error': 'Invalid result format received'
+                },
+                "initial_process_failed": {
+                    'error_type': 'processing_error',
+                    'error': 'Error processing the request'
+                }
+            }
+
+            response_data = error_messages.get(error_type, {
+                'error_type': 'processing_error',
+                'error': 'An unexpected error occurred'
+            })
+            response_data['success'] = False
+            
+            return jsonify(response_data), 400
 
         # Store in session
-        session['current_events'] = events
+        session['current_events'] = result
 
         return jsonify({
             'success': True,
-            'events': events
+            'events': result
         })
     except Exception as e:
         error_type = str(e)
         app.logger.error(f"Process error in session {session.get('session_id', 'unknown')}: {error_type}", exc_info=True)
+
+        if error_type == "no_events_found":
+            return jsonify({
+                'success': False,
+                'error_type': 'no_events_found',
+                'user_message': 'Error processing your image. Make sure there are events in the image and perhaps try with a different photo.'
+            }), 400
+
         return jsonify({
             'success': False,
             'error_type': error_type,

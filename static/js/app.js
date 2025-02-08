@@ -1,4 +1,17 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Fetch config on page load
+    let appConfig;
+    try {
+        const configResponse = await fetch('/api/config');
+        if (!configResponse.ok) {
+            throw new Error(`Failed to fetch config: ${configResponse.status}`);
+        }
+        appConfig = await configResponse.json();
+    } catch (error) {
+        console.error("Error fetching config:", error);
+        appConfig = { maxImageSize: 4 * 1024 * 1024, allowedImageTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff'] };
+    }
+
     // Existing elements
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
@@ -135,6 +148,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const imageFile = formData.get('image');
             const textInput = formData.get('text');
 
+            const maxImageSize = appConfig.maxImageSize;
+            const allowedImageTypes = appConfig.allowedImageTypes;
+
+
+            // Check file size using server config
+            if (imageFile && imageFile.size > maxImageSize) {
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = `Please limit your image to ${maxImageSize/(1024*1024)}mb`;
+                errorContainer.style.display = 'block';
+                processButton.disabled = false;
+                return;
+            }
+
+            // Check file type using server config
+            if (imageFile && !allowedImageTypes.includes(imageFile.type)) {
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = `Please use ${allowedImageTypes.join(', ')} images only`;
+                errorContainer.style.display = 'block';
+                processButton.disabled = false;
+                return;
+            }
+
             // Disable process button and show processing indicator
             processButton.disabled = true;
             processButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing events...';
@@ -148,15 +185,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
+            const errorData = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-                errorModal.show();
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorContainer.style.display = 'block';
+
+                if (errorData.error_type === 'unsafe_prompt') {
+                    errorMessage.textContent = errorData.user_message || errorData.reason || errorData.error;
+                } else if (errorData.user_message) {
+                    errorMessage.textContent = errorData.user_message;
+                } else if (errorData.error) {
+                    errorMessage.textContent = errorData.error;
+                } else {
+                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+                }
+
+                errorContainer.style.display = 'block';
                 processButton.disabled = false;
+                processButton.innerHTML = 'Process';
                 return;
             }
 
-            const data = await response.json();
+            if (!errorData.success) {
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = errorData.error || 'An error occurred while processing your request.';
+                errorContainer.style.display = 'block';
+                processButton.disabled = false;
+                processButton.innerHTML = 'Process';
+                return;
+            }
+            // Hide error message if request is successful
+            document.getElementById('promptErrorContainer').style.display = 'none';
+
+            const data = errorData; // Use the errorData since it contains success/error info
+
             if (data.success) {
                 // Display original input in Calendar Request section
                 if (imageFile) {
@@ -252,10 +317,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const sendButton = chatForm.querySelector('button[type="submit"]');
         const chatInput = document.getElementById('chatInput');
-        
+
         addUserMessage(message);
         chatInput.value = '';
-        
+
         // Disable input and button while processing
         chatInput.disabled = true;
         sendButton.disabled = true;
@@ -325,9 +390,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function displayEvents(events) {
-        if (!events || !Array.isArray(events)) {
-            console.error('Invalid events data:', events);
-            addSystemMessage('Error: Invalid event data received');
+        if (!events) {
+            addSystemMessage('Error: No event data received');
+            return;
+        }
+        if (!Array.isArray(events)) {
+            // Don't log error objects to console
+            addSystemMessage('Error: ' + (events.error || 'Invalid event data received'));
             return;
         }
 

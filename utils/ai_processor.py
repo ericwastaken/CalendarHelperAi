@@ -1,4 +1,3 @@
-
 import os
 import logging
 from openai import OpenAI
@@ -8,7 +7,37 @@ from datetime import datetime
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-client = OpenAI(api_key=OPENAI_API_KEY)
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is not set")
+if not OPENAI_API_KEY.startswith('sk-'):
+    raise ValueError("Invalid OpenAI API key format")
+try:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+except Exception as e:
+    logging.error(f"Error initializing OpenAI client: {str(e)}")
+    raise ValueError("Failed to initialize OpenAI client")
+
+def validate_prompt_safety(text):
+    """Validate if the prompt is safe and calendar-related."""
+    from utils.prompts import SAFETY_VALIDATION_PROMPT
+    messages = [
+        {"role": "system", "content": SAFETY_VALIDATION_PROMPT},
+        {"role": "user", "content": f"Is this prompt safe and calendar-related? Prompt: {text}"}
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+        result = json.loads(response.choices[0].message.content)
+        debug_log(f"Safety validation result: {result}")
+        return result["is_safe"], result["reason"]
+    except Exception as e:
+        debug_log(f"Error in safety validation: {e}")
+        return False, "Safety validation failed"
+
 
 # Set up debug logging based on environment variable
 DEBUG_LOGGING = os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true'
@@ -40,6 +69,12 @@ def lookup_address_details(location):
 
 def process_image_and_text(image_data=None, text=None, existing_events=None, timezone=None):
     try:
+        # First validate the prompt safety
+        is_safe, reason = validate_prompt_safety(text)
+        if not is_safe:
+            debug_log(f"Unsafe prompt rejected: {reason}")
+            return {"error": "Your prompt is not supported - The prompt is not related to calendar or event processing."}
+
         messages = []
         current_dt = datetime.now()
         if timezone:
@@ -121,7 +156,7 @@ Always lookup the addresses for all event locations."""
                         "location_address": event.get('location_address', '')
                     }
                     formatted_events.append(formatted_event)
-                
+
                 messages.append({
                     "role": "user",
                     "content": f"Here are the current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}\n\nRespond with the complete updated events including all fields."
@@ -136,66 +171,78 @@ Always lookup the addresses for all event locations."""
         debug_log(json.dumps(messages, indent=2))
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o", 
             messages=messages,
             response_format={"type": "json_object"}
         )
 
+        if not response or not response.choices or not response.choices[0].message:
+            debug_log("Invalid response structure from OpenAI")
+            raise Exception("initial_process_failed")
+
         response_content = response.choices[0].message.content
+        if not response_content:
+            debug_log("Empty response content from OpenAI")
+            raise Exception("no_events_found")
+
         debug_log(f"OpenAI response: {response_content}")
 
-        events = json.loads(response_content)['events']
+        parsed_response = json.loads(response_content)
+        events = parsed_response.get('events', [])
 
+        if not events or len(events) == 0:
+            debug_log("No events found in response")
+            raise Exception("no_events_found")
+            
         # Process and validate dates for all events
-        if events:
-            for event in events:
+        for event in events:
+            try:
+                # Ensure proper ISO format for dates
+                start_time = event.get('start_time', '')
+                end_time = event.get('end_time', '')
+
+                # Convert to datetime objects to validate
+                datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                debug_log(f"Invalid date format: start={start_time}, end={end_time}")
+                raise Exception("Invalid date format received from AI")
+
+        # Process locations for both initial creation and corrections
+        for event in events:
+            # Ensure both fields exist
+            event['location_name'] = event.get('location_name', '').strip()
+            event['location_address'] = event.get('location_address', '').strip()
+
+            # Do address lookup if we have a location to process
+            if event['location_name'] or event['location_address']:
+                location_query = f"{event['location_name']} {event['location_address']}".strip()
                 try:
-                    # Ensure proper ISO format for dates
-                    start_time = event.get('start_time', '')
-                    end_time = event.get('end_time', '')
-                    
-                    # Convert to datetime objects to validate
-                    datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                    datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-                except (ValueError, AttributeError):
-                    debug_log(f"Invalid date format: start={start_time}, end={end_time}")
-                    raise Exception("Invalid date format received from AI")
+                    address_details = lookup_address_details(location_query)
+                    if address_details:
+                        event['location_details'] = address_details
+                        # Always update the location address with full details
+                        full_address_parts = [
+                            address_details.get('street_address'),
+                            address_details.get('city'),
+                            address_details.get('state'),
+                            address_details.get('postal_code'),
+                            address_details.get('country')
+                        ]
+                        event['location_address'] = ', '.join(filter(None, full_address_parts))
 
-            # Process locations for both initial creation and corrections
-            for event in events:
-                # Ensure both fields exist
-                event['location_name'] = event.get('location_name', '').strip()
-                event['location_address'] = event.get('location_address', '').strip()
-
-                # Do address lookup if we have a location to process
-                if event['location_name'] or event['location_address']:
-                    location_query = f"{event['location_name']} {event['location_address']}".strip()
-                    try:
-                        address_details = lookup_address_details(location_query)
-                        if address_details:
-                            event['location_details'] = address_details
-                            # Always update the location address with full details
-                            full_address_parts = [
-                                address_details.get('street_address'),
-                                address_details.get('city'),
-                                address_details.get('state'),
-                                address_details.get('postal_code'),
-                                address_details.get('country')
-                            ]
-                            event['location_address'] = ', '.join(filter(None, full_address_parts))
-
-                        # Always create combined display version
-                        if event['location_name'] and event['location_address']:
-                            event['location'] = f"{event['location_name']} - {event['location_address']}"
-                        elif event['location_name']:
-                            event['location'] = event['location_name']
-                        elif event['location_address']:
-                            event['location'] = event['location_address']
-                        else:
-                            event['location'] = ''
-                    except Exception as e:
-                        logging.error(f"Address lookup failed for {location_query}: {str(e)}")
-                        raise Exception("address_lookup_failed")
+                    # Always create combined display version
+                    if event['location_name'] and event['location_address']:
+                        event['location'] = f"{event['location_name']} - {event['location_address']}"
+                    elif event['location_name']:
+                        event['location'] = event['location_name']
+                    elif event['location_address']:
+                        event['location'] = event['location_address']
+                    else:
+                        event['location'] = ''
+                except Exception as e:
+                    logging.error(f"Address lookup failed for {location_query}: {str(e)}")
+                    raise Exception("address_lookup_failed")
 
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
@@ -204,5 +251,10 @@ Always lookup the addresses for all event locations."""
         logging.error(error_msg)
         raise Exception("initial_process_failed")
     except Exception as e:
-        logging.error(f"Unexpected error in initial process: {str(e)}")
-        raise Exception("initial_process_failed")
+        error_type = str(e)
+        logging.error(f"Unexpected error in initial process: {error_type}")
+        # If it's our known error type, propagate it directly
+        if error_type in ["no_events_found", "address_lookup_failed"]:
+            raise
+        # Otherwise wrap unknown errors
+        raise Exception("initial_process_failed") from e
