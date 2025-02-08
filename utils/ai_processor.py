@@ -58,8 +58,8 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
 
             # Handle location prompt from session
-            from flask import session
-            location = session.get('location', {})
+        from flask import session
+        location = session.get('location', {})
             current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
 - If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
 - If an event country is not provided, assume: '{location.get('country', 'unknown')}'
