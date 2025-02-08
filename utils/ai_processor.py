@@ -189,8 +189,13 @@ Always lookup the addresses for all event locations."""
             
         debug_log(f"OpenAI response: {response_content}")
 
-        events = json.loads(response_content)['events']
-
+        parsed_response = json.loads(response_content)
+        events = parsed_response.get('events', [])
+        
+        if not events:
+            debug_log("No events found in response")
+            raise Exception("no_events_found")
+            
         # Process and validate dates for all events
         if events:
             for event in events:

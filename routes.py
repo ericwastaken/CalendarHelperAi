@@ -34,12 +34,12 @@ def process():
 
         if image:
             from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
-            
+
             # Validate file size
             image.seek(0, 2)  # Seek to end
             size = image.tell()
             image.seek(0)  # Reset file pointer
-            
+
             if size > MAX_IMAGE_SIZE:
                 return jsonify({
                     'success': False,
@@ -64,7 +64,7 @@ def process():
         # Process with AI
         try:
             result = process_image_and_text(image_data, text, None, timezone)
-            
+
             # Check if there was a safety validation error
             if isinstance(result, dict) and 'error' in result:
                 return jsonify({
@@ -100,6 +100,14 @@ def process():
     except Exception as e:
         error_type = str(e)
         app.logger.error(f"Process error in session {session.get('session_id', 'unknown')}: {error_type}", exc_info=True)
+
+        if error_type == "no_events_found":
+            return jsonify({
+                'success': False,
+                'error_type': 'no_events_found',
+                'user_message': 'Error processing your image. Make sure there are events in the image and perhaps try with a different photo.'
+            }), 400
+
         return jsonify({
             'success': False,
             'error_type': error_type,
