@@ -190,11 +190,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (!response.ok) {
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
+                errorContainer.style.display = 'block';
 
                 if (errorData.error_type === 'unsafe_prompt') {
                     errorMessage.textContent = errorData.error;
                 } else if (errorData.user_message) {
                     errorMessage.textContent = errorData.user_message;
+                } else if (errorData.error) {
+                    errorMessage.textContent = errorData.error;
                 } else {
                     errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
                 }
