@@ -150,6 +150,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!response.ok) {
                 const errorData = await response.json();
+                if (errorData.error_type === 'unsafe_prompt') {
+                    addSystemMessage(errorData.user_message + ' - ' + errorData.reason);
+                    processButton.disabled = false;
+                    processButton.innerHTML = 'Process';
+                    return;
+                }
                 const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
                 errorModal.show();
                 processButton.disabled = false;
@@ -252,10 +258,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const sendButton = chatForm.querySelector('button[type="submit"]');
         const chatInput = document.getElementById('chatInput');
-        
+
         addUserMessage(message);
         chatInput.value = '';
-        
+
         // Disable input and button while processing
         chatInput.disabled = true;
         sendButton.disabled = true;
