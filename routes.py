@@ -63,9 +63,7 @@ def process():
         timezone = request.headers.get('X-Timezone', 'UTC')
         # Process with AI
         try:
-            try:
             result = process_image_and_text(image_data, text, None, timezone)
-        except Exception as e:
             error_msg = str(e)
             if error_msg == "no_events_found":
                 return jsonify({
