@@ -163,10 +163,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
 
             // Check file type using server config
-            if (imageFile && !allowedImageTypes.has(imageFile.type)) {
+            if (imageFile && !allowedImageTypes.includes(imageFile.type)) {
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
-                errorMessage.textContent = `Please use ${Array.from(allowedImageTypes).join(', ')} images only`;
+                errorMessage.textContent = `Please use ${allowedImageTypes.join(', ')} images only`;
                 errorContainer.style.display = 'block';
                 processButton.disabled = false;
                 return;
@@ -185,26 +185,40 @@ document.addEventListener('DOMContentLoaded', async function() {
                 body: formData
             });
 
+            const errorData = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+
                 if (errorData.error_type === 'unsafe_prompt') {
-                    const errorContainer = document.getElementById('promptErrorContainer');
-                    const errorMessage = document.getElementById('promptErrorMessage');
                     errorMessage.textContent = errorData.error;
-                    errorContainer.style.display = 'block';
-                    processButton.disabled = false;
-                    processButton.innerHTML = 'Process';
-                    return;
+                } else if (errorData.user_message) {
+                    errorMessage.textContent = errorData.user_message;
+                } else {
+                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
                 }
-                const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-                errorModal.show();
+
+                errorContainer.style.display = 'block';
                 processButton.disabled = false;
+                processButton.innerHTML = 'Process';
+                return;
+            }
+
+            if (!errorData.success) {
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = errorData.error || 'An error occurred while processing your request.';
+                errorContainer.style.display = 'block';
+                processButton.disabled = false;
+                processButton.innerHTML = 'Process';
                 return;
             }
             // Hide error message if request is successful
             document.getElementById('promptErrorContainer').style.display = 'none';
 
-            const data = await response.json();
+            const data = errorData; // Use the errorData since it contains success/error info
+
             if (data.success) {
                 // Display original input in Calendar Request section
                 if (imageFile) {
