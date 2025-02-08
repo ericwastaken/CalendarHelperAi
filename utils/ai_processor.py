@@ -20,10 +20,9 @@ except Exception as e:
 
 def validate_prompt_safety(text):
     """Validate if the prompt is safe and calendar-related."""
+    from utils.prompts import SAFETY_VALIDATION_PROMPT
     messages = [
-        {"role": "system", "content": """You are a safety validation system. Your task is to determine if the given prompt is appropriate and related to calendar/event processing. 
-        Only return a JSON response with format: {"is_safe": true/false, "reason": "explanation"}
-        Approve ONLY calendar and event-related requests. Reject anything else."""},
+        {"role": "system", "content": SAFETY_VALIDATION_PROMPT},
         {"role": "user", "content": f"Is this prompt safe and calendar-related? Prompt: {text}"}
     ]
 
