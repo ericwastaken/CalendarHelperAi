@@ -25,9 +25,14 @@ This chatbot solves this problem in seconds.
 2. **Set up environment variables:**
    ```bash
    export OPENAI_API_KEY=your_api_key
-   export FLASK_SECRET_KEY=your_secret_key
+   # Generate a random secret key for Flask session security
+   # You can use Python to generate one:
+   # python -c 'import secrets; print(secrets.token_hex(16))'
+   export FLASK_SECRET_KEY=your_random_secret_key
    export DEBUG_LOGGING=false
    ```
+
+   Note: The FLASK_SECRET_KEY should be a random, secure string used to encrypt session data. Never share this key or commit it to version control. You can generate a secure key using Python's secrets module as shown in the comment above.
 
 3. **Install dependencies:**
    ```bash
