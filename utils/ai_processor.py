@@ -52,10 +52,10 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
 - The current time is {current_dt.strftime('%H:%M')}.
 - The current timezone is {timezone or 'UTC'}."""
 
-        system_message = os.environ.get('OPENAI_SYSTEM_PROMPT')
-        if system_message:
-            # Handle date prompt
-            system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
+        from utils.prompts import CALENDAR_SYSTEM_PROMPT
+        system_message = CALENDAR_SYSTEM_PROMPT
+        # Handle date prompt
+        system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
 
             # Handle location prompt from session
             from flask import session
