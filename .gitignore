@@ -5,3 +5,6 @@ __pycache__/
 
 # Environment variables
 .env
+
+# Attached Assets directory
+attached_assets
