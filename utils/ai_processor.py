@@ -10,7 +10,13 @@ from datetime import datetime
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set")
-client = OpenAI(api_key=OPENAI_API_KEY)
+if not OPENAI_API_KEY.startswith('sk-'):
+    raise ValueError("Invalid OpenAI API key format")
+try:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+except Exception as e:
+    logging.error(f"Error initializing OpenAI client: {str(e)}")
+    raise ValueError("Failed to initialize OpenAI client")
 
 def validate_prompt_safety(text):
     """Validate if the prompt is safe and calendar-related."""
