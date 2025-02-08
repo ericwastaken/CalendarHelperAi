@@ -64,7 +64,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
 - If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
 - If an event country is not provided, assume: '{location.get('country', 'unknown')}'
 Always lookup the addresses for all event locations."""
-            system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
+        system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
 
         debug_log(f"System prompt: {system_message}")
         debug_log(f"Current date and location prompts applied")
