@@ -64,18 +64,6 @@ def process():
         # Process with AI
         try:
             result = process_image_and_text(image_data, text, None, timezone)
-            error_msg = str(e)
-            if error_msg == "no_events_found":
-                return jsonify({
-                    'success': False,
-                    'error_type': 'no_events',
-                    'error': 'Error processing your image. Make sure there are events in the image and perhaps try with a different photo.'
-                }), 400
-            return jsonify({
-                'success': False,
-                'error_type': 'process_error',
-                'error': 'An error occurred while processing your request.'
-            }), 400
 
             # Check if there was a safety validation error
             if isinstance(result, dict) and 'error' in result:

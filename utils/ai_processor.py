@@ -190,60 +190,59 @@ Always lookup the addresses for all event locations."""
         parsed_response = json.loads(response_content)
         events = parsed_response.get('events', [])
 
-        if not events:
+        if not events or len(events) == 0:
             debug_log("No events found in response")
             raise Exception("no_events_found")
 
         # Process and validate dates for all events
-        if events:
-            for event in events:
+        for event in events:
+            try:
+                # Ensure proper ISO format for dates
+                start_time = event.get('start_time', '')
+                end_time = event.get('end_time', '')
+
+                # Convert to datetime objects to validate
+                datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                debug_log(f"Invalid date format: start={start_time}, end={end_time}")
+                raise Exception("Invalid date format received from AI")
+
+        # Process locations for both initial creation and corrections
+        for event in events:
+            # Ensure both fields exist
+            event['location_name'] = event.get('location_name', '').strip()
+            event['location_address'] = event.get('location_address', '').strip()
+
+            # Do address lookup if we have a location to process
+            if event['location_name'] or event['location_address']:
+                location_query = f"{event['location_name']} {event['location_address']}".strip()
                 try:
-                    # Ensure proper ISO format for dates
-                    start_time = event.get('start_time', '')
-                    end_time = event.get('end_time', '')
+                    address_details = lookup_address_details(location_query)
+                    if address_details:
+                        event['location_details'] = address_details
+                        # Always update the location address with full details
+                        full_address_parts = [
+                            address_details.get('street_address'),
+                            address_details.get('city'),
+                            address_details.get('state'),
+                            address_details.get('postal_code'),
+                            address_details.get('country')
+                        ]
+                        event['location_address'] = ', '.join(filter(None, full_address_parts))
 
-                    # Convert to datetime objects to validate
-                    datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                    datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-                except (ValueError, AttributeError):
-                    debug_log(f"Invalid date format: start={start_time}, end={end_time}")
-                    raise Exception("Invalid date format received from AI")
-
-            # Process locations for both initial creation and corrections
-            for event in events:
-                # Ensure both fields exist
-                event['location_name'] = event.get('location_name', '').strip()
-                event['location_address'] = event.get('location_address', '').strip()
-
-                # Do address lookup if we have a location to process
-                if event['location_name'] or event['location_address']:
-                    location_query = f"{event['location_name']} {event['location_address']}".strip()
-                    try:
-                        address_details = lookup_address_details(location_query)
-                        if address_details:
-                            event['location_details'] = address_details
-                            # Always update the location address with full details
-                            full_address_parts = [
-                                address_details.get('street_address'),
-                                address_details.get('city'),
-                                address_details.get('state'),
-                                address_details.get('postal_code'),
-                                address_details.get('country')
-                            ]
-                            event['location_address'] = ', '.join(filter(None, full_address_parts))
-
-                        # Always create combined display version
-                        if event['location_name'] and event['location_address']:
-                            event['location'] = f"{event['location_name']} - {event['location_address']}"
-                        elif event['location_name']:
-                            event['location'] = event['location_name']
-                        elif event['location_address']:
-                            event['location'] = event['location_address']
-                        else:
-                            event['location'] = ''
-                    except Exception as e:
-                        logging.error(f"Address lookup failed for {location_query}: {str(e)}")
-                        raise Exception("address_lookup_failed")
+                    # Always create combined display version
+                    if event['location_name'] and event['location_address']:
+                        event['location'] = f"{event['location_name']} - {event['location_address']}"
+                    elif event['location_name']:
+                        event['location'] = event['location_name']
+                    elif event['location_address']:
+                        event['location'] = event['location_address']
+                    else:
+                        event['location'] = ''
+                except Exception as e:
+                    logging.error(f"Address lookup failed for {location_query}: {str(e)}")
+                    raise Exception("address_lookup_failed")
 
         debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
