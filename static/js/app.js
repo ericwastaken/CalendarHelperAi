@@ -1,4 +1,17 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Fetch config on page load
+    let appConfig;
+    try {
+        const configResponse = await fetch('/api/config');
+        if (!configResponse.ok) {
+            throw new Error(`Failed to fetch config: ${configResponse.status}`);
+        }
+        appConfig = await configResponse.json();
+    } catch (error) {
+        console.error("Error fetching config:", error);
+        appConfig = { maxImageSize: 4 * 1024 * 1024, allowedImageTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff'] };
+    }
+
     // Existing elements
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
@@ -135,24 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const imageFile = formData.get('image');
             const textInput = formData.get('text');
 
-            // Fetch config from backend
-            let config;
-            try {
-                const configResponse = await fetch('/api/config');
-                if (!configResponse.ok) {
-                    throw new Error(`Failed to fetch config: ${configResponse.status}`);
-                }
-                config = await configResponse.json();
-            } catch (error) {
-                console.error("Error fetching config:", error);
-                // Handle error appropriately, e.g., fallback to default values or display an error message.
-                // For this example, I'll use default values:
-                config = { maxImageSize: 4 * 1024 * 1024, allowedImageTypes: new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/tiff']) };
-            }
-
-
-            const maxImageSize = config.maxImageSize;
-            const allowedImageTypes = config.allowedImageTypes;
+            const maxImageSize = appConfig.maxImageSize;
+            const allowedImageTypes = appConfig.allowedImageTypes;
 
 
             // Check file size using server config
