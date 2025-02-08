@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 errorContainer.style.display = 'block';
 
                 if (errorData.error_type === 'unsafe_prompt') {
-                    errorMessage.textContent = errorData.error;
+                    errorMessage.textContent = errorData.user_message || errorData.reason || errorData.error;
                 } else if (errorData.user_message) {
                     errorMessage.textContent = errorData.user_message;
                 } else if (errorData.error) {
