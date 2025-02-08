@@ -61,10 +61,10 @@ def process():
 
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
-        # Process with AI
+        
         try:
             result = process_image_and_text(image_data, text, None, timezone)
-
+            
             # Check if there was a safety validation error
             if isinstance(result, dict) and 'error' in result:
                 return jsonify({
@@ -75,29 +75,41 @@ def process():
                 }), 400
 
             if not result or not isinstance(result, list):
-                app.logger.error(f"Invalid result format: {result}")
-                return jsonify({
-                    'success': False,
-                    'error_type': 'processing_error',
-                    'user_message': 'Error processing the request'
-                }), 400
+                raise Exception("invalid_result_format")
+
+            # Store in session and return success
+            session['current_events'] = result
+            return jsonify({
+                'success': True,
+                'events': result
+            })
 
         except Exception as e:
             error_type = str(e)
             app.logger.error(f"Process error: {error_type}", exc_info=True)
 
-            if error_type == "no_events_found":
-                return jsonify({
-                    'success': False,
+            error_messages = {
+                "no_events_found": {
                     'error_type': 'no_events',
                     'error': 'No events were found in the image. Please try with a different photo that contains calendar events.'
-                }), 400
+                },
+                "invalid_result_format": {
+                    'error_type': 'processing_error',
+                    'error': 'Invalid result format received'
+                },
+                "initial_process_failed": {
+                    'error_type': 'processing_error',
+                    'error': 'Error processing the request'
+                }
+            }
 
-            return jsonify({
-                'success': False,
+            response_data = error_messages.get(error_type, {
                 'error_type': 'processing_error',
-                'user_message': 'Error processing the request'
-            }), 400
+                'error': 'An unexpected error occurred'
+            })
+            response_data['success'] = False
+            
+            return jsonify(response_data), 400
 
         # Store in session
         session['current_events'] = result
