@@ -1,18 +1,25 @@
 git clone https://github.com/yourusername/calendar-helper-ai.git
+```
+
+## Getting Started
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/calendar-helper-ai.git
+   ```
+2. **Set up environment variables:**
+   ```bash
+   export OPENAI_API_KEY=your_api_key
+   export FLASK_SECRET_KEY=your_secret_key
+   export DEBUG_LOGGING=false
    ```
 
-2. Install dependencies:
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Set environment variables:
-   ```bash
-   export OPENAI_API_KEY=your_api_key
-   export FLASK_SECRET_KEY=your_secret_key
-   ```
-
-2. Run the application:
+4. **Run the application:**
    ```bash
    python main.py
    ```
@@ -29,7 +36,7 @@ The application will be available at port 5000.
 ## Project Structure
 
 ```
-├── app.py                 # Flask app initialization
+├── app.py                 # Flask application setup
 ├── routes.py             # API endpoints
 ├── utils/
 │   ├── ai_processor.py   # OpenAI integration
@@ -41,8 +48,8 @@ The application will be available at port 5000.
 
 ## Contributing
 
-1. Fork the project on Replit
-2. Create a new branch for your feature
+1. Fork this project
+2. Create your feature branch
 3. Make your changes
 4. Test thoroughly
 5. Submit a pull request with a clear description of your changes
@@ -54,7 +61,7 @@ The application will be available at port 5000.
 - Update documentation as needed
 - Include tests for new features
 
-## Privacy & Data Handling
+## Privacy & Security
 
 - Images and text are processed temporarily in memory only
 - No data is permanently stored
