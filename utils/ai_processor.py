@@ -173,12 +173,20 @@ Always lookup the addresses for all event locations."""
         debug_log(json.dumps(messages, indent=2))
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o", 
             messages=messages,
             response_format={"type": "json_object"}
         )
-
+        
+        if not response or not response.choices or not response.choices[0].message:
+            debug_log("Invalid response structure from OpenAI")
+            raise Exception("initial_process_failed")
+            
         response_content = response.choices[0].message.content
+        if not response_content:
+            debug_log("Empty response content from OpenAI")
+            raise Exception("initial_process_failed")
+            
         debug_log(f"OpenAI response: {response_content}")
 
         events = json.loads(response_content)['events']
