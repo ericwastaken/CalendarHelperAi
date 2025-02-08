@@ -1,0 +1,23 @@
+[2025-02-08 08:10:13,378] DEBUG in _base_client: HTTP Response: POST https://api.openai.com/v1/chat/completions "200 OK" Headers({'date': 'Sat, 08 Feb 2025 08:10:13 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'user-r8fvvzrst5hfap7jphqbxk6c', 'openai-processing-ms': '2466', 'openai-version': '2020-10-01', 'x-ratelimit-limit-input-images': '50000', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-limit-tokens': '800000', 'x-ratelimit-remaining-input-images': '49999', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-remaining-tokens': '798760', 'x-ratelimit-reset-input-images': '1ms', 'x-ratelimit-reset-requests': '12ms', 'x-ratelimit-reset-tokens': '92ms', 'x-request-id': 'req_b81e3f2a2f3500b15dd72a5643722242', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '90ea243cac9badc9-ATL', 'content-encoding': 'gzip', 'alt-svc': 'h3=":443"; ma=86400'})
+[2025-02-08 08:10:13,378] DEBUG in _base_client: request_id: req_b81e3f2a2f3500b15dd72a5643722242
+[2025-02-08 08:10:13,379] DEBUG in ai_processor: OpenAI response: None
+[2025-02-08 08:10:13,379] ERROR in ai_processor: Unexpected error in initial process: the JSON object must be str, bytes or bytearray, not NoneType
+[2025-02-08 08:10:13,379] ERROR in routes: Process error: initial_process_failed
+Traceback (most recent call last):
+  File "/home/runner/workspace/utils/ai_processor.py", line 178, in process_image_and_text
+    events = json.loads(response_content)['events']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/json/__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/routes.py", line 66, in process
+    result = process_image_and_text(image_data, text, None, timezone)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/utils/ai_processor.py", line 239, in process_image_and_text
+    raise Exception("initial_process_failed")
+Exception: initial_process_failed
+[2025-02-08 08:10:13,382] INFO in _internal: 172.31.128.88 - - [08/Feb/2025 08:10:13] "POST /process HTTP/1.1" 400 -
