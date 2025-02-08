@@ -1,3 +1,34 @@
+git clone https://github.com/yourusername/calendar-helper-ai.git
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set environment variables:
+   ```bash
+   export OPENAI_API_KEY=your_api_key
+   export FLASK_SECRET_KEY=your_secret_key
+   ```
+
+2. Run the application:
+   ```bash
+   python main.py
+   ```
+
+The application will be available at port 5000.
+
+## API Endpoints
+
+- `GET /`: Main application interface
+- `POST /process`: Process image/text and generate events
+- `POST /correct`: Apply corrections to existing events
+- `POST /download-ics`: Generate and download iCalendar file
+
+## Project Structure
+
+```
 ├── app.py                 # Flask app initialization
 ├── routes.py             # API endpoints
 ├── utils/
@@ -22,6 +53,13 @@
 - Add comments for complex logic
 - Update documentation as needed
 - Include tests for new features
+
+## Privacy & Data Handling
+
+- Images and text are processed temporarily in memory only
+- No data is permanently stored
+- All processing complies with GDPR, CCPA, and LGPD requirements
+- See `static/terms.html` for complete terms of service
 
 ## License
 
