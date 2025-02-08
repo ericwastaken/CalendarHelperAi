@@ -5,7 +5,15 @@ from app import app
 from utils.ai_processor import process_image_and_text
 from utils.calendar import generate_ics
 from utils.location_service import get_client_ip, get_location_from_ip
+from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
 import uuid
+
+@app.route('/api/config')
+def get_config():
+    return jsonify({
+        'maxImageSize': MAX_IMAGE_SIZE,
+        'allowedImageTypes': list(ALLOWED_IMAGE_TYPES)
+    })
 
 @app.route('/')
 def index():

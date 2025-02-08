@@ -135,28 +135,44 @@ document.addEventListener('DOMContentLoaded', function() {
             const imageFile = formData.get('image');
             const textInput = formData.get('text');
 
-            // Validate image if one was uploaded
-            if (imageFile) {
-                // Check file size (4MB = 4 * 1024 * 1024 bytes)
-                if (imageFile.size > 4 * 1024 * 1024) {
-                    const errorContainer = document.getElementById('promptErrorContainer');
-                    const errorMessage = document.getElementById('promptErrorMessage');
-                    errorMessage.textContent = "Please limit your image to 4mb";
-                    errorContainer.style.display = 'block';
-                    processButton.disabled = false;
-                    return;
+            // Fetch config from backend
+            let config;
+            try {
+                const configResponse = await fetch('/api/config');
+                if (!configResponse.ok) {
+                    throw new Error(`Failed to fetch config: ${configResponse.status}`);
                 }
+                config = await configResponse.json();
+            } catch (error) {
+                console.error("Error fetching config:", error);
+                // Handle error appropriately, e.g., fallback to default values or display an error message.
+                // For this example, I'll use default values:
+                config = { maxImageSize: 4 * 1024 * 1024, allowedImageTypes: new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/tiff']) };
+            }
 
-                // Check file type
-                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff'];
-                if (!validTypes.includes(imageFile.type)) {
-                    const errorContainer = document.getElementById('promptErrorContainer');
-                    const errorMessage = document.getElementById('promptErrorMessage');
-                    errorMessage.textContent = "Please use png, jpg, jpeg, or tiff images only";
-                    errorContainer.style.display = 'block';
-                    processButton.disabled = false;
-                    return;
-                }
+
+            const maxImageSize = config.maxImageSize;
+            const allowedImageTypes = config.allowedImageTypes;
+
+
+            // Check file size using server config
+            if (imageFile && imageFile.size > maxImageSize) {
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = `Please limit your image to ${maxImageSize/(1024*1024)}mb`;
+                errorContainer.style.display = 'block';
+                processButton.disabled = false;
+                return;
+            }
+
+            // Check file type using server config
+            if (imageFile && !allowedImageTypes.has(imageFile.type)) {
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = `Please use ${Array.from(allowedImageTypes).join(', ')} images only`;
+                errorContainer.style.display = 'block';
+                processButton.disabled = false;
+                return;
             }
 
             // Disable process button and show processing indicator
