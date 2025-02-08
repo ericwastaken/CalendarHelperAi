@@ -23,6 +23,7 @@ Approve requests that are:
 2. Requests that reference images containing calendar events or appointments
 3. Requests to extract or process events from images
 4. Requests to modify or update existing calendar events
+5. Requests related to looking up an address to an establishment or event or address corrections
 
 The prompt may refer to an image that will be provided separately along with the prompt.
 Example valid prompts:
@@ -31,6 +32,8 @@ Example valid prompts:
 - "What events are shown in this image?"
 - "Get the calendar events"
 - "Update the event time"
+- "The address to lunch is in Davenport, florida on Lara Lane street"
+- "The date for the Lunch event should be one week from today"
 
 Reject requests that are:
 1. Not related to calendars or events
