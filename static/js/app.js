@@ -151,7 +151,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 const errorData = await response.json();
                 if (errorData.error_type === 'unsafe_prompt') {
-                    addSystemMessage(errorData.user_message + ' - ' + errorData.reason);
+                    const errorContainer = document.getElementById('promptErrorContainer');
+                    const errorMessage = document.getElementById('promptErrorMessage');
+                    errorMessage.textContent = errorData.user_message + ' - ' + errorData.reason;
+                    errorContainer.style.display = 'block';
                     processButton.disabled = false;
                     processButton.innerHTML = 'Process';
                     return;
@@ -161,6 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 processButton.disabled = false;
                 return;
             }
+            // Hide error message if request is successful
+            document.getElementById('promptErrorContainer').style.display = 'none';
 
             const data = await response.json();
             if (data.success) {
