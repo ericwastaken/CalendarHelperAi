@@ -193,7 +193,7 @@ Always lookup the addresses for all event locations."""
         if not events or len(events) == 0:
             debug_log("No events found in response")
             raise Exception("no_events_found")
-
+            
         # Process and validate dates for all events
         for event in events:
             try:

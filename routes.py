@@ -84,10 +84,23 @@ def process():
 
         except Exception as e:
             app.logger.error(f"Process error: {str(e)}", exc_info=True)
+            error_type = str(e)
+            if error_type == "no_events_found":
+                return jsonify({
+                    'success': False,
+                    'error_type': 'no_events',
+                    'error': 'No events were found in the image. Please try with a different photo that contains calendar events.'
+                }), 400
+            elif error_type in ["initial_process_failed", "address_lookup_failed"]:
+                return jsonify({
+                    'success': False,
+                    'error_type': error_type,
+                    'error': 'There was an error processing your request. Please try again.'
+                }), 400
             return jsonify({
                 'success': False,
-                'error_type': 'processing_error',
-                'user_message': 'Error processing the request'
+                'error_type': 'unknown_error',
+                'error': 'An unexpected error occurred. Please try again.'
             }), 400
 
         # Store in session
