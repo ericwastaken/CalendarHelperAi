@@ -62,15 +62,32 @@ def process():
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
         # Process with AI
-        result = process_image_and_text(image_data, text, None, timezone)
-        
-        # Check if there was a safety validation error
-        if isinstance(result, dict) and 'error' in result:
+        try:
+            result = process_image_and_text(image_data, text, None, timezone)
+            
+            # Check if there was a safety validation error
+            if isinstance(result, dict) and 'error' in result:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'user_message': result['error'],
+                    'reason': result.get('reason', '')
+                }), 400
+
+            if not result or not isinstance(result, list):
+                app.logger.error(f"Invalid result format: {result}")
+                return jsonify({
+                    'success': False,
+                    'error_type': 'processing_error',
+                    'user_message': 'Error processing the request'
+                }), 400
+
+        except Exception as e:
+            app.logger.error(f"Process error: {str(e)}", exc_info=True)
             return jsonify({
                 'success': False,
-                'error_type': 'unsafe_prompt',
-                'user_message': result['error'],
-                'reason': result.get('reason', '')
+                'error_type': 'processing_error',
+                'user_message': 'Error processing the request'
             }), 400
 
         # Store in session
