@@ -152,7 +152,7 @@ def process_corrections(text, existing_events, timezone=None):
         )
 
         response_content = response.choices[0].message.content
-        debug_log(f"OpenAI response: {response_content}")
+        debug_log(f"OpenAI response: {response_content}") # Added logging here
 
         parsed_response = json.loads(response_content)
         events = parsed_response.get('events', [])
