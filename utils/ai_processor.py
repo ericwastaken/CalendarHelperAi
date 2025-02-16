@@ -85,35 +85,62 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
             return {"error": "Your prompt is not supported - The prompt is not related to calendar or event processing."}
 
         messages = []
-        current_dt = datetime.now()
-        if timezone:
-            from zoneinfo import ZoneInfo
-            current_dt = datetime.now(ZoneInfo(timezone))
+        
+        # Handle corrections first
+        if existing_events and text:
+            debug_log("Processing correction request")
+            formatted_events = []
+            for event in existing_events:
+                formatted_event = {
+                    "title": event.get('title', ''),
+                    "description": event.get('description', ''),
+                    "start_time": event.get('start_time', ''),
+                    "end_time": event.get('end_time', ''),
+                    "location_name": event.get('location_name', ''),
+                    "location_address": event.get('location_address', '')
+                }
+                formatted_events.append(formatted_event)
 
-        current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
+            from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
+            correction_prompt = CORRECTION_USER_PROMPT.format(
+                events_json=json.dumps(formatted_events, indent=2),
+                correction_text=text
+            )
+            messages = [
+                {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
+                {"role": "user", "content": correction_prompt}
+            ]
+        else:
+            # Handle initial extraction
+            current_dt = datetime.now()
+            if timezone:
+                from zoneinfo import ZoneInfo
+                current_dt = datetime.now(ZoneInfo(timezone))
+
+            current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
 - If the month is not provided, use month {current_dt.month}.
 - If the day is not provided, use day {current_dt.day}.
 - The current time is {current_dt.strftime('%H:%M')}.
 - The current timezone is {timezone or 'UTC'}."""
 
-        from utils.prompts import CALENDAR_SYSTEM_PROMPT
-        system_message = CALENDAR_SYSTEM_PROMPT
-        # Handle date prompt
-        system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
+            from utils.prompts import CALENDAR_SYSTEM_PROMPT
+            system_message = CALENDAR_SYSTEM_PROMPT
+            # Handle date prompt
+            system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
 
             # Handle location prompt from session
-        from flask import session
-        location = session.get('location', {})
-        current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
+            from flask import session
+            location = session.get('location', {})
+            current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
 - If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
 - If an event country is not provided, assume: '{location.get('country', 'unknown')}'
 Always lookup the addresses for all event locations."""
-        system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
+            system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
 
-        debug_log(f"System prompt: {system_message}")
-        debug_log(f"Current date and location prompts applied")
+            debug_log(f"System prompt: {system_message}")
+            debug_log(f"Current date and location prompts applied")
 
-        if not system_message:
+            if not system_message:
             debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
             system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
             Extract event details including title, description, start time, end time, location name, and location address. 
@@ -156,31 +183,7 @@ Always lookup the addresses for all event locations."""
                 ]
             })
         elif text:
-            if existing_events:
-                # Reset messages list for corrections
-                messages = []
-                formatted_events = []
-                for event in existing_events:
-                    formatted_event = {
-                        "title": event.get('title', ''),
-                        "description": event.get('description', ''),
-                        "start_time": event.get('start_time', ''),
-                        "end_time": event.get('end_time', ''),
-                        "location_name": event.get('location_name', ''),
-                        "location_address": event.get('location_address', '')
-                    }
-                    formatted_events.append(formatted_event)
-
-                from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
-                correction_prompt = CORRECTION_USER_PROMPT.format(
-                    events_json=json.dumps(formatted_events, indent=2),
-                    correction_text=text
-                )
-                messages = [
-                    {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
-                    {"role": "user", "content": correction_prompt}
-                ]
-            else:
+            if not existing_events:
                 messages.append({
                     "role": "user",
                     "content": f"Extract calendar events from this text: {text}"
