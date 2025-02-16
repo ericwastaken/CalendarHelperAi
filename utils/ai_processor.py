@@ -160,19 +160,9 @@ Always lookup the addresses for all event locations."""
                     }
                     formatted_events.append(formatted_event)
 
-                # Use a different system prompt for corrections
-                correction_system_prompt = """You are an AI assistant specialized in applying corrections to calendar events. Your task is to apply the requested changes while preserving all unmodified events and their details.
-
-Rules:
-1. Return ALL events, including those not being modified
-2. Only change details that are explicitly mentioned in the correction
-3. Preserve all dates, times, and other information not being changed
-4. Maintain the exact same format for all fields
-
-Respond with JSON in the format: {"events": [{"title": "string", "description": "string", "start_time": "ISO datetime", "end_time": "ISO datetime", "location_name": "string", "location_address": "string"}]}"""
-
+                from utils.prompts import CORRECTION_SYSTEM_PROMPT
                 messages = [
-                    {"role": "system", "content": correction_system_prompt},
+                    {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
                     {"role": "user", "content": f"Current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}"}
                 ]
             else:
