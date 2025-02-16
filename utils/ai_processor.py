@@ -157,9 +157,20 @@ Always lookup the addresses for all event locations."""
                     }
                     formatted_events.append(formatted_event)
 
+                context = f"""Current events to modify:
+{json.dumps(formatted_events, indent=2)}
+
+Requested change: {text}
+
+Instructions:
+1. Return ALL events with the requested changes applied
+2. Keep all existing events and their details
+3. Only modify the specific details mentioned in the requested change
+4. Preserve all dates, times, and other information not explicitly changed"""
+
                 messages.append({
                     "role": "user",
-                    "content": f"Here are the current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}\n\nRespond with the complete updated events including all fields."
+                    "content": context
                 })
             else:
                 messages.append({
