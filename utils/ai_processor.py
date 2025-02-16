@@ -4,6 +4,10 @@ from openai import OpenAI
 import json
 from datetime import datetime, timedelta
 
+class SafetyValidationError(Exception):
+    """Custom exception for safety validation failures"""
+    pass
+
 # Configure OpenAI logging based on environment variables
 openai_http_level = os.environ.get('OPENAI_HTTP_CLIENT_LEVEL', 'ERROR').upper()
 openai_api_level = os.environ.get('OPENAI_API_LEVEL', 'ERROR').upper()
@@ -124,10 +128,7 @@ def process_corrections(text, existing_events, timezone=None):
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
-            # Raise a custom exception class for better error handling
-            class SafetyValidationError(Exception):
-                pass
-            raise SafetyValidationError(f"unsafe_prompt:{reason}")
+            raise SafetyValidationError(reason)
 
         formatted_events = []
         for event in existing_events:
@@ -189,7 +190,7 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
-            raise Exception(f"unsafe_prompt:{reason}")
+            raise SafetyValidationError(reason)
 
         # Prepare current date/time context
         current_dt = datetime.now()

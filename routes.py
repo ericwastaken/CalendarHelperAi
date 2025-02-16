@@ -8,6 +8,9 @@ from utils.location_service import get_client_ip, get_location_from_ip
 from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
 import uuid
 
+class SafetyValidationError(Exception):
+    pass
+
 @app.route('/api/config')
 def get_config():
     return jsonify({
@@ -41,19 +44,11 @@ def process():
             image.seek(0)  # Reset file pointer
 
             if size > MAX_IMAGE_SIZE:
-                return jsonify({
-                    'success': False,
-                    'error_type': 'unsafe_prompt',
-                    'error': 'Please limit your image to 4mb'
-                }), 400
+                raise SafetyValidationError('Please limit your image to 4mb')
 
             # Validate file type
             if image.content_type not in ALLOWED_IMAGE_TYPES:
-                return jsonify({
-                    'success': False,
-                    'error_type': 'unsafe_prompt',
-                    'error': 'Please use png, jpg, jpeg, or tiff images only'
-                }), 400
+                raise SafetyValidationError('Please use png, jpg, jpeg, or tiff images only')
 
             image_data = base64.b64encode(image.read()).decode('utf-8')
         else:
@@ -81,21 +76,13 @@ def process():
             app.logger.error(f"Process error: {error_type}", exc_info=True)
 
             # Handle safety check errors
-            if isinstance(e, Exception) and str(e).startswith('unsafe_prompt:'):
-                try:
-                    reason = str(e).split(':', 1)[1].strip()
-                    return jsonify({
-                        'success': False,
-                        'error_type': 'unsafe_prompt',
-                        'error': 'Your request was rejected for safety reasons.',
-                        'reason': reason
-                    }), 400
-                except:
-                    return jsonify({
-                        'success': False,
-                        'error_type': 'unsafe_prompt',
-                        'error': 'Your request was rejected for safety reasons.'
-                    }), 400
+            if isinstance(e, SafetyValidationError):
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Your request was rejected for safety reasons.',
+                    'reason': str(e) or 'Unknown safety violation'
+                }), 400
 
             error_messages = {
                 "no_events_found": {
@@ -161,24 +148,22 @@ def correct():
             'success': True,
             'events': updated_events
         })
+    except SafetyValidationError as e:
+        return jsonify({
+            'success': False,
+            'error_type': 'unsafe_prompt',
+            'error': 'Your request was rejected for safety reasons.',
+            'reason': str(e) or 'Unknown safety violation',
+            'details': 'Please ensure your correction request is related to calendar events.'
+        }), 400
     except Exception as e:
         error_msg = str(e)
         app.logger.error(f"Correction error: {error_msg}", exc_info=True)
-        
-        # Handle safety validation errors with proper error message extraction
-        if error_msg.startswith('unsafe_prompt:'):
-            reason = str(e).split(':', 1)[1].strip() if ':' in str(e) else 'Unknown safety violation'
+
+        if error_msg in ["initial_process_failed", "address_lookup_failed"]:
             return jsonify({
                 'success': False,
-                'error_type': 'unsafe_prompt',
-                'error': 'Your request was rejected for safety reasons.',
-                'reason': reason,
-                'details': 'Please ensure your correction request is related to calendar events.'
-            }), 400
-        elif error_type in ["initial_process_failed", "address_lookup_failed"]:
-            return jsonify({
-                'success': False,
-                'error_type': error_type,
+                'error_type': error_msg,
                 'user_message': 'There was an error. Please try again in a few seconds.'
             }), 400
         return jsonify({
