@@ -185,76 +185,74 @@ document.addEventListener('DOMContentLoaded', async function() {
                 body: formData
             });
 
-            const errorData = await response.json();
-            const errorContainer = document.getElementById('promptErrorContainer');
-            const errorMessage = document.getElementById('promptErrorMessage');
-            
-            if (!response.ok) {
-                errorContainer.style.display = 'block';
-                if (errorData.reason) {
-                    errorMessage.textContent = errorData.reason;
-                } else if (errorData.user_message) {
-                    errorMessage.textContent = errorData.user_message;
-                } else if (errorData.error) {
-                    errorMessage.textContent = errorData.error;
-                } else {
-                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
-                }
-                processButton.disabled = false;
-                processButton.innerHTML = 'Process';
-                return;
-            }
-
-            if (!errorData.success) {
+            try {
+                const errorData = await response.json();
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
-                errorMessage.textContent = errorData.error || 'An error occurred while processing your request.';
+
+                if (!response.ok || !errorData.success) {
+                    errorContainer.style.display = 'block';
+                    // Priority order for error messages
+                    errorMessage.textContent = 
+                        errorData.reason || 
+                        errorData.user_message || 
+                        errorData.error || 
+                        'An error occurred while processing your request.';
+
+                    processButton.disabled = false;
+                    processButton.innerHTML = 'Process';
+                    return;
+                }
+
+                const data = errorData; // Use the errorData since it contains success/error info
+
+                if (data.success) {
+                    // Display original input in Calendar Request section
+                    if (imageFile) {
+                        const imageUrl = URL.createObjectURL(imageFile);
+                        originalImage.src = imageUrl;
+                        modalImage.src = imageUrl;
+                        originalImageContainer.classList.remove('hidden');
+                    }
+
+                    const displayText = textInput || "Extract the events in this image.";
+                    originalTextContainer.classList.remove('hidden');
+                    originalText.textContent = displayText;
+
+
+                    // Show calendar request section
+                    calendarRequest.classList.remove('hidden');
+
+                    // Show events display
+                    eventsDisplay.classList.remove('hidden');
+                    displayEvents(data.events);
+                    addSystemMessage('Events have been processed.');
+
+                    // Hide upload section and show chat section
+                    uploadSection.classList.add('hidden');
+                    chatSection.classList.remove('hidden');
+
+                    // Show action buttons
+                    actionButtons.style.display = 'flex';
+
+                    // Set 1-hour timeout
+                    clearTimeout(sessionTimeout);
+                    sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
+                } else {
+                    addSystemMessage('Error: ' + data.error);
+                    processButton.disabled = false;
+                }
+            } catch (jsonError) {
+                // Handle JSON parsing errors
+                console.error("Error parsing JSON response:", jsonError);
+                const errorContainer = document.getElementById('promptErrorContainer');
+                const errorMessage = document.getElementById('promptErrorMessage');
+                errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
                 errorContainer.style.display = 'block';
                 processButton.disabled = false;
                 processButton.innerHTML = 'Process';
-                return;
             }
-            // Hide error message if request is successful
-            document.getElementById('promptErrorContainer').style.display = 'none';
 
-            const data = errorData; // Use the errorData since it contains success/error info
-
-            if (data.success) {
-                // Display original input in Calendar Request section
-                if (imageFile) {
-                    const imageUrl = URL.createObjectURL(imageFile);
-                    originalImage.src = imageUrl;
-                    modalImage.src = imageUrl;
-                    originalImageContainer.classList.remove('hidden');
-                }
-
-                const displayText = textInput || "Extract the events in this image.";
-                originalTextContainer.classList.remove('hidden');
-                originalText.textContent = displayText;
-
-
-                // Show calendar request section
-                calendarRequest.classList.remove('hidden');
-
-                // Show events display
-                eventsDisplay.classList.remove('hidden');
-                displayEvents(data.events);
-                addSystemMessage('Events have been processed.');
-
-                // Hide upload section and show chat section
-                uploadSection.classList.add('hidden');
-                chatSection.classList.remove('hidden');
-
-                // Show action buttons
-                actionButtons.style.display = 'flex';
-
-                // Set 1-hour timeout
-                clearTimeout(sessionTimeout);
-                sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
-            } else {
-                addSystemMessage('Error: ' + data.error);
-                processButton.disabled = false;
-            }
         } catch (error) {
             const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
             errorModal.show();
