@@ -85,10 +85,9 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
             return {"error": "There was an issue with your correction."}
 
         messages = []
-        
+
         # Handle corrections first
         if existing_events and text:
-            debug_log("Processing correction request")
             formatted_events = []
             for event in existing_events:
                 formatted_event = {
@@ -106,11 +105,13 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
                 events_json=json.dumps(formatted_events, indent=2),
                 correction_text=text
             )
+            debug_log("Processing correction with existing events")
             messages = [
                 {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
                 {"role": "user", "content": correction_prompt}
             ]
         else:
+            debug_log("Processing initial extraction")
             # Handle initial extraction
             current_dt = datetime.now()
             if timezone:
