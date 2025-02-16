@@ -77,8 +77,8 @@ def process():
             return jsonify({
                 'success': False,
                 'error_type': 'unsafe_prompt',
-                'error': 'Your request was rejected for safety reasons.',
-                'reason': str(e) or 'Unknown safety violation'
+                'error': str(e),
+                'user_message': 'Your request was rejected: ' + str(e)
             }), 400
         except Exception as e:
             error_type = str(e)
