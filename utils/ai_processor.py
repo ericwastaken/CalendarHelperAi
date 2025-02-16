@@ -4,9 +4,14 @@ from openai import OpenAI
 import json
 from datetime import datetime, timedelta
 
-# Configure logging to silence OpenAI client
-logging.getLogger("openai._base_client").setLevel(logging.WARNING)
-logging.getLogger("openai._streaming").setLevel(logging.WARNING)
+# Configure OpenAI logging based on environment variables
+openai_http_level = os.environ.get('OPENAI_HTTP_CLIENT_LEVEL', 'ERROR').upper()
+openai_api_level = os.environ.get('OPENAI_API_LEVEL', 'ERROR').upper()
+
+# Set OpenAI logging levels
+logging.getLogger("openai._base_client").setLevel(getattr(logging, openai_http_level, logging.ERROR))
+logging.getLogger("openai._streaming").setLevel(getattr(logging, openai_api_level, logging.ERROR))
+logging.getLogger("openai._http_client").setLevel(getattr(logging, openai_http_level, logging.ERROR))
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
@@ -180,7 +185,7 @@ Always lookup the addresses for all event locations."""
         for msg in messages:
             sanitized_msg = msg.copy()
             content = msg.get('content')
-            
+
             if isinstance(content, list):
                 sanitized_content = []
                 for item in content:
