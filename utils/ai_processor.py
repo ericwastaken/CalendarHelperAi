@@ -276,5 +276,5 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         if error_type in ["no_events_found", "address_lookup_failed"]:
             raise
         if str(e).startswith('unsafe_prompt:'):
-                raise e
-            raise Exception("initial_process_failed") from e
+            raise e
+        raise Exception("initial_process_failed") from e
