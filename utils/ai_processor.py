@@ -76,6 +76,20 @@ def lookup_address_details(location):
         debug_log(f"Error looking up address: {e}")
         return None
 
+def process_event_dates(event):
+    """Helper function to process and validate event dates"""
+    start_time = event.get('start_time', '')
+    end_time = event.get('end_time')
+
+    start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+    if not end_time:
+        end_dt = start_dt + timedelta(hours=1)
+        event['end_time'] = end_dt.isoformat()
+    else:
+        datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+    
+    return event
+
 def process_location_details(event):
     """Helper function to process location details for an event"""
     event['location_name'] = event.get('location_name', '').strip()
@@ -147,8 +161,9 @@ def process_corrections(text, existing_events, timezone=None):
             debug_log("No events found in response")
             raise Exception("no_events_found")
 
-        # Process locations for corrections
+        # Process dates and locations for corrections
         for event in events:
+            event = process_event_dates(event)
             event = process_location_details(event)
 
         return events
@@ -225,18 +240,8 @@ Always lookup the addresses for all event locations."""
 
         # Process dates and locations
         for event in events:
-            # Validate and process dates
-            start_time = event.get('start_time', '')
-            end_time = event.get('end_time')
-
-            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-            if not end_time:
-                end_dt = start_dt + timedelta(hours=1)
-                event['end_time'] = end_dt.isoformat()
-            else:
-                datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-
-            # Process location details
+            # Process dates and location details
+            event = process_event_dates(event)
             event = process_location_details(event)
 
         return events
