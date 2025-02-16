@@ -77,7 +77,7 @@ def process():
             return jsonify({
                 'success': False,
                 'error_type': 'unsafe_prompt',
-                'error': 'SafetyValidationError',
+                'error': error_message,
                 'reason': error_message,
                 'user_message': error_message
             }), 400
