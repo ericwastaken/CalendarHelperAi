@@ -178,7 +178,11 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
-            return {"error": "There was an issue processing your request."}
+            return {
+                "error": "Your request was rejected for safety reasons.",
+                "error_type": "unsafe_prompt",
+                "reason": reason
+            }
 
         # Prepare current date/time context
         current_dt = datetime.now()
