@@ -143,7 +143,7 @@ def correct():
         timezone = request.headers.get('X-Timezone', 'UTC')
 
         # Process correction with AI
-        updated_events = process_image_and_text(None, correction, events, timezone)
+        updated_events = process_corrections(correction, events, timezone)
 
         # Update session
         session['current_events'] = updated_events

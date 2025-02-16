@@ -76,7 +76,7 @@ def lookup_address_details(location):
         debug_log(f"Error looking up address: {e}")
         return None
 
-def process_image_and_text(image_data=None, text=None, existing_events=None, timezone=None):
+def process_corrections(text, existing_events, timezone=None):
     try:
         # First validate the prompt safety
         is_safe, reason = validate_prompt_safety(text)
@@ -84,13 +84,83 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
             debug_log(f"Unsafe prompt rejected: {reason}")
             return {"error": "There was an issue with your correction."}
 
-        messages = []
+        formatted_events = []
+        for event in existing_events:
+            formatted_event = {
+                "title": event.get('title', ''),
+                "description": event.get('description', ''),
+                "start_time": event.get('start_time', ''),
+                "end_time": event.get('end_time', ''),
+                "location_name": event.get('location_name', ''),
+                "location_address": event.get('location_address', '')
+            }
+            formatted_events.append(formatted_event)
 
-        # Handle corrections first
-        if existing_events and text:
-            formatted_events = []
-            for event in existing_events:
-                formatted_event = {
+        from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
+        correction_prompt = CORRECTION_USER_PROMPT.format(
+            events_json=json.dumps(formatted_events, indent=2),
+            correction_text=text
+        )
+
+        messages = [
+            {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
+            {"role": "user", "content": correction_prompt}
+        ]
+
+        debug_log("Processing correction with correction prompt")
+        debug_log(f"Sending messages to OpenAI: {json.dumps(messages, indent=2)}")
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+
+        response_content = response.choices[0].message.content
+        debug_log(f"OpenAI response: {response_content}")
+
+        parsed_response = json.loads(response_content)
+        events = parsed_response.get('events', [])
+
+        if not events:
+            debug_log("No events found in response")
+            raise Exception("no_events_found")
+
+        # Process locations for corrections
+        for event in events:
+            event['location_name'] = event.get('location_name', '').strip()
+            event['location_address'] = event.get('location_address', '').strip()
+
+            if event['location_name'] or event['location_address']:
+                location_query = f"{event['location_name']} {event['location_address']}".strip()
+                address_details = lookup_address_details(location_query)
+                if address_details:
+                    event['location_details'] = address_details
+                    full_address_parts = [
+                        address_details.get('street_address'),
+                        address_details.get('city'),
+                        address_details.get('state'),
+                        address_details.get('postal_code'),
+                        address_details.get('country')
+                    ]
+                    event['location_address'] = ', '.join(filter(None, full_address_parts))
+                    event['location'] = f"{event['location_name']} - {event['location_address']}" if event['location_name'] else event['location_address']
+
+        return events
+    except Exception as e:
+        error_type = str(e)
+        logging.error(f"Error in correction process: {error_type}")
+        raise
+
+def process_image_and_text(image_data=None, text=None, timezone=None):
+    try:
+        # First validate the prompt safety
+        is_safe, reason = validate_prompt_safety(text)
+        if not is_safe:
+            debug_log(f"Unsafe prompt rejected: {reason}")
+            return {"error": "There was an issue processing your request."}
+
+        messages = []
                     "title": event.get('title', ''),
                     "description": event.get('description', ''),
                     "start_time": event.get('start_time', ''),
