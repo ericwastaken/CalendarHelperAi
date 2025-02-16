@@ -66,10 +66,12 @@ def process():
 
             # Store in session and return success
             session['current_events'] = result
-            return jsonify({
+            response_data = {
                 'success': True,
                 'events': result
-            })
+            }
+            app.logger.debug(f"Sending success response to client: {response_data}")
+            return jsonify(response_data)
 
         except SafetyValidationError as e:
             app.logger.error(f"Process error: {str(e)}", exc_info=True)
@@ -79,7 +81,7 @@ def process():
                 'error_type': 'unsafe_prompt',
                 'user_message': error_message
             }
-            app.logger.debug(f"Sending response to client: {response_data}")
+            app.logger.debug(f"Sending error response to client: {response_data}")
             return jsonify(response_data), 400
         except Exception as e:
             error_type = str(e)
@@ -139,11 +141,13 @@ def correct():
 
         # Update session
         session['current_events'] = updated_events
-
-        return jsonify({
+        
+        response_data = {
             'success': True,
             'events': updated_events
-        })
+        }
+        app.logger.debug(f"Sending corrections response to client: {response_data}")
+        return jsonify(response_data)
     except SafetyValidationError as e:
         return jsonify({
             'success': False,
