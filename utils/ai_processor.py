@@ -171,8 +171,25 @@ Always lookup the addresses for all event locations."""
                     "content": f"Extract calendar events from this text: {text}"
                 })
 
+        # Create sanitized copy of messages for logging
+        sanitized_messages = []
+        for msg in messages:
+            sanitized_msg = msg.copy()
+            if isinstance(msg.get('content'), list):
+                sanitized_content = []
+                for item in msg['content']:
+                    if item['type'] == 'image_url':
+                        sanitized_content.append({
+                            'type': 'image_url',
+                            'image_url': {'url': '[IMAGE DATA REDACTED]'}
+                        })
+                    else:
+                        sanitized_content.append(item)
+                sanitized_msg['content'] = sanitized_content
+            sanitized_messages.append(sanitized_msg)
+
         debug_log("Sending messages to OpenAI:")
-        debug_log(json.dumps(messages, indent=2))
+        debug_log(json.dumps(sanitized_messages, indent=2))
 
         response = client.chat.completions.create(
             model="gpt-4o", 
