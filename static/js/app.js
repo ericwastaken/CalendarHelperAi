@@ -187,18 +187,23 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             try {
                 const errorData = await response.json();
+                console.log('Response received:', errorData);
+                
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
 
                 if (!response.ok || !errorData.success) {
+                    console.log('Error detected, status:', response.status);
+                    console.log('Error data:', errorData);
+                    
                     errorContainer.style.display = 'block';
-                    // Priority order for error messages
-                    errorMessage.textContent = 
-                        errorData.reason || 
-                        errorData.user_message || 
-                        errorData.error || 
-                        'An error occurred while processing your request.';
-
+                    const displayMessage = errorData.reason || 
+                                         errorData.user_message || 
+                                         errorData.error || 
+                                         'An error occurred while processing your request.';
+                    
+                    console.log('Displaying error message:', displayMessage);
+                    errorMessage.textContent = displayMessage;
                     processButton.disabled = false;
                     processButton.innerHTML = 'Process';
                     return;
