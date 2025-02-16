@@ -2,7 +2,7 @@ import os
 import logging
 from openai import OpenAI
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
@@ -157,21 +157,21 @@ Always lookup the addresses for all event locations."""
                     }
                     formatted_events.append(formatted_event)
 
-                context = f"""Current events to modify:
-{json.dumps(formatted_events, indent=2)}
+                # Use a different system prompt for corrections
+                correction_system_prompt = """You are an AI assistant specialized in applying corrections to calendar events. Your task is to apply the requested changes while preserving all unmodified events and their details.
 
-Requested change: {text}
+Rules:
+1. Return ALL events, including those not being modified
+2. Only change details that are explicitly mentioned in the correction
+3. Preserve all dates, times, and other information not being changed
+4. Maintain the exact same format for all fields
 
-Instructions:
-1. Return ALL events with the requested changes applied
-2. Keep all existing events and their details
-3. Only modify the specific details mentioned in the requested change
-4. Preserve all dates, times, and other information not explicitly changed"""
+Respond with JSON in the format: {"events": [{"title": "string", "description": "string", "start_time": "ISO datetime", "end_time": "ISO datetime", "location_name": "string", "location_address": "string"}]}"""
 
-                messages.append({
-                    "role": "user",
-                    "content": context
-                })
+                messages = [
+                    {"role": "system", "content": correction_system_prompt},
+                    {"role": "user", "content": f"Current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}"}
+                ]
             else:
                 messages.append({
                     "role": "user",
@@ -204,7 +204,7 @@ Instructions:
         if not events or len(events) == 0:
             debug_log("No events found in response")
             raise Exception("no_events_found")
-            
+
         # Process and validate dates for all events
         for event in events:
             try:
@@ -214,14 +214,14 @@ Instructions:
 
                 # Convert to datetime objects to validate
                 start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                
+
                 # If end_time is not provided, set it to start_time + 1 hour
                 if not end_time:
                     end_dt = start_dt + timedelta(hours=1)
                     event['end_time'] = end_dt.isoformat()
                 else:
                     datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-                    
+
             except (ValueError, AttributeError):
                 debug_log(f"Invalid date format: start={start_time}, end={end_time}")
                 raise Exception("Invalid date format received from AI")
