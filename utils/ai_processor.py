@@ -169,10 +169,14 @@ Always lookup the addresses for all event locations."""
                     }
                     formatted_events.append(formatted_event)
 
-                from utils.prompts import CORRECTION_SYSTEM_PROMPT
+                from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
+                correction_prompt = CORRECTION_USER_PROMPT.format(
+                    events_json=json.dumps(formatted_events, indent=2),
+                    correction_text=text
+                )
                 messages = [
                     {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Current events:\n{json.dumps(formatted_events, indent=2)}\n\nApply this correction: {text}"}
+                    {"role": "user", "content": correction_prompt}
                 ]
             else:
                 messages.append({

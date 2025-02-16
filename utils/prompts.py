@@ -25,6 +25,13 @@ Rules:
 
 Respond with JSON in the format: {"events": [{"title": "string", "description": "string", "start_time": "ISO datetime", "end_time": "ISO datetime", "location_name": "string", "location_address": "string"}]}"""
 
+CORRECTION_USER_PROMPT = """Here are the current events:
+{events_json}
+
+Apply this correction: {correction_text}
+
+Remember to return ALL events, including those not being modified, and maintain the exact same format."""
+
 SAFETY_VALIDATION_PROMPT = """You are a safety validation system. Your task is to determine if the given prompt is appropriate and related to calendar/event processing. 
 Only return a JSON response with format: {"is_safe": true/false, "reason": "explanation"}
 
