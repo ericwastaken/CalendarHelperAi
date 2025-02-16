@@ -81,7 +81,8 @@ def process():
                 'error_type': 'unsafe_prompt',
                 'user_message': error_message
             }
-            app.logger.info(f"Sending safety validation error to client: {response_data}")
+            app.logger.info(f"Sending safety validation error response to client: {response_data}")
+            app.logger.debug(f"Safety validation error details: {str(e)}")
             return jsonify(response_data), 400
         except Exception as e:
             error_type = str(e)
