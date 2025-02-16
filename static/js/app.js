@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     errorContainer.style.display = 'block';
                     // SafetyValidationError sends 'reason' field
                     // Get error message directly from error field
-                    const displayMessage = errorData.error || 'An error occurred while processing your request.';
+                    const displayMessage = errorData.user_message || 'An error occurred while processing your request.';
                     
                     console.log('Display message selected:', displayMessage);
                     errorMessage.textContent = displayMessage;
