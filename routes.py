@@ -81,9 +81,9 @@ def process():
             app.logger.error(f"Process error: {error_type}", exc_info=True)
 
             # Handle safety check errors
-            if error_type.startswith('unsafe_prompt:'):
+            if isinstance(e, Exception) and str(e).startswith('unsafe_prompt:'):
                 try:
-                    reason = error_type.split(':', 1)[1].strip()
+                    reason = str(e).split(':', 1)[1].strip()
                     return jsonify({
                         'success': False,
                         'error_type': 'unsafe_prompt',
