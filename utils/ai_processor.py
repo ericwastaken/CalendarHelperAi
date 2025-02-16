@@ -140,29 +140,6 @@ Always lookup the addresses for all event locations."""
             debug_log(f"System prompt: {system_message}")
             debug_log(f"Current date and location prompts applied")
 
-            if not system_message:
-            debug_log("OPENAI_SYSTEM_PROMPT not found in environment variables")
-            system_message = f"""You are an AI assistant specialized in interpreting calendar events. 
-            Extract event details including title, description, start time, end time, location name, and location address. 
-            Whenever a date is incomplete, make assumptions based on the following rules:
-            - If the year is not provided, use {current_dt.year}.
-            - If the month is not provided, use month {current_dt.month}.
-            - If the day is not provided, use day {current_dt.day}.
-            For locations, provide both the name of the location (e.g. 'Panera Bread') and its address separately.
-            Respond with JSON in the format:
-            {{
-                "events": [
-                    {{
-                        "title": "string",
-                        "description": "string",
-                        "start_time": "ISO datetime",
-                        "end_time": "ISO datetime",
-                        "location_name": "string",
-                        "location_address": "string"
-                    }}
-                ]
-            }}"""
-
         messages.append({"role": "system", "content": system_message})
 
         if image_data and text:
