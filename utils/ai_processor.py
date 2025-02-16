@@ -130,6 +130,9 @@ Always lookup the addresses for all event locations."""
         messages.append({"role": "system", "content": system_message})
 
         if image_data and text:
+            if os.environ.get('DEBUG_LOG_IMAGE', 'false').lower() == 'true':
+                debug_log(f"Processing image data: {image_data[:100]}...")
+
             messages.append({
                 "role": "user",
                 "content": [
