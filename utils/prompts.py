@@ -1,4 +1,6 @@
 
+ADDRESS_LOOKUP_PROMPT = """You are a location lookup assistant. For the given location, return the full address in JSON format with these fields: street_address, city, state, country, postal_code. Use null for unknown fields."""
+
 CALENDAR_SYSTEM_PROMPT = """You are an AI assistant specialized in interpreting calendar events from potentially confusing written notes, appointment reminder cards and text. Extract as many event details from the provided image including title, description, start time, end time, location name, and location address. The image might contain more than one event. Do not make up an event, only base your response on the image and the provided prompt.
 
 For locations for events, provide both the name of the location (e.g. 'Panera Bread') and its address separately. When an exact address is not provided, make assumptions based on the following location information:

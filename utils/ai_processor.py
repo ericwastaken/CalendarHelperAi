@@ -60,8 +60,9 @@ def lookup_address_details(location):
     if not location or location.lower() == 'unknown':
         return None
 
+    from utils.prompts import ADDRESS_LOOKUP_PROMPT
     messages = [
-        {"role": "system", "content": "You are a location lookup assistant. For the given location, return the full address in JSON format with these fields: street_address, city, state, country, postal_code. Use null for unknown fields."},
+        {"role": "system", "content": ADDRESS_LOOKUP_PROMPT},
         {"role": "user", "content": f"Look up the full address for: {location}"}
     ]
 
@@ -71,7 +72,13 @@ def lookup_address_details(location):
             messages=messages,
             response_format={"type": "json_object"}
         )
-        return json.loads(response.choices[0].message.content)
+        response_content = response.choices[0].message.content
+        try:
+            parsed_content = json.loads(response_content)
+            debug_log(f"Address lookup response:\n{json.dumps(parsed_content, indent=2)}")
+        except json.JSONDecodeError:
+            debug_log(f"Address lookup response (invalid JSON):\n{response_content}")
+        return json.loads(response_content)
     except Exception as e:
         debug_log(f"Error looking up address: {e}")
         return None
