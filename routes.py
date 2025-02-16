@@ -162,10 +162,11 @@ def correct():
             'events': updated_events
         })
     except Exception as e:
-        error_type = str(e)
-        app.logger.error(f"Correction error: {error_type}", exc_info=True)
+        error_msg = str(e)
+        app.logger.error(f"Correction error: {error_msg}", exc_info=True)
         
-        if isinstance(e, Exception) and str(e).startswith('unsafe_prompt:'):
+        # Handle safety validation errors with proper error message extraction
+        if error_msg.startswith('unsafe_prompt:'):
             reason = str(e).split(':', 1)[1].strip() if ':' in str(e) else 'Unknown safety violation'
             return jsonify({
                 'success': False,

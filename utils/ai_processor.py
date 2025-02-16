@@ -124,7 +124,10 @@ def process_corrections(text, existing_events, timezone=None):
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
-            raise Exception(f"unsafe_prompt:{reason}")
+            # Raise a custom exception class for better error handling
+            class SafetyValidationError(Exception):
+                pass
+            raise SafetyValidationError(f"unsafe_prompt:{reason}")
 
         formatted_events = []
         for event in existing_events:
