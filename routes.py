@@ -159,14 +159,23 @@ def correct():
     except Exception as e:
         error_type = str(e)
         app.logger.error(f"Correction error: {error_type}", exc_info=True)
+        
         if error_type.startswith('unsafe_prompt:'):
-            reason = error_type.split(':', 1)[1]
-            return jsonify({
-                'success': False,
-                'error_type': 'unsafe_prompt',
-                'error': 'Your request was rejected for safety reasons.',
-                'reason': reason
-            }), 400
+            try:
+                reason = error_type.split(':', 1)[1].strip()
+                return jsonify({
+                    'success': False, 
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Your request was rejected for safety reasons.',
+                    'reason': reason or 'Unknown safety violation'
+                }), 400
+            except IndexError:
+                return jsonify({
+                    'success': False,
+                    'error_type': 'unsafe_prompt',
+                    'error': 'Your request was rejected for safety reasons.',
+                    'reason': 'Unknown safety violation'
+                }), 400
         elif error_type in ["initial_process_failed", "address_lookup_failed"]:
             return jsonify({
                 'success': False,
