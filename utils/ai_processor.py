@@ -76,6 +76,27 @@ def lookup_address_details(location):
         debug_log(f"Error looking up address: {e}")
         return None
 
+def process_location_details(event):
+    """Helper function to process location details for an event"""
+    event['location_name'] = event.get('location_name', '').strip()
+    event['location_address'] = event.get('location_address', '').strip()
+
+    if event['location_name'] or event['location_address']:
+        location_query = f"{event['location_name']} {event['location_address']}".strip()
+        address_details = lookup_address_details(location_query)
+        if address_details:
+            event['location_details'] = address_details
+            full_address_parts = [
+                address_details.get('street_address'),
+                address_details.get('city'),
+                address_details.get('state'),
+                address_details.get('postal_code'),
+                address_details.get('country')
+            ]
+            event['location_address'] = ', '.join(filter(None, full_address_parts))
+            event['location'] = f"{event['location_name']} - {event['location_address']}" if event['location_name'] else event['location_address']
+    return event
+
 def process_corrections(text, existing_events, timezone=None):
     try:
         # First validate the prompt safety
@@ -128,23 +149,7 @@ def process_corrections(text, existing_events, timezone=None):
 
         # Process locations for corrections
         for event in events:
-            event['location_name'] = event.get('location_name', '').strip()
-            event['location_address'] = event.get('location_address', '').strip()
-
-            if event['location_name'] or event['location_address']:
-                location_query = f"{event['location_name']} {event['location_address']}".strip()
-                address_details = lookup_address_details(location_query)
-                if address_details:
-                    event['location_details'] = address_details
-                    full_address_parts = [
-                        address_details.get('street_address'),
-                        address_details.get('city'),
-                        address_details.get('state'),
-                        address_details.get('postal_code'),
-                        address_details.get('country')
-                    ]
-                    event['location_address'] = ', '.join(filter(None, full_address_parts))
-                    event['location'] = f"{event['location_name']} - {event['location_address']}" if event['location_name'] else event['location_address']
+            event = process_location_details(event)
 
         return events
     except Exception as e:
@@ -313,35 +318,8 @@ Always lookup the addresses for all event locations."""
         # Process locations for both initial creation and corrections
         for event in events:
             # Ensure both fields exist
-            event['location_name'] = event.get('location_name', '').strip()
-            event['location_address'] = event.get('location_address', '').strip()
-
-            # Do address lookup if we have a location to process
-            if event['location_name'] or event['location_address']:
-                location_query = f"{event['location_name']} {event['location_address']}".strip()
-                try:
-                    address_details = lookup_address_details(location_query)
-                    if address_details:
-                        event['location_details'] = address_details
-                        # Always update the location address with full details
-                        full_address_parts = [
-                            address_details.get('street_address'),
-                            address_details.get('city'),
-                            address_details.get('state'),
-                            address_details.get('postal_code'),
-                            address_details.get('country')
-                        ]
-                        event['location_address'] = ', '.join(filter(None, full_address_parts))
-
-                    # Always create combined display version
-                    if event['location_name'] and event['location_address']:
-                        event['location'] = f"{event['location_name']} - {event['location_address']}"
-                    elif event['location_name']:
-                        event['location'] = event['location_name']
-                    elif event['location_address']:
-                        event['location'] = event['location_address']
-                    else:
-                        event['location'] = ''
+            try:
+                event = process_location_details(event)
                 except Exception as e:
                     logging.error(f"Address lookup failed for {location_query}: {str(e)}")
                     raise Exception("address_lookup_failed")
