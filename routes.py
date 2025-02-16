@@ -63,7 +63,7 @@ def process():
         timezone = request.headers.get('X-Timezone', 'UTC')
 
         try:
-            result = process_image_and_text(image_data, text, None, timezone)
+            result = process_image_and_text(image_data, text, timezone)
 
             # Check if there was a safety validation error
 

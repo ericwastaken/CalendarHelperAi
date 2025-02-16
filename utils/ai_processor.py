@@ -87,7 +87,7 @@ def process_event_dates(event):
         event['end_time'] = end_dt.isoformat()
     else:
         datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-    
+
     return event
 
 def process_location_details(event):
@@ -193,7 +193,7 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         # Insert date context
         location = session.get('location', {})
         from utils.prompts import DATE_PROMPT_TEMPLATE, LOCATION_PROMPT_TEMPLATE
-        
+
         current_date_prompt = DATE_PROMPT_TEMPLATE.format(
             year=current_dt.year,
             month=current_dt.month,
