@@ -4,6 +4,10 @@ from openai import OpenAI
 import json
 from datetime import datetime, timedelta
 
+# Configure logging to silence OpenAI client
+logging.getLogger("openai._base_client").setLevel(logging.WARNING)
+logging.getLogger("openai._streaming").setLevel(logging.WARNING)
+
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
