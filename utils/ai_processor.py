@@ -175,9 +175,11 @@ Always lookup the addresses for all event locations."""
         sanitized_messages = []
         for msg in messages:
             sanitized_msg = msg.copy()
-            if isinstance(msg.get('content'), list):
+            content = msg.get('content')
+            
+            if isinstance(content, list):
                 sanitized_content = []
-                for item in msg['content']:
+                for item in content:
                     if item['type'] == 'image_url':
                         sanitized_content.append({
                             'type': 'image_url',
@@ -186,6 +188,8 @@ Always lookup the addresses for all event locations."""
                     else:
                         sanitized_content.append(item)
                 sanitized_msg['content'] = sanitized_content
+            elif isinstance(content, str) and 'data:image' in content:
+                sanitized_msg['content'] = '[IMAGE DATA REDACTED]'
             sanitized_messages.append(sanitized_msg)
 
         debug_log("Sending messages to OpenAI:")
