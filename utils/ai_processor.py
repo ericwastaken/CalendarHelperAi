@@ -82,7 +82,7 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
-            return {"error": "Your prompt is not supported - The prompt is not related to calendar or event processing."}
+            return {"error": "There was an issue with your correction."}
 
         messages = []
         
