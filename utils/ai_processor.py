@@ -239,7 +239,10 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         if not response.choices or not response.choices[0].message.content:
             raise Exception("initial_process_failed")
 
-        events = json.loads(response.choices[0].message.content).get('events', [])
+        response_content = response.choices[0].message.content
+        debug_log(f"OpenAI response content: {response_content}")
+        events = json.loads(response_content).get('events', [])
+        debug_log(f"Extracted events: {events}")
         if not events:
             raise Exception("no_events_found")
 
