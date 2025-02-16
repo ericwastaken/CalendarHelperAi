@@ -192,8 +192,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const errorMessage = document.getElementById('promptErrorMessage');
                 errorContainer.style.display = 'block';
 
-                if (errorData.error_type === 'unsafe_prompt') {
-                    errorMessage.textContent = errorData.user_message || errorData.reason || errorData.error;
+                if (errorData.error_type === 'unsafe_prompt' || errorData.error === 'SafetyValidationError') {
+                    errorMessage.textContent = errorData.reason || errorData.user_message || 'Your request was rejected for safety reasons.';
+                    errorMessage.textContent += ' Please ensure your request is related to calendar events.';
                 } else if (errorData.user_message) {
                     errorMessage.textContent = errorData.user_message;
                 } else if (errorData.error) {
