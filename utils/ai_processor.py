@@ -157,6 +157,8 @@ Always lookup the addresses for all event locations."""
             })
         elif text:
             if existing_events:
+                # Reset messages list for corrections
+                messages = []
                 formatted_events = []
                 for event in existing_events:
                     formatted_event = {
