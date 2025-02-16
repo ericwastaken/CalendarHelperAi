@@ -189,18 +189,17 @@ document.addEventListener('DOMContentLoaded', async function() {
             const errorContainer = document.getElementById('promptErrorContainer');
             const errorMessage = document.getElementById('promptErrorMessage');
             
-            errorContainer.style.display = 'block';
-            if (errorData.reason) {
-                errorMessage.textContent = errorData.reason;
-            } else if (errorData.user_message) {
-                errorMessage.textContent = errorData.user_message;
-            } else if (errorData.error) {
-                errorMessage.textContent = errorData.error;
-            } else {
-                errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
-            }
-
+            if (!response.ok) {
                 errorContainer.style.display = 'block';
+                if (errorData.reason) {
+                    errorMessage.textContent = errorData.reason;
+                } else if (errorData.user_message) {
+                    errorMessage.textContent = errorData.user_message;
+                } else if (errorData.error) {
+                    errorMessage.textContent = errorData.error;
+                } else {
+                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+                }
                 processButton.disabled = false;
                 processButton.innerHTML = 'Process';
                 return;
