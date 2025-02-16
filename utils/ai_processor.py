@@ -191,18 +191,23 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         from flask import session
 
         # Insert date context
-        current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
-- If the month is not provided, use month {current_dt.month}.
-- If the day is not provided, use day {current_dt.day}.
-- The current time is {current_dt.strftime('%H:%M')}.
-- The current timezone is {timezone or 'UTC'}."""
+        location = session.get('location', {})
+        from utils.prompts import DATE_PROMPT_TEMPLATE, LOCATION_PROMPT_TEMPLATE
+        
+        current_date_prompt = DATE_PROMPT_TEMPLATE.format(
+            year=current_dt.year,
+            month=current_dt.month,
+            day=current_dt.day,
+            time=current_dt.strftime('%H:%M'),
+            timezone=timezone or 'UTC'
+        )
 
         # Insert location context
-        location = session.get('location', {})
-        current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
-- If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
-- If an event country is not provided, assume: '{location.get('country', 'unknown')}'
-Always lookup the addresses for all event locations."""
+        current_location_prompt = LOCATION_PROMPT_TEMPLATE.format(
+            city=location.get('city', 'unknown'),
+            region=location.get('region', 'unknown'),
+            country=location.get('country', 'unknown')
+        )
 
         system_message = CALENDAR_SYSTEM_PROMPT.replace('{current_date_prompt}', current_date_prompt).replace('{current_location_prompt}', current_location_prompt)
 

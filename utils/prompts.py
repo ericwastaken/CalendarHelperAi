@@ -52,6 +52,19 @@ Example valid prompts:
 - "The address to lunch is in Davenport, florida on Lara Lane street"
 - "The date for the Lunch event should be one week from today"
 
+
+
+LOCATION_PROMPT_TEMPLATE = """- If an event location city is not provided assume: '{city}'
+- If an event state or region is not provided assume: '{region}'
+- If an event country is not provided, assume: '{country}'
+Always lookup the addresses for all event locations."""
+
+DATE_PROMPT_TEMPLATE = """- If the year is not provided, use {year}.
+- If the month is not provided, use month {month}.
+- If the day is not provided, use day {day}.
+- The current time is {time}.
+- The current timezone is {timezone}."""
+
 Reject requests that are:
 1. Not related to calendars or events
 2. Malicious or inappropriate content
