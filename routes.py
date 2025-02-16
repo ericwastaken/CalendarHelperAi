@@ -2,7 +2,7 @@ import os
 import base64
 from flask import request, jsonify, render_template, session
 from app import app
-from utils.ai_processor import process_image_and_text
+from utils.ai_processor import process_image_and_text, process_corrections
 from utils.calendar import generate_ics
 from utils.location_service import get_client_ip, get_location_from_ip
 from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
@@ -61,12 +61,12 @@ def process():
 
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
-        
+
         try:
             result = process_image_and_text(image_data, text, None, timezone)
-            
+
             # Check if there was a safety validation error
-            
+
 
             if not result or not isinstance(result, list):
                 raise Exception("invalid_result_format")
@@ -112,7 +112,7 @@ def process():
                 'error': 'An unexpected error occurred'
             })
             response_data['success'] = False
-            
+
             return jsonify(response_data), 400
 
         # Store in session
@@ -159,7 +159,15 @@ def correct():
     except Exception as e:
         error_type = str(e)
         app.logger.error(f"Correction error: {error_type}", exc_info=True)
-        if error_type in ["initial_process_failed", "address_lookup_failed"]:
+        if error_type.startswith('unsafe_prompt:'):
+            reason = error_type.split(':', 1)[1]
+            return jsonify({
+                'success': False,
+                'error_type': 'unsafe_prompt',
+                'error': 'Your request was rejected for safety reasons.',
+                'reason': reason
+            }), 400
+        elif error_type in ["initial_process_failed", "address_lookup_failed"]:
             return jsonify({
                 'success': False,
                 'error_type': error_type,
