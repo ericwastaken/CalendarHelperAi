@@ -159,182 +159,91 @@ def process_corrections(text, existing_events, timezone=None):
 
 def process_image_and_text(image_data=None, text=None, timezone=None):
     try:
-        # First validate the prompt safety
+        # Validate prompt safety
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
             return {"error": "There was an issue processing your request."}
 
-        messages = []
-                    "title": event.get('title', ''),
-                    "description": event.get('description', ''),
-                    "start_time": event.get('start_time', ''),
-                    "end_time": event.get('end_time', ''),
-                    "location_name": event.get('location_name', ''),
-                    "location_address": event.get('location_address', '')
-                }
-                formatted_events.append(formatted_event)
+        # Prepare current date/time context
+        current_dt = datetime.now()
+        if timezone:
+            from zoneinfo import ZoneInfo
+            current_dt = datetime.now(ZoneInfo(timezone))
 
-            from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
-            correction_prompt = CORRECTION_USER_PROMPT.format(
-                events_json=json.dumps(formatted_events, indent=2),
-                correction_text=text
-            )
-            debug_log("Processing correction with existing events")
-            messages = [
-                {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
-                {"role": "user", "content": correction_prompt}
-            ]
-        else:
-            debug_log("Processing initial extraction")
-            # Handle initial extraction
-            current_dt = datetime.now()
-            if timezone:
-                from zoneinfo import ZoneInfo
-                current_dt = datetime.now(ZoneInfo(timezone))
+        # Get system prompt and insert current context
+        from utils.prompts import CALENDAR_SYSTEM_PROMPT
+        from flask import session
 
-            current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
+        # Insert date context
+        current_date_prompt = f"""- If the year is not provided, use {current_dt.year}.
 - If the month is not provided, use month {current_dt.month}.
 - If the day is not provided, use day {current_dt.day}.
 - The current time is {current_dt.strftime('%H:%M')}.
 - The current timezone is {timezone or 'UTC'}."""
 
-            if existing_events:
-                from utils.prompts import CORRECTION_SYSTEM_PROMPT
-                system_message = CORRECTION_SYSTEM_PROMPT
-            else:
-                from utils.prompts import CALENDAR_SYSTEM_PROMPT
-                system_message = CALENDAR_SYSTEM_PROMPT
-                # Handle date prompt
-                system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
-
-                # Handle location prompt from session
-                from flask import session
-                location = session.get('location', {})
-                current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
+        # Insert location context
+        location = session.get('location', {})
+        current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
 - If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
 - If an event country is not provided, assume: '{location.get('country', 'unknown')}'
 Always lookup the addresses for all event locations."""
-                system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
 
-            debug_log(f"System prompt: {system_message}")
-            debug_log(f"Current date and location prompts applied")
+        system_message = CALENDAR_SYSTEM_PROMPT.replace('{current_date_prompt}', current_date_prompt).replace('{current_location_prompt}', current_location_prompt)
 
-        messages.append({"role": "system", "content": system_message})
+        # Prepare messages for OpenAI
+        messages = [{"role": "system", "content": system_message}]
 
         if image_data and text:
-            if os.environ.get('DEBUG_LOG_IMAGE', 'false').lower() == 'true':
-                debug_log(f"Processing image data: {image_data[:100]}...")
-
             messages.append({
                 "role": "user",
                 "content": [
-                    {
-                        "type": "text",
-                        "text": f"Extract calendar events from this image and text: {text}"
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
-                    }
+                    {"type": "text", "text": f"Extract calendar events from this image and text: {text}"},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
                 ]
             })
         elif text:
-            if not existing_events:
-                messages.append({
-                    "role": "user",
-                    "content": f"Extract calendar events from this text: {text}"
-                })
+            messages.append({
+                "role": "user",
+                "content": f"Extract calendar events from this text: {text}"
+            })
 
-        # Create sanitized copy of messages for logging
-        sanitized_messages = []
-        for msg in messages:
-            sanitized_msg = msg.copy()
-            content = msg.get('content')
-
-            if isinstance(content, list):
-                sanitized_content = []
-                for item in content:
-                    if item['type'] == 'image_url':
-                        sanitized_content.append({
-                            'type': 'image_url',
-                            'image_url': {'url': '[IMAGE DATA REDACTED]'}
-                        })
-                    else:
-                        sanitized_content.append(item)
-                sanitized_msg['content'] = sanitized_content
-            elif isinstance(content, str) and 'data:image' in content:
-                sanitized_msg['content'] = '[IMAGE DATA REDACTED]'
-            sanitized_messages.append(sanitized_msg)
-
-        debug_log("Sending messages to OpenAI:")
-        debug_log(json.dumps(sanitized_messages, indent=2))
-
+        # Call OpenAI API
         response = client.chat.completions.create(
-            model="gpt-4o", 
+            model="gpt-4o",
             messages=messages,
             response_format={"type": "json_object"}
         )
 
-        if not response or not response.choices or not response.choices[0].message:
-            debug_log("Invalid response structure from OpenAI")
+        # Parse and validate response
+        if not response.choices or not response.choices[0].message.content:
             raise Exception("initial_process_failed")
 
-        response_content = response.choices[0].message.content
-        if not response_content:
-            debug_log("Empty response content from OpenAI")
+        events = json.loads(response.choices[0].message.content).get('events', [])
+        if not events:
             raise Exception("no_events_found")
 
-        debug_log(f"OpenAI response: {response_content}")
-
-        parsed_response = json.loads(response_content)
-        events = parsed_response.get('events', [])
-
-        if not events or len(events) == 0:
-            debug_log("No events found in response")
-            raise Exception("no_events_found")
-
-        # Process and validate dates for all events
+        # Process dates and locations
         for event in events:
-            try:
-                # Ensure proper ISO format for dates
-                start_time = event.get('start_time', '')
-                end_time = event.get('end_time')
+            # Validate and process dates
+            start_time = event.get('start_time', '')
+            end_time = event.get('end_time')
 
-                # Convert to datetime objects to validate
-                start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            if not end_time:
+                end_dt = start_dt + timedelta(hours=1)
+                event['end_time'] = end_dt.isoformat()
+            else:
+                datetime.fromisoformat(end_time.replace('Z', '+00:00'))
 
-                # If end_time is not provided, set it to start_time + 1 hour
-                if not end_time:
-                    end_dt = start_dt + timedelta(hours=1)
-                    event['end_time'] = end_dt.isoformat()
-                else:
-                    datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            # Process location details
+            event = process_location_details(event)
 
-            except (ValueError, AttributeError):
-                debug_log(f"Invalid date format: start={start_time}, end={end_time}")
-                raise Exception("Invalid date format received from AI")
-
-        # Process locations for both initial creation and corrections
-        for event in events:
-            # Ensure both fields exist
-            try:
-                event = process_location_details(event)
-                except Exception as e:
-                    logging.error(f"Address lookup failed for {location_query}: {str(e)}")
-                    raise Exception("address_lookup_failed")
-
-        debug_log(f"Parsed events with address details: {json.dumps(events, indent=2)}")
         return events
-    except json.JSONDecodeError as e:
-        error_msg = f"Error parsing OpenAI response: {e}"
-        logging.error(error_msg)
-        raise Exception("initial_process_failed")
+
     except Exception as e:
         error_type = str(e)
-        logging.error(f"Unexpected error in initial process: {error_type}")
-        # If it's our known error type, propagate it directly
+        logging.error(f"Error in process_image_and_text: {error_type}")
         if error_type in ["no_events_found", "address_lookup_failed"]:
             raise
-        # Otherwise wrap unknown errors
         raise Exception("initial_process_failed") from e
