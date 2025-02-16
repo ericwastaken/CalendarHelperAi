@@ -193,16 +193,21 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const errorMessage = document.getElementById('promptErrorMessage');
 
                 if (!response.ok || !errorData.success) {
-                    console.log('Error detected, status:', response.status);
-                    console.log('Error data:', errorData);
+                    console.log('Error response:', {
+                        status: response.status,
+                        data: errorData
+                    });
                     
                     errorContainer.style.display = 'block';
-                    const displayMessage = errorData.reason || 
-                                         errorData.user_message || 
-                                         errorData.error || 
-                                         'An error occurred while processing your request.';
+                    // SafetyValidationError sends 'reason' field
+                    let displayMessage = errorData.reason;
                     
-                    console.log('Displaying error message:', displayMessage);
+                    // If no reason, try other error fields in order
+                    if (!displayMessage) {
+                        displayMessage = errorData.user_message || errorData.error || 'An error occurred while processing your request.';
+                    }
+                    
+                    console.log('Display message selected:', displayMessage);
                     errorMessage.textContent = displayMessage;
                     processButton.disabled = false;
                     processButton.innerHTML = 'Process';
