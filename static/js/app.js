@@ -186,10 +186,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
 
             const errorData = await response.json();
+            const errorContainer = document.getElementById('promptErrorContainer');
+            const errorMessage = document.getElementById('promptErrorMessage');
 
-            if (!response.ok) {
-                const errorContainer = document.getElementById('promptErrorContainer');
-                const errorMessage = document.getElementById('promptErrorMessage');
+            if (!response.ok || !errorData.success) {
                 errorContainer.style.display = 'block';
 
                 if (errorData.error_type === 'unsafe_prompt' || errorData.error === 'SafetyValidationError') {
