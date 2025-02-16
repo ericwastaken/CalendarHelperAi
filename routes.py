@@ -1,4 +1,3 @@
-
 import os
 import base64
 from flask import request, jsonify, render_template, session
@@ -73,13 +72,14 @@ def process():
             })
 
         except SafetyValidationError as e:
-            app.logger.error(f"Process error: Safety validation failed: {e}", exc_info=True)
+            app.logger.error(f"Process error: {str(e)}", exc_info=True)
+            error_message = str(e)
             return jsonify({
                 'success': False,
                 'error_type': 'unsafe_prompt',
                 'error': 'SafetyValidationError',
-                'reason': str(e),
-                'user_message': str(e)
+                'reason': error_message,
+                'user_message': error_message
             }), 400
         except Exception as e:
             error_type = str(e)
