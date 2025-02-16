@@ -74,11 +74,13 @@ def process():
         except SafetyValidationError as e:
             app.logger.error(f"Process error: {str(e)}", exc_info=True)
             error_message = str(e)
-            return jsonify({
+            response_data = {
                 'success': False,
                 'error_type': 'unsafe_prompt',
                 'user_message': error_message
-            }), 400
+            }
+            app.logger.debug(f"Sending response to client: {response_data}")
+            return jsonify(response_data), 400
         except Exception as e:
             error_type = str(e)
             app.logger.error(f"Process error: {error_type}", exc_info=True)
