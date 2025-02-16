@@ -1,3 +1,4 @@
+
 import os
 import base64
 from flask import request, jsonify, render_template, session
@@ -57,18 +58,19 @@ def process():
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
 
-        result = process_image_and_text(image_data, text, timezone)
+        try:
+            result = process_image_and_text(image_data, text, timezone)
 
-        # Check if there was a safety validation error
-        if not result or not isinstance(result, list):
-            raise Exception("invalid_result_format")
+            # Check if there was a safety validation error
+            if not result or not isinstance(result, list):
+                raise Exception("invalid_result_format")
 
-        # Store in session and return success
-        session['current_events'] = result
-        return jsonify({
-            'success': True,
-            'events': result
-        })
+            # Store in session and return success
+            session['current_events'] = result
+            return jsonify({
+                'success': True,
+                'events': result
+            })
 
         except SafetyValidationError as e:
             app.logger.error(f"Process error: Safety validation failed: {e}", exc_info=True)
@@ -93,7 +95,7 @@ def process():
                 },
                 "initial_process_failed": {
                     'error_type': 'processing_error',
-                    'error': 'Error processing the request.  Please check your input and try again.',
+                    'error': 'Error processing the request. Please check your input and try again.',
                     'user_message': 'There was an error processing your request. Please try again later.'
                 }
             }
@@ -106,7 +108,6 @@ def process():
             response_data['success'] = False
 
             return jsonify(response_data), 400
-
 
     except Exception as e:
         error_type = str(e)
