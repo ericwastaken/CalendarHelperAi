@@ -210,11 +210,18 @@ Instructions:
             try:
                 # Ensure proper ISO format for dates
                 start_time = event.get('start_time', '')
-                end_time = event.get('end_time', '')
+                end_time = event.get('end_time')
 
                 # Convert to datetime objects to validate
-                datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                
+                # If end_time is not provided, set it to start_time + 1 hour
+                if not end_time:
+                    end_dt = start_dt + timedelta(hours=1)
+                    event['end_time'] = end_dt.isoformat()
+                else:
+                    datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                    
             except (ValueError, AttributeError):
                 debug_log(f"Invalid date format: start={start_time}, end={end_time}")
                 raise Exception("Invalid date format received from AI")
