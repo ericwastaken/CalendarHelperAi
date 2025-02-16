@@ -57,19 +57,18 @@ def process():
         # Get timezone from request
         timezone = request.headers.get('X-Timezone', 'UTC')
 
-        try:
-            result = process_image_and_text(image_data, text, timezone)
+        result = process_image_and_text(image_data, text, timezone)
 
-            # Check if there was a safety validation error
-            if not result or not isinstance(result, list):
-                raise Exception("invalid_result_format")
+        # Check if there was a safety validation error
+        if not result or not isinstance(result, list):
+            raise Exception("invalid_result_format")
 
-            # Store in session and return success
-            session['current_events'] = result
-            return jsonify({
-                'success': True,
-                'events': result
-            })
+        # Store in session and return success
+        session['current_events'] = result
+        return jsonify({
+            'success': True,
+            'events': result
+        })
 
         except SafetyValidationError as e:
             app.logger.error(f"Process error: Safety validation failed: {e}", exc_info=True)
