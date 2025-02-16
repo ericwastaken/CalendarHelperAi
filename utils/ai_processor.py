@@ -123,19 +123,23 @@ def process_image_and_text(image_data=None, text=None, existing_events=None, tim
 - The current time is {current_dt.strftime('%H:%M')}.
 - The current timezone is {timezone or 'UTC'}."""
 
-            from utils.prompts import CALENDAR_SYSTEM_PROMPT
-            system_message = CALENDAR_SYSTEM_PROMPT
-            # Handle date prompt
-            system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
+            if existing_events:
+                from utils.prompts import CORRECTION_SYSTEM_PROMPT
+                system_message = CORRECTION_SYSTEM_PROMPT
+            else:
+                from utils.prompts import CALENDAR_SYSTEM_PROMPT
+                system_message = CALENDAR_SYSTEM_PROMPT
+                # Handle date prompt
+                system_message = system_message.replace('{current_date_prompt}', current_date_prompt)
 
-            # Handle location prompt from session
-            from flask import session
-            location = session.get('location', {})
-            current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
+                # Handle location prompt from session
+                from flask import session
+                location = session.get('location', {})
+                current_location_prompt = f"""- If an event location city is not provided assume: '{location.get('city', 'unknown')}'
 - If an event state or region is not provided assume: '{location.get('region', 'unknown')}'
 - If an event country is not provided, assume: '{location.get('country', 'unknown')}'
 Always lookup the addresses for all event locations."""
-            system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
+                system_message = system_message.replace('{current_location_prompt}', current_location_prompt)
 
             debug_log(f"System prompt: {system_message}")
             debug_log(f"Current date and location prompts applied")
