@@ -66,8 +66,6 @@ def process():
             result = process_image_and_text(image_data, text, timezone)
 
             # Check if there was a safety validation error
-
-
             if not result or not isinstance(result, list):
                 raise Exception("invalid_result_format")
 
@@ -84,8 +82,9 @@ def process():
 
             # Handle safety check errors
             if error_type.startswith('unsafe_prompt:'):
-                reason = error_type.split(':', 1)[1]
-                return jsonify({
+                try:
+                    reason = error_type.split(':', 1)[1].strip()
+                    return jsonify({
                     'success': False,
                     'error_type': 'unsafe_prompt',
                     'error': 'Your request was rejected for safety reasons.',
