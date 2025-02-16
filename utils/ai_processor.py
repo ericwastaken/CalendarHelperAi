@@ -240,9 +240,16 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
             raise Exception("initial_process_failed")
 
         response_content = response.choices[0].message.content
-        debug_log(f"OpenAI response content: {response_content}")
+        try:
+            parsed_content = json.loads(response_content)
+            debug_log(f"OpenAI response content:\n{json.dumps(parsed_content, indent=2)}")
+        except json.JSONDecodeError:
+            debug_log(f"OpenAI response content (invalid JSON):\n{response_content}")
         events = json.loads(response_content).get('events', [])
-        debug_log(f"Extracted events: {events}")
+        try:
+            debug_log(f"Extracted events:\n{json.dumps(events, indent=2)}")
+        except json.JSONDecodeError:
+            debug_log(f"Extracted events (invalid JSON):\n{events}")
         if not events:
             raise Exception("no_events_found")
 
