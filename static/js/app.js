@@ -338,13 +338,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 body: JSON.stringify({ correction: message })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                addSystemMessage('There was an error. Please try again in a few seconds.');
+            const errorData = await response.json();
+            if (!response.ok || !errorData.success) {
+                const errorMessage = errorData.user_message || 'There was an error. Please try again in a few seconds.';
+                addSystemMessage(errorMessage);
                 return;
             }
 
-            const data = await response.json();
+            const data = errorData;
             if (data.success) {
                 displayEvents(data.events);
                 addSystemMessage('Events have been updated based on your correction.');

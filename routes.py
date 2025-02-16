@@ -100,11 +100,12 @@ def correct():
         return jsonify({'success': True, 'events': updated_events})
 
     except SafetyValidationError as e:
-        app.logger.warning(f"Safety validation error: {str(e)}")
+        error_message = str(e)
+        app.logger.warning(f"Safety validation error: {error_message}")
         return jsonify({
             'success': False,
             'error_type': 'unsafe_prompt',
-            'user_message': str(e)
+            'user_message': error_message
         }), 400
 
     except Exception as e:
