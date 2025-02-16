@@ -274,11 +274,12 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         debug_log(f"Final processed events:\n{json.dumps({'events': events}, indent=2)}")
         return events
 
+    except SafetyValidationError as e:
+        logging.error(f"Safety validation error in process_image_and_text: {str(e)}")
+        raise
     except Exception as e:
         error_type = str(e)
         logging.error(f"Error in process_image_and_text: {error_type}")
         if error_type in ["no_events_found", "address_lookup_failed"]:
             raise
-        if str(e).startswith('unsafe_prompt:'):
-            raise e
         raise Exception("initial_process_failed") from e

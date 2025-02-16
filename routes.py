@@ -71,18 +71,17 @@ def process():
                 'events': result
             })
 
+        except SafetyValidationError as e:
+            app.logger.error(f"Process error: Safety validation failed: {e}", exc_info=True)
+            return jsonify({
+                'success': False,
+                'error_type': 'unsafe_prompt',
+                'error': 'Your request was rejected for safety reasons.',
+                'reason': str(e) or 'Unknown safety violation'
+            }), 400
         except Exception as e:
             error_type = str(e)
             app.logger.error(f"Process error: {error_type}", exc_info=True)
-
-            # Handle safety check errors
-            if isinstance(e, SafetyValidationError):
-                return jsonify({
-                    'success': False,
-                    'error_type': 'unsafe_prompt',
-                    'error': 'Your request was rejected for safety reasons.',
-                    'reason': str(e) or 'Unknown safety violation'
-                }), 400
 
             error_messages = {
                 "no_events_found": {
@@ -95,25 +94,21 @@ def process():
                 },
                 "initial_process_failed": {
                     'error_type': 'processing_error',
-                    'error': 'Error processing the request'
+                    'error': 'Error processing the request.  Please check your input and try again.',
+                    'user_message': 'There was an error processing your request. Please try again later.'
                 }
             }
 
             response_data = error_messages.get(error_type, {
                 'error_type': 'processing_error',
-                'error': 'An unexpected error occurred'
+                'error': 'An unexpected error occurred',
+                'user_message': 'There was an unexpected error. Please try again later.'
             })
             response_data['success'] = False
 
             return jsonify(response_data), 400
 
-        # Store in session
-        session['current_events'] = result
 
-        return jsonify({
-            'success': True,
-            'events': result
-        })
     except Exception as e:
         error_type = str(e)
         app.logger.error(f"Process error in session {session.get('session_id', 'unknown')}: {error_type}", exc_info=True)
