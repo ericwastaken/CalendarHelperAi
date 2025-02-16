@@ -8,8 +8,7 @@ from utils.location_service import get_client_ip, get_location_from_ip
 from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
 import uuid
 
-class SafetyValidationError(Exception):
-    pass
+from utils.ai_processor import SafetyValidationError
 
 @app.route('/api/config')
 def get_config():
