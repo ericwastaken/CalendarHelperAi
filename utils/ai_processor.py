@@ -173,6 +173,7 @@ def process_corrections(text, existing_events, timezone=None):
             event = process_event_dates(event)
             event = process_location_details(event)
 
+        debug_log(f"Final processed events:\n{json.dumps({'events': events}, indent=2)}")
         return events
     except Exception as e:
         error_type = str(e)
@@ -266,6 +267,7 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
             event = process_event_dates(event)
             event = process_location_details(event)
 
+        debug_log(f"Final processed events:\n{json.dumps({'events': events}, indent=2)}")
         return events
 
     except Exception as e:
