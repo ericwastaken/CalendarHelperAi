@@ -188,20 +188,17 @@ document.addEventListener('DOMContentLoaded', async function() {
             const errorData = await response.json();
             const errorContainer = document.getElementById('promptErrorContainer');
             const errorMessage = document.getElementById('promptErrorMessage');
-
-            if (!response.ok || !errorData.success) {
-                errorContainer.style.display = 'block';
-
-                if (errorData.error_type === 'unsafe_prompt' || errorData.error === 'SafetyValidationError') {
-                    errorMessage.textContent = errorData.reason || errorData.user_message || 'Your request was rejected for safety reasons.';
-                    errorMessage.textContent += ' Please ensure your request is related to calendar events.';
-                } else if (errorData.user_message) {
-                    errorMessage.textContent = errorData.user_message;
-                } else if (errorData.error) {
-                    errorMessage.textContent = errorData.error;
-                } else {
-                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
-                }
+            
+            errorContainer.style.display = 'block';
+            if (errorData.reason) {
+                errorMessage.textContent = errorData.reason;
+            } else if (errorData.user_message) {
+                errorMessage.textContent = errorData.user_message;
+            } else if (errorData.error) {
+                errorMessage.textContent = errorData.error;
+            } else {
+                errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+            }
 
                 errorContainer.style.display = 'block';
                 processButton.disabled = false;
