@@ -96,22 +96,22 @@ def correct():
 
         updated_events = process_corrections(correction, events, timezone)
         session['current_events'] = updated_events
-
-        app.logger.info(f"Successfully processed correction with {len(updated_events)} events")
+        
         return jsonify({'success': True, 'events': updated_events})
 
     except SafetyValidationError as e:
-        app.logger.warning(f"Safety validation error in correction: {str(e)}")
+        app.logger.warning(f"Safety validation error: {str(e)}")
         return jsonify({
-            'success': False, 
+            'success': False,
             'error_type': 'unsafe_prompt',
             'user_message': str(e)
         }), 400
+
     except Exception as e:
-        app.logger.error(f"Unexpected error in correct: {str(e)}", exc_info=True)
+        app.logger.error(f"Process error: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
-            'error_type': 'processing_error',
+            'error_type': 'processing_error', 
             'user_message': 'An unexpected error occurred. Please try again.'
         }), 500
 
