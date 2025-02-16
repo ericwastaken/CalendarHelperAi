@@ -85,11 +85,17 @@ def process():
                 try:
                     reason = error_type.split(':', 1)[1].strip()
                     return jsonify({
-                    'success': False,
-                    'error_type': 'unsafe_prompt',
-                    'error': 'Your request was rejected for safety reasons.',
-                    'reason': reason
-                }), 400
+                        'success': False,
+                        'error_type': 'unsafe_prompt',
+                        'error': 'Your request was rejected for safety reasons.',
+                        'reason': reason
+                    }), 400
+                except:
+                    return jsonify({
+                        'success': False,
+                        'error_type': 'unsafe_prompt',
+                        'error': 'Your request was rejected for safety reasons.'
+                    }), 400
 
             error_messages = {
                 "no_events_found": {
