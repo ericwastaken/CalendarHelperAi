@@ -302,6 +302,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 // Clear timeout
                 clearTimeout(sessionTimeout);
+                eventsData = []; // Explicitly clear stored events
             }
         } catch (error) {
             addSystemMessage('Error clearing session: ' + error.message);
