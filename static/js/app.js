@@ -393,8 +393,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             const response = await fetch('/download-ics', {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
-                }
+                },
+                body: JSON.stringify({ events: eventsData })
             });
 
             const data = await response.json();

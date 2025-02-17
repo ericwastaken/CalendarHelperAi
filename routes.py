@@ -117,7 +117,7 @@ def correct():
 @app.route('/download-ics', methods=['POST'])
 def download_ics():
     try:
-        events = session.get('current_events', [])
+        events = request.json.get('events', [])
         if not events:
             return jsonify({
                 'success': False,
