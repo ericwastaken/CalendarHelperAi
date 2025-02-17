@@ -7,6 +7,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             throw new Error(`Failed to fetch config: ${configResponse.status}`);
         }
         appConfig = await configResponse.json();
+        // Override console methods if debug logging is disabled
+        if (!appConfig.debug_logging) {
+            console.log = () => {};
+            console.debug = () => {};
+            console.info = () => {};
+            // Keep error and warn for critical issues
+        }
     } catch (error) {
         console.error("Error fetching config:", error);
         appConfig = { maxImageSize: 4 * 1024 * 1024, allowedImageTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff'] };
@@ -16,6 +23,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
     const eventsDisplay = document.getElementById('eventsDisplay');
+
+    // Display version if available
+    if (appConfig.version) {
+        const versionElement = document.createElement('small');
+        versionElement.className = 'version-tag';
+        versionElement.textContent = `v${appConfig.version}`;
+        document.querySelector('.app-header').appendChild(versionElement);
+    }
     const chatMessages = document.getElementById('chatMessages');
     const clearButton = document.getElementById('clearButton');
     const downloadButton = document.getElementById('downloadButton');
@@ -185,79 +200,87 @@ document.addEventListener('DOMContentLoaded', async function() {
                 body: formData
             });
 
-            const errorData = await response.json();
+            try {
+                const errorData = await response.json();
+                console.log('Response received:', errorData);
+                console.log('Response from process endpoint:', errorData);
 
-            if (!response.ok) {
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
-                errorContainer.style.display = 'block';
 
-                if (errorData.error_type === 'unsafe_prompt') {
-                    errorMessage.textContent = errorData.user_message || errorData.reason || errorData.error;
-                } else if (errorData.user_message) {
-                    errorMessage.textContent = errorData.user_message;
-                } else if (errorData.error) {
-                    errorMessage.textContent = errorData.error;
+                if (!response.ok || !errorData.success) {
+                    console.log('Error response:', {
+                        status: response.status,
+                        data: errorData
+                    });
+
+                    errorContainer.style.display = 'block';
+                    // SafetyValidationError sends 'reason' field
+                    // Get error message directly from error field
+                    const displayMessage = errorData.user_message || 'An error occurred while processing your request.';
+
+                    console.log('Display message selected:', displayMessage);
+                    errorMessage.textContent = displayMessage;
+                    processButton.disabled = false;
+                    processButton.innerHTML = 'Process';
+                    return;
+                }
+
+                const data = errorData; // Use the errorData since it contains success/error info
+
+                if (data.success) {
+                    // Display original input in Calendar Request section
+                    if (imageFile) {
+                        const imageUrl = URL.createObjectURL(imageFile);
+                        originalImage.src = imageUrl;
+                        modalImage.src = imageUrl;
+                        originalImageContainer.classList.remove('hidden');
+                    }
+
+                    const displayText = textInput || "Extract the events in this image.";
+                    originalTextContainer.classList.remove('hidden');
+                    originalText.textContent = displayText;
+
+
+                    // Show calendar request section
+                    calendarRequest.classList.remove('hidden');
+
+                    // Show events display
+                    eventsDisplay.classList.remove('hidden');
+                    displayEvents(data.events);
+                    addSystemMessage('Events have been processed.');
+
+                    // Clear any error messages
+                    const errorContainer = document.getElementById('promptErrorContainer');
+                    const errorMessage = document.getElementById('promptErrorMessage');
+                    errorContainer.style.display = 'none';
+                    errorMessage.textContent = '';
+
+                    // Hide upload section and show chat section
+                    uploadSection.classList.add('hidden');
+                    chatSection.classList.remove('hidden');
+
+                    // Show action buttons
+                    actionButtons.style.display = 'flex';
+
+                    // Set 1-hour timeout
+                    clearTimeout(sessionTimeout);
+                    sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
                 } else {
-                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+                    addSystemMessage('Error: ' + data.error);
+                    processButton.disabled = false;
                 }
-
-                errorContainer.style.display = 'block';
-                processButton.disabled = false;
-                processButton.innerHTML = 'Process';
-                return;
-            }
-
-            if (!errorData.success) {
+            } catch (jsonError) {
+                // Handle JSON parsing errors
+                console.error("Error parsing JSON response:", jsonError);
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
-                errorMessage.textContent = errorData.error || 'An error occurred while processing your request.';
+                errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
                 errorContainer.style.display = 'block';
                 processButton.disabled = false;
                 processButton.innerHTML = 'Process';
-                return;
             }
-            // Hide error message if request is successful
-            document.getElementById('promptErrorContainer').style.display = 'none';
 
-            const data = errorData; // Use the errorData since it contains success/error info
-
-            if (data.success) {
-                // Display original input in Calendar Request section
-                if (imageFile) {
-                    const imageUrl = URL.createObjectURL(imageFile);
-                    originalImage.src = imageUrl;
-                    modalImage.src = imageUrl;
-                    originalImageContainer.classList.remove('hidden');
-                }
-
-                const displayText = textInput || "Extract the events in this image.";
-                originalTextContainer.classList.remove('hidden');
-                originalText.textContent = displayText;
-
-
-                // Show calendar request section
-                calendarRequest.classList.remove('hidden');
-
-                // Show events display
-                eventsDisplay.classList.remove('hidden');
-                displayEvents(data.events);
-                addSystemMessage('Events have been processed.');
-
-                // Hide upload section and show chat section
-                uploadSection.classList.add('hidden');
-                chatSection.classList.remove('hidden');
-
-                // Show action buttons
-                actionButtons.style.display = 'flex';
-
-                // Set 1-hour timeout
-                clearTimeout(sessionTimeout);
-                sessionTimeout = setTimeout(clearSession, 3600000); // 1 hour in milliseconds
-            } else {
-                addSystemMessage('Error: ' + data.error);
-                processButton.disabled = false;
-            }
         } catch (error) {
             const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
             errorModal.show();
@@ -270,46 +293,37 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
     // Handle clear session
-    async function clearSession() {
-        try {
-            const response = await fetch('/clear-session', {
-                method: 'POST'
-            });
+    function clearSession() {
+        // Reset UI state
+        eventsDisplay.innerHTML = '';
+        eventsDisplay.classList.add('hidden');
+        chatMessages.innerHTML = '';
+        uploadForm.reset();
+        processButton.disabled = false;
 
-            const data = await response.json();
-            if (data.success) {
-                // Reset UI state
-                eventsDisplay.innerHTML = '';
-                eventsDisplay.classList.add('hidden');
-                chatMessages.innerHTML = '';
-                uploadForm.reset();
-                processButton.disabled = false;
+        // Clear original input display
+        originalImage.src = '';
+        originalText.textContent = '';
+        calendarRequest.classList.add('hidden');
+        originalImageContainer.classList.add('hidden');
+        originalTextContainer.classList.add('hidden');
 
-                // Clear original input display
-                originalImage.src = '';
-                originalText.textContent = '';
-                calendarRequest.classList.add('hidden');
-                originalImageContainer.classList.add('hidden');
-                originalTextContainer.classList.add('hidden');
+        // Show upload section and hide chat section
+        uploadSection.classList.remove('hidden');
+        chatSection.classList.add('hidden');
 
-                // Show upload section and hide chat section
-                uploadSection.classList.remove('hidden');
-                chatSection.classList.add('hidden');
+        // Hide action buttons
+        actionButtons.style.display = 'none';
 
-                // Hide action buttons
-                actionButtons.style.display = 'none';
-
-                // Clear timeout
-                clearTimeout(sessionTimeout);
-            }
-        } catch (error) {
-            addSystemMessage('Error clearing session: ' + error.message);
-        }
+        // Clear timeout
+        clearTimeout(sessionTimeout);
+        eventsData = []; // Explicitly clear stored events
     }
 
     clearButton.addEventListener('click', clearSession);
     // Handle chat corrections
-    chatForm.addEventListener('submit', async function(e) {
+    const sendButton = chatForm.querySelector('button[type="submit"]');
+    sendButton.addEventListener('click', async function(e) {
         e.preventDefault();
         const message = document.getElementById('chatInput').value;
 
@@ -334,16 +348,22 @@ document.addEventListener('DOMContentLoaded', async function() {
                     'Content-Type': 'application/json',
                     'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
                 },
-                body: JSON.stringify({ correction: message })
+                body: JSON.stringify({ 
+                    correction: message,
+                    current_events: eventsData
+                })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                addSystemMessage('There was an error. Please try again in a few seconds.');
+            const errorData = await response.json();
+            console.log('Correction response:', errorData); // Log correction response
+            if (!response.ok || !errorData.success) {
+                const errorMessage = errorData.user_message || 'There was an error. Please try again in a few seconds.';
+                addSystemMessage(errorMessage);
+                console.error('Correction error:', errorData); // Log correction error
                 return;
             }
 
-            const data = await response.json();
+            const data = errorData;
             if (data.success) {
                 displayEvents(data.events);
                 addSystemMessage('Events have been updated based on your correction.');
@@ -372,8 +392,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             const response = await fetch('/download-ics', {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
-                }
+                },
+                body: JSON.stringify({ events: eventsData })
             });
 
             const data = await response.json();
@@ -389,11 +411,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
+    let eventsData = [];
+
     function displayEvents(events) {
         if (!events) {
             addSystemMessage('Error: No event data received');
             return;
         }
+        eventsData = events;
         if (!Array.isArray(events)) {
             // Don't log error objects to console
             addSystemMessage('Error: ' + (events.error || 'Invalid event data received'));

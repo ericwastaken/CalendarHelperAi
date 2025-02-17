@@ -22,6 +22,15 @@ body {
 .app-header {
     text-align: center;
     margin-bottom: 2rem;
+    position: relative;
+}
+
+.version-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #666;
+    font-size: 0.8rem;
 }
 
 .upload-section {
