@@ -242,6 +242,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                     displayEvents(data.events);
                     addSystemMessage('Events have been processed.');
 
+                    // Clear any error messages
+                    const errorContainer = document.getElementById('promptErrorContainer');
+                    const errorMessage = document.getElementById('promptErrorMessage');
+                    errorContainer.style.display = 'none';
+                    errorMessage.textContent = '';
+
                     // Hide upload section and show chat section
                     uploadSection.classList.add('hidden');
                     chatSection.classList.remove('hidden');
