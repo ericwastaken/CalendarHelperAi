@@ -311,7 +311,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     clearButton.addEventListener('click', clearSession);
     // Handle chat corrections
-    chatForm.addEventListener('submit', async function(e) {
+    const sendButton = chatForm.querySelector('button[type="submit"]');
+    sendButton.addEventListener('click', async function(e) {
         e.preventDefault();
         const message = document.getElementById('chatInput').value;
 
