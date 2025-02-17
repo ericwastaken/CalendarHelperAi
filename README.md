@@ -55,9 +55,16 @@ The application will be available at port 5000.
 ## API Endpoints
 
 - `GET /`: Main application interface
+- `GET /api/config`: Get application configuration (version, max image size, allowed image types, debug settings)
 - `POST /process`: Process image/text and generate events
 - `POST /correct`: Apply corrections to existing events
 - `POST /download-ics`: Generate and download iCalendar file
+
+The `/api/config` endpoint is called automatically when the application loads to configure client-side validation and debugging. It returns:
+- Maximum allowed image size
+- List of allowed image types (jpg, png, etc.)
+- Application version
+- Debug logging settings
 
 ## Project Structure
 
