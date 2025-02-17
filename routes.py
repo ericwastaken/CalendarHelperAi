@@ -20,11 +20,6 @@ def get_config():
 
 @app.route('/')
 def index():
-    session['session_id'] = str(uuid.uuid4())
-    ip = get_client_ip()
-    location = get_location_from_ip(ip)
-    if location:
-        session['location'] = location
     return render_template('index.html')
 
 @app.route('/process', methods=['POST'])
@@ -69,7 +64,6 @@ def process():
                 'user_message': 'No events were found. Please try again.'
             }), 400
 
-        session['current_events'] = result
         app.logger.info(f"Successfully processed request with {len(result)} events")
         return jsonify({'success': True, 'events': result})
 
