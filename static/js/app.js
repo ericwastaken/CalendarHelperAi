@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
     const eventsDisplay = document.getElementById('eventsDisplay');
-    
+
     // Display version if available
     if (appConfig.version) {
         const versionElement = document.createElement('small');
@@ -203,7 +203,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const errorData = await response.json();
                 console.log('Response received:', errorData);
-                
+                console.log('Response from process endpoint:', errorData);
+
                 const errorContainer = document.getElementById('promptErrorContainer');
                 const errorMessage = document.getElementById('promptErrorMessage');
 
@@ -212,12 +213,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                         status: response.status,
                         data: errorData
                     });
-                    
+
                     errorContainer.style.display = 'block';
                     // SafetyValidationError sends 'reason' field
                     // Get error message directly from error field
                     const displayMessage = errorData.user_message || 'An error occurred while processing your request.';
-                    
+
                     console.log('Display message selected:', displayMessage);
                     errorMessage.textContent = displayMessage;
                     processButton.disabled = false;
@@ -354,9 +355,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
 
             const errorData = await response.json();
+            console.log('Correction response:', errorData); // Log correction response
             if (!response.ok || !errorData.success) {
                 const errorMessage = errorData.user_message || 'There was an error. Please try again in a few seconds.';
                 addSystemMessage(errorMessage);
+                console.error('Correction error:', errorData); // Log correction error
                 return;
             }
 
