@@ -6,15 +6,15 @@ This chatbot solves this problem in seconds.
 
 📸 How it works:
 
-1️⃣ Launch the app on your phone, tap Choose File, and TAKE PHOTO of the reminder card.
+1️⃣ Launch the app on your phone (or computer), tap Choose File, and TAKE PHOTO of the reminder card.
 
 2️⃣ Give the AI chatbot some quick instructions.
 
 3️⃣ It extracts the appointment details, formats them properly, and shows a preview.
 
-4️⃣ You can refine the results with chat.
+4️⃣ You can refine the results with chat, claryfying dates and times, adding or correcting a location, etc. Chat for as long as you want until the calendar items are exactly how you want them!
 
-5️⃣ When satisfied, download a single calendar file—on most phones, the file will offer to add the appointments directly to your calendar with one tap!
+5️⃣ When satisfied, download a single calendar file. On phones, most phones will offer to add the appointments directly to your calendar with one tap! On computers, you will download the file then double click to open and process into your calendar.
 
 ## Getting Started
 
@@ -38,12 +38,14 @@ This chatbot solves this problem in seconds.
    python -c 'import secrets; print(secrets.token_hex(16))'
    ```
 
-3. **Install dependencies:**
+   Also, in development environments, you can enable logs to see much more information both in the server log as well as the browser logs.
+
+4. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Run the application:**
+5. **Run the application:**
    ```bash
    python main.py
    ```
@@ -87,10 +89,11 @@ The application will be available at port 5000.
 
 ## Privacy & Security
 
-- Images and text are processed temporarily in memory only (with DEBUG_LOGGING=false)
+- Images are processed temporarily in memory only (with DEBUG_LOGGING=false and DEBUG_LOG_IMAGE=false)
+- Text is processed temporarily in memory only (with DEBUG_LOGGING=false)
 - No data is permanently stored (with DEBUG_LOGGING=false)
-- No server-side session data is used or stored
-- Debug logs can be enabled for development (see environment variables)
+- No server-side session data is used or stored ever, even with logging enabled.
+- Debug logs can be enabled for development (see the environment variables)
 - All processing complies with GDPR, CCPA, and LGPD requirements
 - See `static/terms.html` for complete terms of service
 
