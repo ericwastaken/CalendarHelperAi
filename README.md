@@ -79,6 +79,43 @@ The `/api/config` endpoint is called automatically when the application loads to
 - Application version
 - Debug logging settings
 
+## Frontend Implementation
+
+The frontend is built using vanilla JavaScript and Bootstrap for styling, providing a responsive and intuitive user interface. The main workflow consists of:
+
+1. **Initial Load**:
+   - Fetches configuration from `/api/config`
+   - Sets up event listeners for file upload and chat
+   - Initializes UI components
+
+2. **User Interaction Flow**:
+   - Upload Section: Handles image uploads and initial text input
+   - Processing Display: Shows loading states during API calls
+   - Results Display: Renders extracted events in cards
+   - Chat Interface: Enables real-time corrections through conversation
+   - Calendar Download: Generates and downloads .ics files
+
+3. **Key Features**:
+   - Real-time image preview
+   - Interactive chat for corrections
+   - Dynamic event card updates
+   - Mobile-responsive design
+   - Client-side validation for uploads
+
+The UI maintains state in memory during the session and automatically clears after one hour of inactivity or when manually cleared by the user.
+
+## Project Structure
+
+```
+├── app.py                 # Flask application setup
+├── routes.py             # API endpoints
+├── utils/
+│   ├── ai_processor.py   # OpenAI integration
+│   ├── calendar.py       # iCalendar generation
+│   └── location_service.py # Location services
+├── static/               # Frontend assets
+└── templates/            # HTML templates
+
 ## Contributing
 
 1. Fork this project
