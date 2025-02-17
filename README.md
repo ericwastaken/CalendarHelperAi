@@ -23,16 +23,20 @@ This chatbot solves this problem in seconds.
    git clone https://github.com/yourusername/calendar-helper-ai.git
    ```
 2. **Set up environment variables:**
+   Create a `.env` file with the following variables:
    ```bash
-   export OPENAI_API_KEY=your_api_key
-   # Generate a random secret key for Flask session security
-   # You can use Python to generate one:
-   # python -c 'import secrets; print(secrets.token_hex(16))'
-   export FLASK_SECRET_KEY=your_random_secret_key
-   export DEBUG_LOGGING=false
+   OPENAI_API_KEY=your_api_key
+   FLASK_SECRET_KEY=your_random_secret_key  # For Flask development server only
+   DEBUG_LOGGING=false
+   DEBUG_LOG_IMAGE=false
+   OPENAI_HTTP_CLIENT_LEVEL=ERROR
+   OPENAI_API_LEVEL=ERROR
    ```
 
-   Note: The FLASK_SECRET_KEY should be a random, secure string used to encrypt session data. Never share this key or commit it to version control. You can generate a secure key using Python's secrets module as shown in the comment above.
+   Note: The FLASK_SECRET_KEY is only used for securing Flask's development server. This application does not use server-side sessions or store any session data. You can generate a secure key using:
+   ```bash
+   python -c 'import secrets; print(secrets.token_hex(16))'
+   ```
 
 3. **Install dependencies:**
    ```bash
@@ -85,6 +89,8 @@ The application will be available at port 5000.
 
 - Images and text are processed temporarily in memory only (with DEBUG_LOGGING=false)
 - No data is permanently stored (with DEBUG_LOGGING=false)
+- No server-side session data is used or stored
+- Debug logs can be enabled for development (see environment variables)
 - All processing complies with GDPR, CCPA, and LGPD requirements
 - See `static/terms.html` for complete terms of service
 
