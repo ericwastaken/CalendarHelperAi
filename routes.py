@@ -14,7 +14,8 @@ from utils.ai_processor import SafetyValidationError
 def get_config():
     return jsonify({
         'maxImageSize': MAX_IMAGE_SIZE,
-        'allowedImageTypes': list(ALLOWED_IMAGE_TYPES)
+        'allowedImageTypes': list(ALLOWED_IMAGE_TYPES),
+        'version': APP_VERSION
     })
 
 @app.route('/')

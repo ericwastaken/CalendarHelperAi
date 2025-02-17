@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
     const eventsDisplay = document.getElementById('eventsDisplay');
+    
+    // Display version if available
+    if (appConfig.version) {
+        const versionElement = document.createElement('small');
+        versionElement.className = 'version-tag';
+        versionElement.textContent = `v${appConfig.version}`;
+        document.querySelector('.app-header').appendChild(versionElement);
+    }
     const chatMessages = document.getElementById('chatMessages');
     const clearButton = document.getElementById('clearButton');
     const downloadButton = document.getElementById('downloadButton');
