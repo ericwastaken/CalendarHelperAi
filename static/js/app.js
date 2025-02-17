@@ -7,6 +7,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             throw new Error(`Failed to fetch config: ${configResponse.status}`);
         }
         appConfig = await configResponse.json();
+        // Override console methods if debug logging is disabled
+        if (!appConfig.debug_logging) {
+            console.log = () => {};
+            console.debug = () => {};
+            console.info = () => {};
+            // Keep error and warn for critical issues
+        }
     } catch (error) {
         console.error("Error fetching config:", error);
         appConfig = { maxImageSize: 4 * 1024 * 1024, allowedImageTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff'] };

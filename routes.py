@@ -12,10 +12,12 @@ from utils.ai_processor import SafetyValidationError
 
 @app.route('/api/config')
 def get_config():
+    debug_logging = os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true'
     return jsonify({
         'maxImageSize': MAX_IMAGE_SIZE,
         'allowedImageTypes': list(ALLOWED_IMAGE_TYPES),
-        'version': APP_VERSION
+        'version': APP_VERSION,
+        'debug_logging': debug_logging
     })
 
 @app.route('/')
