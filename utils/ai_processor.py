@@ -130,6 +130,10 @@ def process_corrections(text, existing_events, timezone=None):
             debug_log(f"Unsafe prompt rejected: {reason}")
             raise SafetyValidationError(reason)
 
+        if not existing_events:
+            debug_log("No existing events to process")
+            raise Exception("no_events_found")
+
         formatted_events = []
         for event in existing_events:
             formatted_event = {
@@ -141,6 +145,7 @@ def process_corrections(text, existing_events, timezone=None):
                 "location_address": event.get('location_address', '')
             }
             formatted_events.append(formatted_event)
+        debug_log(f"Formatted events for correction: {json.dumps(formatted_events, indent=2)}")
 
         from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
         correction_prompt = CORRECTION_USER_PROMPT.format(

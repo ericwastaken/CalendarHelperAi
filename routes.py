@@ -94,7 +94,9 @@ def correct():
         events = session.get('current_events', [])
         timezone = request.headers.get('X-Timezone', 'UTC')
 
+        app.logger.debug(f"Current events before correction: {events}")
         updated_events = process_corrections(correction, events, timezone)
+        app.logger.debug(f"Updated events after correction: {updated_events}")
         session['current_events'] = updated_events
         
         return jsonify({'success': True, 'events': updated_events})
