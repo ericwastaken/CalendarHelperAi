@@ -1,6 +1,6 @@
 import os
 import base64
-from flask import request, jsonify, render_template, session
+from flask import request, jsonify, render_template
 from app import app
 from utils.ai_processor import process_image_and_text, process_corrections, SafetyValidationError
 from utils.calendar import generate_ics
@@ -93,8 +93,6 @@ def correct():
         app.logger.debug(f"Current events before correction: {events}")
         updated_events = process_corrections(correction, events, timezone)
         app.logger.debug(f"Updated events after correction: {updated_events}")
-        session['current_events'] = updated_events
-        
         return jsonify({'success': True, 'events': updated_events})
 
     except SafetyValidationError as e:
@@ -137,8 +135,3 @@ def download_ics():
             'user_message': 'Error generating calendar file'
         }), 500
 
-@app.route('/clear-session', methods=['POST'])
-def clear_session():
-    session.clear()
-    session['session_id'] = str(uuid.uuid4())
-    return jsonify({'success': True})
