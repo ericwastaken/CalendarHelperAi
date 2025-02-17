@@ -5,7 +5,7 @@ from app import app
 from utils.ai_processor import process_image_and_text, process_corrections, SafetyValidationError
 from utils.calendar import generate_ics
 from utils.location_service import get_client_ip, get_location_from_ip
-from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
+from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES, APP_VERSION
 import uuid
 
 from utils.ai_processor import SafetyValidationError
