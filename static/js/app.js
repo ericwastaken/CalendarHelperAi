@@ -285,42 +285,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
     // Handle clear session
-    async function clearSession() {
-        try {
-            const response = await fetch('/clear-session', {
-                method: 'POST'
-            });
+    function clearSession() {
+        // Reset UI state
+        eventsDisplay.innerHTML = '';
+        eventsDisplay.classList.add('hidden');
+        chatMessages.innerHTML = '';
+        uploadForm.reset();
+        processButton.disabled = false;
 
-            const data = await response.json();
-            if (data.success) {
-                // Reset UI state
-                eventsDisplay.innerHTML = '';
-                eventsDisplay.classList.add('hidden');
-                chatMessages.innerHTML = '';
-                uploadForm.reset();
-                processButton.disabled = false;
+        // Clear original input display
+        originalImage.src = '';
+        originalText.textContent = '';
+        calendarRequest.classList.add('hidden');
+        originalImageContainer.classList.add('hidden');
+        originalTextContainer.classList.add('hidden');
 
-                // Clear original input display
-                originalImage.src = '';
-                originalText.textContent = '';
-                calendarRequest.classList.add('hidden');
-                originalImageContainer.classList.add('hidden');
-                originalTextContainer.classList.add('hidden');
+        // Show upload section and hide chat section
+        uploadSection.classList.remove('hidden');
+        chatSection.classList.add('hidden');
 
-                // Show upload section and hide chat section
-                uploadSection.classList.remove('hidden');
-                chatSection.classList.add('hidden');
+        // Hide action buttons
+        actionButtons.style.display = 'none';
 
-                // Hide action buttons
-                actionButtons.style.display = 'none';
-
-                // Clear timeout
-                clearTimeout(sessionTimeout);
-                eventsData = []; // Explicitly clear stored events
-            }
-        } catch (error) {
-            addSystemMessage('Error clearing session: ' + error.message);
-        }
+        // Clear timeout
+        clearTimeout(sessionTimeout);
+        eventsData = []; // Explicitly clear stored events
     }
 
     clearButton.addEventListener('click', clearSession);
