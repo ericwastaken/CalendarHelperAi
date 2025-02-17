@@ -335,7 +335,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                     'Content-Type': 'application/json',
                     'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
                 },
-                body: JSON.stringify({ correction: message })
+                body: JSON.stringify({ 
+                    correction: message,
+                    current_events: eventsData
+                })
             });
 
             const errorData = await response.json();
@@ -391,11 +394,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
+    let eventsData = [];
+
     function displayEvents(events) {
         if (!events) {
             addSystemMessage('Error: No event data received');
             return;
         }
+        eventsData = events;
         if (!Array.isArray(events)) {
             // Don't log error objects to console
             addSystemMessage('Error: ' + (events.error || 'Invalid event data received'));

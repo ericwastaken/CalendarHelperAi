@@ -90,8 +90,9 @@ def process():
 @app.route('/correct', methods=['POST'])
 def correct():
     try:
-        correction = request.json.get('correction')
-        events = session.get('current_events', [])
+        data = request.json
+        correction = data.get('correction')
+        events = data.get('current_events', [])
         timezone = request.headers.get('X-Timezone', 'UTC')
 
         app.logger.debug(f"Current events before correction: {events}")
