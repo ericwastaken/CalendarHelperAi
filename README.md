@@ -16,17 +16,23 @@ This chatbot solves this problem in seconds.
 
 5️⃣ When satisfied, download a single calendar file. On phones, most phones will offer to add the appointments directly to your calendar with one tap! On computers, you will download the file then double click to open and process into your calendar.
 
+## Fun Fact
+
+This app was generated and is actively maintained using REPLIT.COM. [Get your own REPLIT to begin generating and hosting apps with AI.](https://replit.com/refer/EricSoto1)
+
+Check out a LIVE VERSION at [CalendarHelperAI.com](https://calendarhelperai.com).
+
 ## Getting Started
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/calendar-helper-ai.git
+   git clone https://github.com/ericwastaken/calendar-helper-ai.git
    ```
 2. **Set up environment variables:**
    Create a `.env` file with the following variables:
    ```bash
    OPENAI_API_KEY=your_api_key
-   FLASK_SECRET_KEY=your_random_secret_key  # For Flask development server only
+   FLASK_SECRET_KEY=your_random_secret_key
    DEBUG_LOGGING=false
    DEBUG_LOG_IMAGE=false
    OPENAI_HTTP_CLIENT_LEVEL=ERROR
@@ -55,7 +61,7 @@ The application will be available at port 5000.
 ## Project Structure
 
 ```
-├── app.py                 # Flask application setup
+├── app.py                # Flask application setup
 ├── routes.py             # API endpoints
 ├── utils/
 │   ├── ai_processor.py   # OpenAI integration
@@ -78,6 +84,24 @@ The `/api/config` endpoint is called automatically when the application loads to
 - List of allowed image types (jpg, png, etc.)
 - Application version
 - Debug logging settings
+
+The `utils/config.py` file is central to the operation of the application as it houses constants that are accessed by the `/api/config` endpoint. These constants include settings that affect how the application runs, such as version numbers, maximum image sizes, accepted image formats, among other configuration details. By consolidating these constants in a single file, the application can maintain clarity and make updates to configuration settings straightforward.
+
+### Backend Implementation
+
+The backend implementation is primarily responsible for handling requests from the frontend and leveraging OpenAI's capabilities to process images, text, and facilitate interactive chat sessions for event correction. When the frontend submits data, typically an image and initial text, the backend receives these through defined API endpoints.
+
+Upon receiving an image, the backend employs OpenAI to extract appointment details by interpreting the visual and textual data. These extracted details are then previewed for the user in the chat interface on the frontend, enabling them to see the AI's interpretation.
+
+One of the core features of the backend is to initiate and manage chat sessions that allow users to make corrections or add details through conversation. This part of the system also utilizes OpenAI, enabling dynamic interaction where users can refine the extracted events based on feedback and further input. Additionally, locations are processed using OpenAI to ensure accurate venue details are attached to events.
+
+All OpenAI prompts used across these functionalities are maintained separately, as explained in the Prompts section. This separation ensures that the AI interactions are structured, contextual, and adaptable to the application's flow. By keeping prompts separate, the application can flexibly adapt queries and responses to align with user inputs and contextual nuances.
+
+### Prompts
+
+Prompts are maintained within the `utils/prompts.py` file. This file contains declarations for all the prompts in a format that is suitable for processing by the AI model. These prompts are static but contain dynamic elements that are injected based on user input and other contextual data gathered during the app's execution (for example, the user's location based on their IP address, the current date, etc.)
+
+Once a prompt is constructed, it is sent through API calls to the OpenAI service where it undergoes processing. The processed output is then returned to the application, where it is used to extract information or make corrections as part of the application's flow. This dynamic prompt handling enables the AI feature to respond intelligently to user interactions, providing relevant and accurate results.
 
 ## Frontend Implementation
 
@@ -103,18 +127,6 @@ The frontend is built using vanilla JavaScript and Bootstrap for styling, provid
    - Client-side validation for uploads
 
 The UI maintains state in memory during the session and automatically clears after one hour of inactivity or when manually cleared by the user.
-
-## Project Structure
-
-```
-├── app.py                 # Flask application setup
-├── routes.py             # API endpoints
-├── utils/
-│   ├── ai_processor.py   # OpenAI integration
-│   ├── calendar.py       # iCalendar generation
-│   └── location_service.py # Location services
-├── static/               # Frontend assets
-└── templates/            # HTML templates
 
 ## Contributing
 
