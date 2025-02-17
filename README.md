@@ -52,6 +52,19 @@ This chatbot solves this problem in seconds.
 
 The application will be available at port 5000.
 
+## Project Structure
+
+```
+├── app.py                 # Flask application setup
+├── routes.py             # API endpoints
+├── utils/
+│   ├── ai_processor.py   # OpenAI integration
+│   ├── calendar.py       # iCalendar generation
+│   └── location_service.py # Location services
+├── static/               # Frontend assets
+└── templates/            # HTML templates
+```
+
 ## API Endpoints
 
 - `GET /`: Main application interface
@@ -65,19 +78,6 @@ The `/api/config` endpoint is called automatically when the application loads to
 - List of allowed image types (jpg, png, etc.)
 - Application version
 - Debug logging settings
-
-## Project Structure
-
-```
-├── app.py                 # Flask application setup
-├── routes.py             # API endpoints
-├── utils/
-│   ├── ai_processor.py   # OpenAI integration
-│   ├── calendar.py       # iCalendar generation
-│   └── location_service.py # Location services
-├── static/               # Frontend assets
-└── templates/            # HTML templates
-```
 
 ## Contributing
 
