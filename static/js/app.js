@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     imageInput.addEventListener('change', function(e) {
         const files = Array.from(e.target.files);
         handleFileSelection(files);
+        // Clear the file input text
+        this.value = '';
     });
 
     function handleFileSelection(files) {
