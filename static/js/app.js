@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             const img = document.createElement('img');
             img.src = URL.createObjectURL(file);
-            img.onclick = () => {
+            previewItem.onclick = () => {
                 const modal = document.getElementById('imageModal');
                 const modalImg = document.getElementById('modalImage');
                 modal.style.display = 'block';
