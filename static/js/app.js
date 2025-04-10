@@ -230,10 +230,26 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 if (data.success) {
                     // Display original input in Calendar Request section
-                    if (imageFile) {
-                        const imageUrl = URL.createObjectURL(imageFile);
-                        originalImage.src = imageUrl;
-                        modalImage.src = imageUrl;
+                    const imageFiles = formData.getAll('image');
+                    if (imageFiles.length > 0) {
+                        const imageContainer = document.createElement('div');
+                        imageContainer.className = 'image-grid';
+
+                        imageFiles.forEach((file, index) => {
+                            const imageWrapper = document.createElement('div');
+                            imageWrapper.className = 'image-preview-wrapper';
+
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.className = 'preview-thumbnail';
+                            img.alt = `Uploaded image ${index + 1}`;
+
+                            imageWrapper.appendChild(img);
+                            imageContainer.appendChild(imageWrapper);
+                        });
+
+                        originalImageContainer.innerHTML = '';
+                        originalImageContainer.appendChild(imageContainer);
                         originalImageContainer.classList.remove('hidden');
                     }
 

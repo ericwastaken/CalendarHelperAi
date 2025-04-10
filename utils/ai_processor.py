@@ -231,13 +231,13 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         # Prepare messages for OpenAI
         messages = [{"role": "system", "content": system_message}]
 
-        if image_data and text:
+        if image_data_list and text:
+            content = [{"type": "text", "text": f"Extract calendar events from these images and text: {text}"}]
+            for image_data in image_data_list:
+                content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}})
             messages.append({
                 "role": "user",
-                "content": [
-                    {"type": "text", "text": f"Extract calendar events from this image and text: {text}"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
-                ]
+                "content": content
             })
         elif text:
             messages.append({
