@@ -32,28 +32,27 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Handle file selection
     imageInput.addEventListener('change', function(e) {
-        const files = Array.from(e.target.files);
-        handleFileSelection(files);
+        const newFiles = Array.from(e.target.files);
+        handleFileSelection(newFiles);
         // Clear the file input text
         this.value = '';
     });
 
-    function handleFileSelection(files) {
+    function handleFileSelection(newFiles) {
         // Clear previous warnings
         uploadLimitWarning.textContent = '';
         
-        // Validate number of files
-        if (files.length > 5) {
-            uploadLimitWarning.textContent = 'Please select up to 5 images only';
-            imageInput.value = '';
+        // Check if adding these files would exceed the limit
+        if (selectedFiles.size + newFiles.length > 5) {
+            uploadLimitWarning.textContent = `Cannot add more images. Maximum is 5 (currently have ${selectedFiles.size})`;
             return;
         }
 
         // Validate total size and file types
-        let totalSize = 0;
+        let totalSize = Array.from(selectedFiles).reduce((sum, file) => sum + file.size, 0);
         const invalidFiles = [];
         
-        files.forEach(file => {
+        newFiles.forEach(file => {
             totalSize += file.size;
             if (!appConfig.allowedImageTypes.includes(file.type)) {
                 invalidFiles.push(file.name);
@@ -62,19 +61,19 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         if (totalSize > (appConfig.maxImageSize * 5)) {
             uploadLimitWarning.textContent = 'Total size of images exceeds limit';
-            imageInput.value = '';
             return;
         }
 
         if (invalidFiles.length > 0) {
             uploadLimitWarning.textContent = `Invalid file type(s): ${invalidFiles.join(', ')}`;
-            imageInput.value = '';
             return;
         }
 
-        // Clear previous previews
-        imagePreviewContainer.innerHTML = '';
-        selectedFiles.clear();
+        // Add new files to selection
+        newFiles.forEach(file => {
+            selectedFiles.add(file);
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
 
         // Create previews for valid files
         files.forEach(file => {
