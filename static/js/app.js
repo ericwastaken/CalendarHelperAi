@@ -34,8 +34,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     imageInput.addEventListener('change', function(e) {
         const newFiles = Array.from(e.target.files);
         handleFileSelection(newFiles);
-        // Clear the file input text
-        this.value = '';
+        // Clear the file input
+        e.target.value = '';
     });
 
     function handleFileSelection(newFiles) {
@@ -69,14 +69,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
-        // Add new files to selection
+        // Add new files to selection and create previews
         newFiles.forEach(file => {
-            selectedFiles.add(file);
-            const previewItem = document.createElement('div');
-            previewItem.className = 'image-preview-item';
-
-        // Create previews for valid files
-        files.forEach(file => {
             selectedFiles.add(file);
             const previewItem = document.createElement('div');
             previewItem.className = 'image-preview-item';
