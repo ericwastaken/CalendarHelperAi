@@ -84,6 +84,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             const img = document.createElement('img');
             img.src = URL.createObjectURL(file);
+            img.onclick = () => {
+                const modal = document.getElementById('imageModal');
+                const modalImg = document.getElementById('modalImage');
+                modal.style.display = 'block';
+                modalImg.src = URL.createObjectURL(file);
+                document.body.style.overflow = 'hidden';
+            };
             
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-image';
@@ -106,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     function updateFileCounter() {
-        uploadCounter.textContent = `${selectedFiles.size} of 5 images selected`;
+        uploadCounter.textContent = `${selectedFiles.size} of 5 images will be processed`;
     }
 
     // Display version if available
