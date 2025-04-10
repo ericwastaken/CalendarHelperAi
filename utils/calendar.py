@@ -10,7 +10,8 @@ def generate_ics(events, timezone='UTC'):
     for event_data in events:
         event = Event()
         event.add('summary', event_data['title'])
-        event.add('description', event_data['description'] + "\n\nCalendar item created by https://calendarhelperai.com")
+        source_info = f"\nExtracted from: {event_data.get('source_image', 'text input')}"
+        event.add('description', event_data['description'] + source_info + "\n\nCalendar item created by https://calendarhelperai.com")
 
         try:
             # Handle both datetime strings with and without timezone

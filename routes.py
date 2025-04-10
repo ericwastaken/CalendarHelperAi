@@ -40,12 +40,15 @@ def process():
             }), 400
 
         image_data_list = []
+        total_size = 0
+        
         if images:
             for image in images:
                 # Validate file size
                 image.seek(0, 2)
                 size = image.tell()
                 image.seek(0)
+                total_size += size
 
                 if size > MAX_IMAGE_SIZE:
                     return jsonify({
@@ -58,15 +61,24 @@ def process():
                     return jsonify({
                         'success': False,
                         'error_type': 'validation_error',
-                        'user_message': 'Please use png, jpg, jpeg, or tiff images only'
+                        'user_message': f'Invalid file type: {image.filename}. Please use png, jpg, jpeg, or tiff images only.'
                     }), 400
 
-                image_data_list.append(base64.b64encode(image.read()).decode('utf-8'))
-        else:
-            image_data_list = []
+                # Store image data with filename for tracking
+                image_data_list.append({
+                    'data': base64.b64encode(image.read()).decode('utf-8'),
+                    'filename': image.filename
+                })
+
+        if total_size > (MAX_IMAGE_SIZE * 5):
+            return jsonify({
+                'success': False,
+                'error_type': 'validation_error',
+                'user_message': 'Total size of all images exceeds the limit'
+            }), 400
 
         timezone = request.headers.get('X-Timezone', 'UTC')
-        result = process_image_and_text(image_data, text, timezone)
+        result = process_image_and_text(image_data_list, text, timezone)
 
         if not result:
             return jsonify({
