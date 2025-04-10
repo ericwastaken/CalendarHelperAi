@@ -337,6 +337,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                             img.src = URL.createObjectURL(file);
                             img.className = 'preview-thumbnail';
                             img.alt = `Uploaded image ${index + 1}`;
+                            
+                            // Add click handler for modal
+                            imageWrapper.addEventListener('click', () => {
+                                const modal = document.getElementById('imageModal');
+                                const modalImg = document.getElementById('modalImage');
+                                modal.style.display = 'block';
+                                modalImg.src = URL.createObjectURL(file);
+                                document.body.style.overflow = 'hidden';
+                            });
 
                             imageWrapper.appendChild(img);
                             imageContainer.appendChild(imageWrapper);
