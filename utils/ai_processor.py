@@ -235,38 +235,38 @@ def process_image_and_text(image_data_list=None, text=None, timezone=None):
         messages = [{"role": "system", "content": system_message}]
 
         if image_data_list and text:
+            # Create single message with all images
+            content = [{"type": "text", "text": f"Extract calendar events from these images and text: {text}. For each event, specify which image it came from."}]
             for image_data in image_data_list:
-                content = [
-                    {"type": "text", "text": f"Extract calendar events from this image ('{image_data['filename']}') and text: {text}"}
-                ]
                 content.append({
-                    "type": "image_url", 
+                    "type": "image_url",
                     "image_url": {"url": f"data:image/jpeg;base64,{image_data['data']}"}
                 })
-                messages.append({
-                    "role": "user",
-                    "content": content
-                })
+                content.append({"type": "text", "text": f"Image filename: {image_data['filename']}"})
+            
+            messages.append({
+                "role": "user",
+                "content": content
+            })
+            
+            # Process all images in single call
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                response_format={"type": "json_object"}
+            )
+            
+            if not response.choices[0].message.content:
+                raise Exception("no_response_content")
                 
-                # Process each image individually
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    response_format={"type": "json_object"}
-                )
-                
-                parsed_content = json.loads(response.choices[0].message.content)
-                events = parsed_content.get('events', [])
-                
-                # Add source information to each event
-                for event in events:
-                    event['source_image'] = image_data['filename']
-                    event = process_event_dates(event)
-                    event = process_location_details(event)
-                    all_events.append(event)
-                
-                # Clear messages for next image
-                messages = messages[:-1]
+            parsed_content = json.loads(response.choices[0].message.content)
+            events = parsed_content.get('events', [])
+            
+            # Process all events
+            for event in events:
+                event = process_event_dates(event)
+                event = process_location_details(event)
+                all_events.append(event)
         elif text:
             messages.append({
                 "role": "user",
