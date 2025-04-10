@@ -218,11 +218,60 @@ body {
     }
 }
 
-.image-grid {
+.image-upload-preview {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin: 1rem 0;
+}
+
+.image-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(231, 76, 60, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.remove-image:hover {
+    background: rgba(231, 76, 60, 1);
+}
+
+.upload-counter {
+    text-align: center;
+    color: #666;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.upload-limit-warning {
+    color: #e74c3c;
+    text-align: center;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
 }
 
 .image-preview-wrapper {

@@ -23,6 +23,89 @@ document.addEventListener('DOMContentLoaded', async function() {
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
     const eventsDisplay = document.getElementById('eventsDisplay');
+    const imageInput = document.getElementById('image');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const uploadCounter = document.getElementById('uploadCounter');
+    const uploadLimitWarning = document.getElementById('uploadLimitWarning');
+    
+    let selectedFiles = new Set();
+
+    // Handle file selection
+    imageInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        handleFileSelection(files);
+    });
+
+    function handleFileSelection(files) {
+        // Clear previous warnings
+        uploadLimitWarning.textContent = '';
+        
+        // Validate number of files
+        if (files.length > 5) {
+            uploadLimitWarning.textContent = 'Please select up to 5 images only';
+            imageInput.value = '';
+            return;
+        }
+
+        // Validate total size and file types
+        let totalSize = 0;
+        const invalidFiles = [];
+        
+        files.forEach(file => {
+            totalSize += file.size;
+            if (!appConfig.allowedImageTypes.includes(file.type)) {
+                invalidFiles.push(file.name);
+            }
+        });
+
+        if (totalSize > (appConfig.maxImageSize * 5)) {
+            uploadLimitWarning.textContent = 'Total size of images exceeds limit';
+            imageInput.value = '';
+            return;
+        }
+
+        if (invalidFiles.length > 0) {
+            uploadLimitWarning.textContent = `Invalid file type(s): ${invalidFiles.join(', ')}`;
+            imageInput.value = '';
+            return;
+        }
+
+        // Clear previous previews
+        imagePreviewContainer.innerHTML = '';
+        selectedFiles.clear();
+
+        // Create previews for valid files
+        files.forEach(file => {
+            selectedFiles.add(file);
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+            
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-image';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => {
+                selectedFiles.delete(file);
+                previewItem.remove();
+                updateFileCounter();
+                if (selectedFiles.size === 0) {
+                    imageInput.value = '';
+                }
+            };
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeBtn);
+            imagePreviewContainer.appendChild(previewItem);
+        });
+
+        updateFileCounter();
+    }
+
+    function updateFileCounter() {
+        uploadCounter.textContent = `${selectedFiles.size} of 5 images selected`;
+    }
 
     // Display version if available
     if (appConfig.version) {
@@ -156,7 +239,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const formData = new FormData(uploadForm);
+        const formData = new FormData();
+        
+        // Add text input
+        const textInput = document.getElementById('text').value;
+        formData.append('text', textInput);
+        
+        // Add selected files
+        selectedFiles.forEach(file => {
+            formData.append('image', file);
+        });
 
         try {
             // Store original input
