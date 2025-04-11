@@ -388,6 +388,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     outline: 2px solid red; /* Debug outline */
+    transition: opacity 0.2s;
 }
 
 .close-modal {

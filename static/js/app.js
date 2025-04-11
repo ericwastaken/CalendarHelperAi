@@ -360,14 +360,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 modalImg.onload = () => {
                                     modal.style.display = 'block';
                                     document.body.style.overflow = 'hidden';
+                                    // Force layout recalculation
+                                    modalImg.style.opacity = '0';
+                                    setTimeout(() => {
+                                        modalImg.style.opacity = '1';
+                                    }, 50);
                                 };
+                                
+                                modal.style.display = 'block';
                                 modalImg.src = imageUrl;
-
-                                // Fallback if image is cached and onload doesn't fire
-                                if (modalImg.complete) {
-                                    modal.style.display = 'block';
-                                    document.body.style.overflow = 'hidden';
-                                }
+                                document.body.style.overflow = 'hidden';
 
                                 console.log('Modal displayed with styles:', {
                                     modalDisplay: modal.style.display,
