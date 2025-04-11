@@ -189,13 +189,16 @@ def process_corrections(text, existing_events, timezone=None):
         logging.error(f"Error in correction process: {error_type}")
         raise
 
-def process_image_and_text(image_data=None, text=None, timezone=None):
+def process_image_and_text(image_data_list=None, text=None, timezone=None):
     try:
         # Validate prompt safety
         is_safe, reason = validate_prompt_safety(text)
         if not is_safe:
             debug_log(f"Unsafe prompt rejected: {reason}")
             raise SafetyValidationError(reason)
+
+        # Track events by source
+        all_events = []
 
         # Prepare current date/time context
         current_dt = datetime.now()
@@ -231,14 +234,39 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
         # Prepare messages for OpenAI
         messages = [{"role": "system", "content": system_message}]
 
-        if image_data and text:
+        if image_data_list and text:
+            # Create single message with all images
+            content = [{"type": "text", "text": f"Extract calendar events from these images and text: {text}. For each event, specify which image it came from."}]
+            for image_data in image_data_list:
+                content.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_data['data']}"}
+                })
+                content.append({"type": "text", "text": f"Image filename: {image_data['filename']}"})
+            
             messages.append({
                 "role": "user",
-                "content": [
-                    {"type": "text", "text": f"Extract calendar events from this image and text: {text}"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
-                ]
+                "content": content
             })
+            
+            # Process all images in single call
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                response_format={"type": "json_object"}
+            )
+            
+            if not response.choices[0].message.content:
+                raise Exception("no_response_content")
+                
+            parsed_content = json.loads(response.choices[0].message.content)
+            events = parsed_content.get('events', [])
+            
+            # Process all events
+            for event in events:
+                event = process_event_dates(event)
+                event = process_location_details(event)
+                all_events.append(event)
         elif text:
             messages.append({
                 "role": "user",
@@ -262,22 +290,11 @@ def process_image_and_text(image_data=None, text=None, timezone=None):
             debug_log(f"OpenAI response content:\n{json.dumps(parsed_content, indent=2)}")
         except json.JSONDecodeError:
             debug_log(f"OpenAI response content (invalid JSON):\n{response_content}")
-        events = json.loads(response_content).get('events', [])
-        try:
-            debug_log(f"Extracted events:\n{json.dumps(events, indent=2)}")
-        except json.JSONDecodeError:
-            debug_log(f"Extracted events (invalid JSON):\n{events}")
-        if not events:
+        if not all_events:
             raise Exception("no_events_found")
 
-        # Process dates and locations
-        for event in events:
-            # Process dates and location details
-            event = process_event_dates(event)
-            event = process_location_details(event)
-
-        debug_log(f"Final processed events:\n{json.dumps({'events': events}, indent=2)}")
-        return events
+        debug_log(f"Final processed events:\n{json.dumps({'events': all_events}, indent=2)}")
+        return all_events
 
     except SafetyValidationError as e:
         logging.error(f"Safety validation error in process_image_and_text: {str(e)}")

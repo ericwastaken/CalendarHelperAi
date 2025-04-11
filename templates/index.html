@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar Helper AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -26,7 +28,7 @@
 
         <section class="upload-section" id="uploadSection">
             <form id="uploadForm" class="text-center">
-                <p class="upload-instruction">Upload an image with event information and provide instructions for creating one or more calendar items. Note, the image can contain multiple events. <a href="#" id="exampleLink">Example</a></p>
+                <p class="upload-instruction">Upload one or more images with event information and provide instructions for creating calendar items. Note, each image can contain multiple events. <a href="#" id="exampleLink">Example</a></p>
 
                 <!-- Example Modal -->
                 <div id="exampleModal" class="modal">
@@ -37,7 +39,11 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                    <input type="file" class="form-control" id="image" name="image" accept="image/*" multiple>
+                    <small class="text-muted">Select up to 5 images</small>
+                    <div id="uploadCounter" class="upload-counter"></div>
+                    <div id="uploadLimitWarning" class="upload-limit-warning"></div>
+                    <div id="imagePreviewContainer" class="image-upload-preview"></div>
                 </div>
                 <div class="mb-3">
                     <textarea class="form-control" id="text" name="text" rows="3" 
@@ -50,6 +56,7 @@
                     <button type="submit" class="button" id="processButton">Process</button>
                 </div>
                 <div class="processing-indicator" id="processingIndicator">
+                    <p class="processing-message">If your image(s) contain many appointments, for example a printed weekly or monthly calendar page, the initial analysis might take some time.</p>
                 </div>
             </form>
         </section>
@@ -60,10 +67,6 @@
                 <div class="original-image-container hidden" id="originalImageContainer">
                     <div class="image-preview">
                         <img id="originalImage" src="" alt="Uploaded image" class="thumbnail">
-                        <div class="image-modal" id="imageModal">
-                            <span class="close-modal">&times;</span>
-                            <img id="modalImage" src="" alt="Full size image">
-                        </div>
                     </div>
                 </div>
                 <div class="original-text-container hidden" id="originalTextContainer">
@@ -102,6 +105,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

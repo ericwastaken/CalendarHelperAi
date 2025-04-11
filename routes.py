@@ -27,37 +27,58 @@ def index():
 @app.route('/process', methods=['POST'])
 def process():
     try:
-        image = request.files.get('image')
+        images = request.files.getlist('image')
         text = request.form.get('text', '').strip()
         if not text:
-            text = "Extract the events in this image."
+            text = "Extract the events in these images."
 
-        if image:
-            # Validate file size
-            image.seek(0, 2)
-            size = image.tell()
-            image.seek(0)
+        if len(images) > 5:
+            return jsonify({
+                'success': False,
+                'error_type': 'validation_error',
+                'user_message': 'Please select up to 5 images only'
+            }), 400
 
-            if size > MAX_IMAGE_SIZE:
-                return jsonify({
-                    'success': False,
-                    'error_type': 'validation_error',
-                    'user_message': 'Please limit your image to 4mb'
-                }), 400
+        image_data_list = []
+        total_size = 0
+        
+        if images:
+            for image in images:
+                # Validate file size
+                image.seek(0, 2)
+                size = image.tell()
+                image.seek(0)
+                total_size += size
 
-            if image.content_type not in ALLOWED_IMAGE_TYPES:
-                return jsonify({
-                    'success': False,
-                    'error_type': 'validation_error',
-                    'user_message': 'Please use png, jpg, jpeg, or tiff images only'
-                }), 400
+                if size > MAX_IMAGE_SIZE:
+                    return jsonify({
+                        'success': False,
+                        'error_type': 'validation_error',
+                        'user_message': f'Please limit each image to 4mb. {image.filename} is too large.'
+                    }), 400
 
-            image_data = base64.b64encode(image.read()).decode('utf-8')
-        else:
-            image_data = None
+                if image.content_type not in ALLOWED_IMAGE_TYPES:
+                    return jsonify({
+                        'success': False,
+                        'error_type': 'validation_error',
+                        'user_message': f'Invalid file type: {image.filename}. Please use png, jpg, jpeg, or tiff images only.'
+                    }), 400
+
+                # Store image data with filename for tracking
+                image_data_list.append({
+                    'data': base64.b64encode(image.read()).decode('utf-8'),
+                    'filename': image.filename
+                })
+
+        if total_size > (MAX_IMAGE_SIZE * 5):
+            return jsonify({
+                'success': False,
+                'error_type': 'validation_error',
+                'user_message': 'Total size of all images exceeds the limit'
+            }), 400
 
         timezone = request.headers.get('X-Timezone', 'UTC')
-        result = process_image_and_text(image_data, text, timezone)
+        result = process_image_and_text(image_data_list, text, timezone)
 
         if not result:
             return jsonify({

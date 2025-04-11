@@ -23,6 +23,99 @@ document.addEventListener('DOMContentLoaded', async function() {
     const uploadForm = document.getElementById('uploadForm');
     const chatForm = document.getElementById('chatForm');
     const eventsDisplay = document.getElementById('eventsDisplay');
+    const imageInput = document.getElementById('image');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const uploadCounter = document.getElementById('uploadCounter');
+    const uploadLimitWarning = document.getElementById('uploadLimitWarning');
+
+    let selectedFiles = new Set();
+
+    // Using Lightbox2 for image modal functionality
+
+    // Handle file selection
+    imageInput.addEventListener('change', function(e) {
+        const newFiles = Array.from(e.target.files);
+        handleFileSelection(newFiles);
+        // Clear the file input
+        e.target.value = '';
+    });
+
+    function handleFileSelection(newFiles) {
+        // Clear previous warnings
+        uploadLimitWarning.textContent = '';
+
+        // Check if adding these files would exceed the limit
+        if (selectedFiles.size + newFiles.length > 5) {
+            uploadLimitWarning.textContent = `Cannot add more images. Maximum is 5 (currently have ${selectedFiles.size})`;
+            return;
+        }
+
+        // Validate total size and file types
+        let totalSize = Array.from(selectedFiles).reduce((sum, file) => sum + file.size, 0);
+        const invalidFiles = [];
+
+        newFiles.forEach(file => {
+            totalSize += file.size;
+            if (!appConfig.allowedImageTypes.includes(file.type)) {
+                invalidFiles.push(file.name);
+            }
+        });
+
+        if (totalSize > (appConfig.maxImageSize * 5)) {
+            uploadLimitWarning.textContent = 'Total size of images exceeds limit';
+            return;
+        }
+
+        if (invalidFiles.length > 0) {
+            uploadLimitWarning.textContent = `Invalid file type(s): ${invalidFiles.join(', ')}`;
+            return;
+        }
+
+        // Add new files to selection and create previews
+        newFiles.forEach(file => {
+            selectedFiles.add(file);
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+
+            const img = document.createElement('img');
+            const fileUrl = URL.createObjectURL(file);
+            img.src = fileUrl;
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.dataset.lightbox = 'image-set';
+            link.appendChild(img);
+            previewItem.onclick = (e) => {
+                if (!e.target.classList.contains('remove-image')) {
+                    link.click();
+                }
+            };
+            previewItem.appendChild(link);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-image';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.onclick = (e) => {
+                console.log('Remove button clicked');
+                e.stopPropagation(); // Prevent event from bubbling to preview handler
+                selectedFiles.delete(file);
+                previewItem.remove();
+                updateFileCounter();
+                if (selectedFiles.size === 0) {
+                    imageInput.value = '';
+                }
+            };
+
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeBtn);
+            imagePreviewContainer.appendChild(previewItem);
+        });
+
+        updateFileCounter();
+    }
+
+    function updateFileCounter() {
+        uploadCounter.textContent = `${selectedFiles.size} of 5 images will be processed`;
+    }
 
     // Display version if available
     if (appConfig.version) {
@@ -40,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const chatSection = document.getElementById('chatSection');
     const actionButtons = document.getElementById('actionButtons');
 
-    // New elements for modals
+    // Modal elements for terms and examples
     const dataModal = document.getElementById('dataModal');
     const readMoreLink = document.getElementById('readMoreLink');
     const termsLink = document.getElementById('termsLink');
@@ -49,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const exampleModal = document.getElementById('exampleModal');
     const closeExampleModalBtn = document.getElementById('closeExampleModal');
 
-    // Modal functionality
+    // Terms and example modal functionality
     function toggleModal(modal, show) {
         if (show) {
             // Load terms content if it hasn't been loaded yet
@@ -128,35 +221,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     const originalTextContainer = document.getElementById('originalTextContainer');
     const originalImage = document.getElementById('originalImage');
     const originalText = document.getElementById('originalText');
-    const imageModal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const closeImageModalBtn = document.querySelector('.close-modal');
 
     let sessionTimeout;
-
-    // Image modal functionality
-    originalImage.addEventListener('click', function() {
-        imageModal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    });
-
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', function() {
-            imageModal.style.display = 'none';
-            document.body.style.overflow = '';
-        });
-    });
-
-    imageModal.addEventListener('click', function(e) {
-        if (e.target === imageModal) {
-            imageModal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    });
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const formData = new FormData(uploadForm);
+        const formData = new FormData();
+
+        // Add text input
+        const textInput = document.getElementById('text').value;
+        formData.append('text', textInput);
+
+        // Add selected files
+        selectedFiles.forEach(file => {
+            formData.append('image', file);
+        });
 
         try {
             // Store original input
@@ -187,10 +266,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
-            // Disable process button and show processing indicator
+            // Disable process button and image controls during processing
             processButton.disabled = true;
             processButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing events...';
             processingIndicator.style.display = 'block';
+            
+            // Disable all remove buttons and preview clicks
+            document.querySelectorAll('.remove-image').forEach(btn => btn.disabled = true);
+            document.querySelectorAll('.image-preview-item').forEach(item => {
+                item.style.pointerEvents = 'none';
+                item.style.opacity = '0.7';
+            });
 
             const response = await fetch('/process', {
                 method: 'POST',
@@ -230,10 +316,46 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 if (data.success) {
                     // Display original input in Calendar Request section
-                    if (imageFile) {
-                        const imageUrl = URL.createObjectURL(imageFile);
-                        originalImage.src = imageUrl;
-                        modalImage.src = imageUrl;
+                    const imageFiles = formData.getAll('image');
+                    if (imageFiles.length > 0) {
+                        const imageContainer = document.createElement('div');
+                        imageContainer.className = 'image-grid';
+
+                        imageFiles.forEach((file, index) => {
+                            const imageWrapper = document.createElement('div');
+                            imageWrapper.className = 'image-preview-wrapper';
+
+                            const img = document.createElement('img');
+                            const fileUrl = URL.createObjectURL(file);
+                            img.src = fileUrl;
+                            img.className = 'preview-thumbnail';
+                            img.alt = `Uploaded image ${index + 1}`;
+
+                            // Add Lightbox2 functionality
+                            const link = document.createElement('a');
+                            link.href = fileUrl;
+                            link.dataset.lightbox = 'upload-preview';
+                            link.appendChild(img);
+                            imageWrapper.appendChild(link);
+
+                            // Debug logging for lightbox
+                            console.log('Created lightbox link:', {
+                                href: link.href,
+                                dataset: link.dataset,
+                                parentElement: link.parentElement
+                            });
+
+                            // Only add click handler for remove button
+                            imageWrapper.addEventListener('click', (e) => {
+                                if (e.target.classList.contains('remove-image')) {
+                                    console.log('Remove button clicked');
+                                }
+                            });
+                            imageContainer.appendChild(imageWrapper);
+                        });
+
+                        originalImageContainer.innerHTML = '';
+                        originalImageContainer.appendChild(imageContainer);
                         originalImageContainer.classList.remove('hidden');
                     }
 
@@ -307,6 +429,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         calendarRequest.classList.add('hidden');
         originalImageContainer.classList.add('hidden');
         originalTextContainer.classList.add('hidden');
+
+        // Clear image previews and selected files
+        imagePreviewContainer.innerHTML = '';
+        selectedFiles.clear();
+        updateFileCounter();
 
         // Show upload section and hide chat section
         uploadSection.classList.remove('hidden');
