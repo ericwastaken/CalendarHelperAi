@@ -37,6 +37,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         const modalImg = document.getElementById('modalImage');
         const closeBtn = modal.querySelector('.close-modal');
 
+        // Log modal state before changes
+        console.log('Modal initial state:', {
+            display: modal.style.display,
+            opacity: modal.style.opacity,
+            zIndex: getComputedStyle(modal).zIndex,
+            classList: Array.from(modal.classList),
+            position: getComputedStyle(modal).position,
+            dimensions: {
+                width: modal.offsetWidth,
+                height: modal.offsetHeight,
+                viewportWidth: window.innerWidth,
+                viewportHeight: window.innerHeight
+            }
+        });
+
         function closeModal() {
             modal.classList.remove('show');
             document.body.style.overflow = '';
@@ -69,9 +84,19 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Show modal
         modal.style.display = 'block';
+        console.log('Modal display set to block');
+        
         requestAnimationFrame(() => {
             modal.classList.add('show');
+            console.log('Modal after show class added:', {
+                display: modal.style.display,
+                opacity: getComputedStyle(modal).opacity,
+                visibility: getComputedStyle(modal).visibility,
+                zIndex: getComputedStyle(modal).zIndex,
+                pointerEvents: getComputedStyle(modal).pointerEvents
+            });
         });
+        
         document.body.style.overflow = 'hidden';
 
         // Load and display image

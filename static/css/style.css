@@ -367,13 +367,33 @@ body {
     background-color: rgba(0, 0, 0, 0.9);
     overflow: hidden;
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
     pointer-events: none;
+    visibility: hidden;
 }
 
 .image-modal.show {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
+}
+
+/* Ensure consistent modal image handling */
+.image-modal img#modalImage {
+    max-width: 90%;
+    max-height: 90vh;
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.image-modal.show img#modalImage {
+    opacity: 1;
 }
 
 .image-modal.fade-in {
