@@ -369,17 +369,15 @@ body {
 }
 
 .image-modal img {
-    max-width: 90%;
+    max-width: 90vw;
     max-height: 90vh;
-    margin: auto;
-    display: block;
+    width: auto;
+    height: auto;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    outline: 2px solid red; /* Debug outline */
-    width: auto;
-    height: auto;
+    object-fit: contain;
 }
 
 .close-modal {
