@@ -86,23 +86,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         modal.style.display = 'block';
         console.log('Modal display set to block');
         
+        // Force reflow
+        modal.offsetHeight;
+        
         requestAnimationFrame(() => {
             console.log('Modal before show class:', {
                 display: modal.style.display,
                 opacity: getComputedStyle(modal).opacity,
-                visibility: getComputedStyle(modal).visibility,
                 zIndex: getComputedStyle(modal).zIndex,
                 pointerEvents: getComputedStyle(modal).pointerEvents,
                 stack: new Error().stack
             });
 
             modal.classList.add('show');
-            modal.style.pointerEvents = 'auto';  // Explicitly set pointer-events
             
             console.log('Modal after show class added:', {
                 display: modal.style.display,
                 opacity: getComputedStyle(modal).opacity,
-                visibility: getComputedStyle(modal).visibility,
                 zIndex: getComputedStyle(modal).zIndex,
                 pointerEvents: getComputedStyle(modal).pointerEvents,
                 classList: Array.from(modal.classList)
