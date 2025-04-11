@@ -266,10 +266,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
-            // Disable process button and show processing indicator
+            // Disable process button and image controls during processing
             processButton.disabled = true;
             processButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing events...';
             processingIndicator.style.display = 'block';
+            
+            // Disable all remove buttons and preview clicks
+            document.querySelectorAll('.remove-image').forEach(btn => btn.disabled = true);
+            document.querySelectorAll('.image-preview-item').forEach(item => {
+                item.style.pointerEvents = 'none';
+                item.style.opacity = '0.7';
+            });
 
             const response = await fetch('/process', {
                 method: 'POST',
