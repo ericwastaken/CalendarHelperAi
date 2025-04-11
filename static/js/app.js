@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const chatSection = document.getElementById('chatSection');
     const actionButtons = document.getElementById('actionButtons');
 
-    // New elements for modals
+    // Modal elements for terms and examples
     const dataModal = document.getElementById('dataModal');
     const readMoreLink = document.getElementById('readMoreLink');
     const termsLink = document.getElementById('termsLink');
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const exampleModal = document.getElementById('exampleModal');
     const closeExampleModalBtn = document.getElementById('closeExampleModal');
 
-    // Modal functionality
+    // Terms and example modal functionality
     function toggleModal(modal, show) {
         if (show) {
             // Load terms content if it hasn't been loaded yet
@@ -221,13 +221,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const originalTextContainer = document.getElementById('originalTextContainer');
     const originalImage = document.getElementById('originalImage');
     const originalText = document.getElementById('originalText');
-    const imageModal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const closeImageModalBtn = document.querySelector('.close-modal');
 
     let sessionTimeout;
-
-    // Image preview functionality handled by Lightbox2
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();

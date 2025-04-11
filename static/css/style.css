@@ -356,8 +356,6 @@ body {
     transform: scale(1.05);
 }
 
-/* Modal styles now handled by Lightbox2 */
-
 .image-preview-item img,
 .image-preview-wrapper img {
     width: 100%;
