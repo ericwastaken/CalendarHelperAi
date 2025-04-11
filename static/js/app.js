@@ -350,23 +350,41 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
 
-                                // Show modal immediately
+                                function closeModal() {
+                                    modal.style.display = 'none';
+                                    document.body.style.overflow = '';
+                                    modalImg.style.opacity = '0';
+                                    modalImg.style.visibility = 'hidden';
+                                }
+
+                                function handleEscape(e) {
+                                    if (e.key === 'Escape') {
+                                        closeModal();
+                                    }
+                                }
+
+                                // Set up event listeners
+                                document.addEventListener('keydown', handleEscape);
+                                modal.addEventListener('click', (e) => {
+                                    if (e.target === modal || e.target === closeBtn) {
+                                        closeModal();
+                                    }
+                                });
+
+                                // Show modal
                                 modal.style.display = 'block';
                                 document.body.style.overflow = 'hidden';
 
-                                // Set image source and handle load
+                                // Load and display image
                                 modalImg.onload = () => {
                                     console.log('Image loaded:', {
                                         naturalWidth: modalImg.naturalWidth,
                                         naturalHeight: modalImg.naturalHeight
                                     });
-
-                                    // Show image once loaded
                                     modalImg.style.opacity = '1';
                                     modalImg.style.visibility = 'visible';
                                 };
 
-                                // Reset image state before loading
                                 modalImg.style.opacity = '0';
                                 modalImg.style.visibility = 'hidden';
                                 modalImg.src = imageUrl;

@@ -366,6 +366,12 @@ body {
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.9);
     overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.image-modal.fade-in {
+    opacity: 1;
 }
 
 .image-modal img {
