@@ -70,22 +70,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         function closeModal() {
             trackEvent('close_started');
             modal.classList.remove('show');
+            modal.style.opacity = '0';
             document.body.style.overflow = '';
-            console.log('Modal closing state:', {
-                display: modal.style.display,
-                opacity: getComputedStyle(modal).opacity,
-                classList: Array.from(modal.classList)
-            });
             
-            setTimeout(() => {
+            // Wait for transition
+            modal.addEventListener('transitionend', function handler() {
+                modal.removeEventListener('transitionend', handler);
                 modal.style.display = 'none';
+                modal.style.pointerEvents = 'none';
                 trackEvent('close_completed');
-                console.log('Modal final state:', {
-                    display: modal.style.display,
-                    opacity: getComputedStyle(modal).opacity,
-                    classList: Array.from(modal.classList)
-                });
-            }, 300);
+            });
         }
 
         function handleEscape(e) {
@@ -122,14 +116,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             computedDisplay: getComputedStyle(modal).display
         });
 
-        // Clear existing classes and styles
+        // Reset modal state
         modal.className = 'image-modal';
         modal.style.cssText = '';
-        
-        // Set initial styles
         modal.style.display = 'block';
         modal.style.visibility = 'visible';
         modal.style.opacity = '0';
+        modal.style.pointerEvents = 'auto';
         
         console.log('Initial modal setup:', {
             display: modal.style.display,
