@@ -356,15 +356,31 @@ document.addEventListener('DOMContentLoaded', async function() {
                                     closeBtn: closeBtn
                                 });
 
+                                // Reset modal image and ensure it's loaded
+                                modalImg.onload = () => {
+                                    modal.style.display = 'block';
+                                    document.body.style.overflow = 'hidden';
+                                };
                                 modalImg.src = imageUrl;
-                                modal.style.display = 'block';
-                                document.body.style.overflow = 'hidden';
+
+                                // Fallback if image is cached and onload doesn't fire
+                                if (modalImg.complete) {
+                                    modal.style.display = 'block';
+                                    document.body.style.overflow = 'hidden';
+                                }
 
                                 console.log('Modal displayed with styles:', {
                                     modalDisplay: modal.style.display,
                                     imgSrc: modalImg.src,
                                     modalZIndex: window.getComputedStyle(modal).zIndex,
                                     bodyOverflow: document.body.style.overflow
+                                });
+
+                                console.log('Image dimensions:', {
+                                    naturalWidth: modalImg.naturalWidth,
+                                    naturalHeight: modalImg.naturalHeight,
+                                    displayWidth: modalImg.offsetWidth,
+                                    displayHeight: modalImg.offsetHeight
                                 });
 
                                 function closeModal() {
