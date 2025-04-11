@@ -37,6 +37,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         const modalImg = document.getElementById('modalImage');
         const closeBtn = modal.querySelector('.close-modal');
 
+        // Track modal events
+        const modalEvents = [];
+        const trackEvent = (event) => {
+            const timestamp = new Date().toISOString();
+            modalEvents.push({ timestamp, event });
+            console.log('Modal Event:', { timestamp, event });
+        };
+
+        trackEvent('init');
+
         // Log modal state before changes
         console.log('Modal initial state:', {
             display: modal.style.display,
@@ -49,14 +59,32 @@ document.addEventListener('DOMContentLoaded', async function() {
                 height: modal.offsetHeight,
                 viewportWidth: window.innerWidth,
                 viewportHeight: window.innerHeight
+            },
+            computedStyles: {
+                visibility: getComputedStyle(modal).visibility,
+                transform: getComputedStyle(modal).transform,
+                transition: getComputedStyle(modal).transition
             }
         });
 
         function closeModal() {
+            trackEvent('close_started');
             modal.classList.remove('show');
             document.body.style.overflow = '';
+            console.log('Modal closing state:', {
+                display: modal.style.display,
+                opacity: getComputedStyle(modal).opacity,
+                classList: Array.from(modal.classList)
+            });
+            
             setTimeout(() => {
                 modal.style.display = 'none';
+                trackEvent('close_completed');
+                console.log('Modal final state:', {
+                    display: modal.style.display,
+                    opacity: getComputedStyle(modal).opacity,
+                    classList: Array.from(modal.classList)
+                });
             }, 300);
         }
 
@@ -130,13 +158,40 @@ document.addEventListener('DOMContentLoaded', async function() {
                 });
                 
                 // Log transition state
+                // Track transition phases
+                modal.addEventListener('transitionstart', (e) => {
+                    trackEvent('transition_start');
+                    console.log('Transition started:', {
+                        property: e.propertyName,
+                        opacity: getComputedStyle(modal).opacity,
+                        display: getComputedStyle(modal).display,
+                        elapsedTime: e.elapsedTime
+                    });
+                });
+
                 modal.addEventListener('transitionend', (e) => {
+                    trackEvent('transition_end');
                     console.log('Transition ended:', {
+                        property: e.propertyName,
+                        opacity: getComputedStyle(modal).opacity,
+                        display: getComputedStyle(modal).display,
+                        elapsedTime: e.elapsedTime,
+                        finalState: {
+                            visibility: getComputedStyle(modal).visibility,
+                            transform: getComputedStyle(modal).transform,
+                            pointerEvents: getComputedStyle(modal).pointerEvents
+                        }
+                    });
+                });
+
+                modal.addEventListener('transitioncancel', (e) => {
+                    trackEvent('transition_cancelled');
+                    console.log('Transition cancelled:', {
                         property: e.propertyName,
                         opacity: getComputedStyle(modal).opacity,
                         display: getComputedStyle(modal).display
                     });
-                }, { once: true });
+                });
             });
         });
         
