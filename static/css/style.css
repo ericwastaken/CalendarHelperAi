@@ -286,14 +286,14 @@ body {
 
 .remove-image {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: -8px;
+    right: -8px;
     background: rgba(231, 76, 60, 0.9);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -308,9 +308,11 @@ body {
 
 @media (max-width: 768px) {
     .remove-image {
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         font-size: 12px;
+        top: -6px;
+        right: -6px;
     }
 }
 
