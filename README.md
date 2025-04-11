@@ -1,12 +1,12 @@
 ## Chat with a calendar assistant
 
-Ever been handed a tiny reminder card after booking an appointment—at the dentist, a massage therapist, or even a pedicure—only to shove it in your pocket, promising yourself you'll add it to your digital calendar later? (And then... forget? 😅)
+Ever been handed multiple reminder cards after booking appointments—at the dentist, a massage therapist, or even a pedicure—only to shove them in your pocket, promising yourself you'll add them to your digital calendar later? (And then... forget? 😅)
 
 This chatbot solves this problem in seconds.
 
 📸 How it works:
 
-1️⃣ Launch the app on your phone (or computer), tap Choose File, and TAKE PHOTO of the reminder card.
+1️⃣ Launch the app on your phone (or computer), tap Choose File, and upload one or more photos of your reminder cards (up to 5 images at once).
 
 2️⃣ Give the AI chatbot some quick instructions.
 
