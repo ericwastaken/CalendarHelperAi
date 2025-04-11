@@ -285,10 +285,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             img.src = URL.createObjectURL(file);
             previewItem.onclick = (e) => {
                 if (!e.target.classList.contains('remove-image')) {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(file);
-                    link.dataset.lightbox = 'image-set';
-                    link.click();
+                    showImageModal(URL.createObjectURL(file));
                 }
             };
 
