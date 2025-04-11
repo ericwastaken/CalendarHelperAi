@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     const uploadCounter = document.getElementById('uploadCounter');
     const uploadLimitWarning = document.getElementById('uploadLimitWarning');
-    
+
     let selectedFiles = new Set();
 
     // Handle file selection
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     function handleFileSelection(newFiles) {
         // Clear previous warnings
         uploadLimitWarning.textContent = '';
-        
+
         // Check if adding these files would exceed the limit
         if (selectedFiles.size + newFiles.length > 5) {
             uploadLimitWarning.textContent = `Cannot add more images. Maximum is 5 (currently have ${selectedFiles.size})`;
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Validate total size and file types
         let totalSize = Array.from(selectedFiles).reduce((sum, file) => sum + file.size, 0);
         const invalidFiles = [];
-        
+
         newFiles.forEach(file => {
             totalSize += file.size;
             if (!appConfig.allowedImageTypes.includes(file.type)) {
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             selectedFiles.add(file);
             const previewItem = document.createElement('div');
             previewItem.className = 'image-preview-item';
-            
+
             const img = document.createElement('img');
             img.src = URL.createObjectURL(file);
             previewItem.onclick = () => {
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 modalImg.src = URL.createObjectURL(file);
                 document.body.style.overflow = 'hidden';
             };
-            
+
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-image';
             removeBtn.innerHTML = '×';
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     imageInput.value = '';
                 }
             };
-            
+
             previewItem.appendChild(img);
             previewItem.appendChild(removeBtn);
             imagePreviewContainer.appendChild(previewItem);
@@ -242,11 +242,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData();
-        
+
         // Add text input
         const textInput = document.getElementById('text').value;
         formData.append('text', textInput);
-        
+
         // Add selected files
         selectedFiles.forEach(file => {
             formData.append('image', file);
@@ -334,16 +334,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                             imageWrapper.className = 'image-preview-wrapper';
 
                             const img = document.createElement('img');
-                            img.src = URL.createObjectURL(file);
+                            const fileUrl = URL.createObjectURL(file);
+                            img.src = fileUrl;
                             img.className = 'preview-thumbnail';
                             img.alt = `Uploaded image ${index + 1}`;
-                            
+
                             // Add click handler for modal
                             imageWrapper.addEventListener('click', () => {
                                 const modal = document.getElementById('imageModal');
                                 const modalImg = document.getElementById('modalImage');
                                 modal.style.display = 'block';
-                                modalImg.src = URL.createObjectURL(file);
+                                modalImg.src = fileUrl;
                                 document.body.style.overflow = 'hidden';
                             });
 
