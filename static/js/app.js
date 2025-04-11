@@ -423,6 +423,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         originalImageContainer.classList.add('hidden');
         originalTextContainer.classList.add('hidden');
 
+        // Clear image previews and selected files
+        imagePreviewContainer.innerHTML = '';
+        selectedFiles.clear();
+        updateFileCounter();
+
         // Show upload section and hide chat section
         uploadSection.classList.remove('hidden');
         chatSection.classList.add('hidden');
