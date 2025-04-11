@@ -94,39 +94,49 @@ document.addEventListener('DOMContentLoaded', async function() {
             computedDisplay: getComputedStyle(modal).display
         });
 
+        // Clear existing classes and styles
+        modal.className = 'image-modal';
+        modal.style.cssText = '';
+        
         // Set initial styles
         modal.style.display = 'block';
         modal.style.visibility = 'visible';
-        console.log('Modal display and visibility set');
+        modal.style.opacity = '0';
         
-        // Force reflow and log
+        console.log('Initial modal setup:', {
+            display: modal.style.display,
+            opacity: getComputedStyle(modal).opacity,
+            visibility: getComputedStyle(modal).visibility,
+            transition: getComputedStyle(modal).transition
+        });
+        
+        // Force reflow
         const reflow = modal.offsetHeight;
         console.log('Forced reflow:', reflow);
         
+        // Use double RAF for reliable transition
         requestAnimationFrame(() => {
-            // Log pre-animation frame state
-            console.log('Pre-animation frame state:', {
-                display: modal.style.display,
-                opacity: getComputedStyle(modal).opacity,
-                visibility: getComputedStyle(modal).visibility,
-                zIndex: getComputedStyle(modal).zIndex,
-                pointerEvents: getComputedStyle(modal).pointerEvents,
-                transition: getComputedStyle(modal).transition,
-                classList: Array.from(modal.classList)
-            });
-
-            modal.classList.add('show');
-            modal.style.pointerEvents = 'auto';
-            
-            // Log post-show class state
-            console.log('Post-show class state:', {
-                display: modal.style.display,
-                opacity: getComputedStyle(modal).opacity,
-                visibility: getComputedStyle(modal).visibility,
-                zIndex: getComputedStyle(modal).zIndex,
-                pointerEvents: getComputedStyle(modal).pointerEvents,
-                transition: getComputedStyle(modal).transition,
-                classList: Array.from(modal.classList)
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+                modal.style.opacity = '1';
+                modal.style.pointerEvents = 'auto';
+                
+                console.log('After show class:', {
+                    display: modal.style.display,
+                    opacity: getComputedStyle(modal).opacity,
+                    visibility: getComputedStyle(modal).visibility,
+                    transition: getComputedStyle(modal).transition,
+                    classList: Array.from(modal.classList)
+                });
+                
+                // Log transition state
+                modal.addEventListener('transitionend', (e) => {
+                    console.log('Transition ended:', {
+                        property: e.propertyName,
+                        opacity: getComputedStyle(modal).opacity,
+                        display: getComputedStyle(modal).display
+                    });
+                }, { once: true });
             });
         });
         
