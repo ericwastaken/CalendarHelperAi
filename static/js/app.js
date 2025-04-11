@@ -69,16 +69,35 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         function closeModal() {
             trackEvent('close_started');
+            
+            // Ensure pointer events are disabled immediately
+            modal.style.pointerEvents = 'none';
             modal.classList.remove('show');
             modal.style.opacity = '0';
             document.body.style.overflow = '';
             
-            // Wait for transition
-            modal.addEventListener('transitionend', function handler() {
-                modal.removeEventListener('transitionend', handler);
+            // Wait for transition with timeout fallback
+            const transitionTimeout = setTimeout(() => {
+                finishClosing();
+            }, 350); // Slightly longer than transition duration
+            
+            function finishClosing() {
+                clearTimeout(transitionTimeout);
                 modal.style.display = 'none';
-                modal.style.pointerEvents = 'none';
                 trackEvent('close_completed');
+                console.log('Modal final state:', {
+                    display: modal.style.display,
+                    opacity: modal.style.opacity,
+                    pointerEvents: modal.style.pointerEvents,
+                    classList: Array.from(modal.classList)
+                });
+            }
+            
+            modal.addEventListener('transitionend', function handler(e) {
+                if (e.propertyName === 'opacity') {
+                    modal.removeEventListener('transitionend', handler);
+                    finishClosing();
+                }
             });
         }
 
@@ -118,11 +137,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Reset modal state
         modal.className = 'image-modal';
-        modal.style.cssText = '';
-        modal.style.display = 'block';
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '0';
-        modal.style.pointerEvents = 'auto';
+        Object.assign(modal.style, {
+            display: 'block',
+            visibility: 'visible',
+            opacity: '0',
+            pointerEvents: 'none', // Start with no pointer events
+            zIndex: '999999',
+            transition: 'opacity 0.3s ease-in-out'
+        });
+        
+        // Force layout recalculation
+        modal.offsetHeight;
         
         console.log('Initial modal setup:', {
             display: modal.style.display,
