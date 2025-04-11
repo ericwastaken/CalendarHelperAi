@@ -38,12 +38,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         const closeBtn = modal.querySelector('.close-modal');
 
         function closeModal() {
-            modal.classList.remove('show');
+            modal.style.opacity = '0';
             document.body.style.overflow = '';
             setTimeout(() => {
                 modal.style.display = 'none';
-                modalImg.style.opacity = '0';
-                modalImg.style.visibility = 'hidden';
             }, 300);
         }
 
@@ -71,8 +69,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Show modal
         modal.style.display = 'block';
+        modal.style.opacity = '0';
         requestAnimationFrame(() => {
-            modal.classList.add('show');
+            modal.style.opacity = '1';
         });
         document.body.style.overflow = 'hidden';
 
