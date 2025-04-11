@@ -350,9 +350,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
 
-                                // Reset modal and image states
-                                //modal.style.display = 'block'; // Moved this line
-                                modalImg.style.opacity = '0';
+                                // Show modal immediately
+                                modal.style.display = 'block';
                                 document.body.style.overflow = 'hidden';
 
                                 // Set image source and handle load
@@ -362,52 +361,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                                         naturalHeight: modalImg.naturalHeight
                                     });
 
-                                    // Show modal first
-                                    modal.style.display = 'block';
-                                    document.body.style.overflow = 'hidden';
-
-                                    // Force a reflow
-                                    void modal.offsetHeight;
-
-                                    // Show image with a slight delay to ensure modal is visible
-                                    requestAnimationFrame(() => {
-                                        modalImg.style.opacity = '1';
-                                        modalImg.style.visibility = 'visible';
-                                    });
+                                    // Show image once loaded
+                                    modalImg.style.opacity = '1';
+                                    modalImg.style.visibility = 'visible';
                                 };
 
-                                // Reset image state before setting new source
+                                // Reset image state before loading
                                 modalImg.style.opacity = '0';
                                 modalImg.style.visibility = 'hidden';
                                 modalImg.src = imageUrl;
-
-                                function closeModal() {
-                                    modal.style.display = 'none';
-                                    document.body.style.overflow = '';
-                                    cleanup();
-                                }
-
-                                function handleEscape(e) {
-                                    if (e.key === 'Escape') {
-                                        closeModal();
-                                    }
-                                }
-
-                                function handleModalClick(e) {
-                                    if (e.target === modal || e.target === closeBtn) {
-                                        closeModal();
-                                    }
-                                }
-
-                                function cleanup() {
-                                    document.removeEventListener('keydown', handleEscape);
-                                    modal.removeEventListener('click', handleModalClick);
-                                    closeBtn.removeEventListener('click', handleModalClick);
-                                }
-
-                                document.addEventListener('keydown', handleEscape);
-                                modal.addEventListener('click', handleModalClick);
-                                closeBtn.addEventListener('click', handleModalClick);
                             }
 
                             imageWrapper.appendChild(img);
