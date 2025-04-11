@@ -38,10 +38,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         const closeBtn = modal.querySelector('.close-modal');
 
         function closeModal() {
-            modal.style.display = 'none';
+            modal.classList.remove('show');
             document.body.style.overflow = '';
-            modalImg.style.opacity = '0';
-            modalImg.style.visibility = 'hidden';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalImg.style.opacity = '0';
+                modalImg.style.visibility = 'hidden';
+            }, 300);
         }
 
         function handleEscape(e) {
@@ -50,16 +53,27 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         }
 
-        // Set up event listeners
+        // Clean up old event listeners
+        const oldHandleEscape = modal._handleEscape;
+        if (oldHandleEscape) {
+            document.removeEventListener('keydown', oldHandleEscape);
+        }
+        
+        // Set up new event listeners
         document.addEventListener('keydown', handleEscape);
-        modal.addEventListener('click', (e) => {
+        modal._handleEscape = handleEscape;
+        
+        modal.onclick = (e) => {
             if (e.target === modal || e.target === closeBtn) {
                 closeModal();
             }
-        });
+        };
 
         // Show modal
         modal.style.display = 'block';
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+        });
         document.body.style.overflow = 'hidden';
 
         // Load and display image
@@ -396,11 +410,13 @@ document.addEventListener('DOMContentLoaded', async function() {
                             img.alt = `Uploaded image ${index + 1}`;
 
                             // Add click handler for modal
-                            imageWrapper.addEventListener('click', () => {
-                                showImageModal(fileUrl);
+                            imageWrapper.addEventListener('click', (e) => {
+                                // Only show modal if not clicking remove button
+                                if (!e.target.classList.contains('remove-image')) {
+                                    console.log('Preview wrapper clicked, showing modal');
+                                    showImageModal(fileUrl);
+                                }
                             });
-
-                            
 
                             imageWrapper.appendChild(img);
                             imageContainer.appendChild(imageWrapper);
