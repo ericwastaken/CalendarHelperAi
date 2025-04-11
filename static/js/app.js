@@ -137,17 +137,23 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Reset modal state
         modal.className = 'image-modal';
+        modal.style.cssText = ''; // Clear all styles first
+        
+        // Force a repaint by accessing offsetHeight
+        modal.offsetHeight;
+        
+        // Now set new styles
         Object.assign(modal.style, {
             display: 'block',
             visibility: 'visible',
             opacity: '0',
-            pointerEvents: 'none', // Start with no pointer events
+            pointerEvents: 'none',
             zIndex: '999999',
             transition: 'opacity 0.3s ease-in-out'
         });
         
-        // Force layout recalculation
-        modal.offsetHeight;
+        // Force another layout recalculation
+        void modal.offsetHeight;
         
         console.log('Initial modal setup:', {
             display: modal.style.display,
