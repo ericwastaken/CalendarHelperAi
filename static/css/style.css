@@ -378,9 +378,16 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     object-fit: contain;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+.image-preview-item img,
+.image-preview-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .close-modal {

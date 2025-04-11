@@ -349,89 +349,27 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 const modal = document.getElementById('imageModal');
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
-                                
-                                console.log('Modal elements:', {
-                                    modal: modal,
-                                    modalImg: modalImg,
-                                    closeBtn: closeBtn
-                                });
 
-                                console.log('Starting image load process...');
-                                
-                                // Clear any existing onload handlers
-                                modalImg.onload = null;
-                                
-                                // Set up onload handler before setting src
+                                // Reset modal and image states
+                                modal.style.display = 'block';
+                                modalImg.style.opacity = '0';
+                                document.body.style.overflow = 'hidden';
+
+                                // Set image source and handle load
                                 modalImg.onload = () => {
-                                    console.log('Image loaded event fired');
-                                    console.log('Pre-display image dimensions:', {
+                                    console.log('Image loaded:', {
                                         naturalWidth: modalImg.naturalWidth,
-                                        naturalHeight: modalImg.naturalHeight,
-                                        offsetWidth: modalImg.offsetWidth,
-                                        offsetHeight: modalImg.offsetHeight,
-                                        getBoundingClientRect: modalImg.getBoundingClientRect()
+                                        naturalHeight: modalImg.naturalHeight
                                     });
 
-                                    modal.style.display = 'block';
-                                    document.body.style.overflow = 'hidden';
-                                    
-                                    // Force layout recalculation
-                                    modalImg.style.opacity = '0';
-                                    console.log('Modal computed style after display block:', {
-                                        display: window.getComputedStyle(modal).display,
-                                        visibility: window.getComputedStyle(modal).visibility,
-                                        opacity: window.getComputedStyle(modal).opacity,
-                                        position: window.getComputedStyle(modal).position,
-                                        width: window.getComputedStyle(modal).width,
-                                        height: window.getComputedStyle(modal).height
-                                    });
-
-                                    requestAnimationFrame(() => {
-                                        modalImg.style.opacity = '1';
-                                        console.log('Post-RAF image dimensions:', {
-                                            offsetWidth: modalImg.offsetWidth,
-                                            offsetHeight: modalImg.offsetHeight,
-                                            getBoundingClientRect: modalImg.getBoundingClientRect(),
-                                            computedStyle: {
-                                                width: window.getComputedStyle(modalImg).width,
-                                                height: window.getComputedStyle(modalImg).height,
-                                                maxWidth: window.getComputedStyle(modalImg).maxWidth,
-                                                maxHeight: window.getComputedStyle(modalImg).maxHeight,
-                                                objectFit: window.getComputedStyle(modalImg).objectFit,
-                                                position: window.getComputedStyle(modalImg).position
-                                            }
-                                        });
-                                    });
+                                    // Show image once loaded
+                                    modalImg.style.opacity = '1';
+                                    modalImg.style.visibility = 'visible';
                                 };
 
-                                console.log('Setting image src:', imageUrl);
                                 modalImg.src = imageUrl;
 
-                                // Log initial modal state
-                                console.log('Initial modal state:', {
-                                    modalDisplay: modal.style.display,
-                                    modalVisibility: modal.style.visibility,
-                                    modalZIndex: window.getComputedStyle(modal).zIndex,
-                                    modalPosition: window.getComputedStyle(modal).position,
-                                    imgSrc: modalImg.src,
-                                    imgComplete: modalImg.complete,
-                                    bodyOverflow: document.body.style.overflow
-                                });
-
-                                // Display modal first
-                                modal.style.display = 'block';
-                                document.body.style.overflow = 'hidden';
-                                
-                                // Give time for modal to be visible before showing image
-                                requestAnimationFrame(() => {
-                                    requestAnimationFrame(() => {
-                                        modalImg.style.opacity = '1';
-                                        modalImg.style.visibility = 'visible';
-                                    });
-                                });
-
                                 function closeModal() {
-                                    console.log('closeModal called');
                                     modal.style.display = 'none';
                                     document.body.style.overflow = '';
                                     cleanup();
