@@ -382,8 +382,25 @@ document.addEventListener('DOMContentLoaded', async function() {
                                     naturalWidth: modalImg.naturalWidth,
                                     naturalHeight: modalImg.naturalHeight,
                                     displayWidth: modalImg.offsetWidth,
-                                    displayHeight: modalImg.offsetHeight
+                                    displayHeight: modalImg.offsetHeight,
+                                    clientWidth: modalImg.clientWidth,
+                                    clientHeight: modalImg.clientHeight,
+                                    modalWidth: modal.offsetWidth,
+                                    modalHeight: modal.offsetHeight,
+                                    computedStyle: {
+                                        width: window.getComputedStyle(modalImg).width,
+                                        height: window.getComputedStyle(modalImg).height,
+                                        maxWidth: window.getComputedStyle(modalImg).maxWidth,
+                                        maxHeight: window.getComputedStyle(modalImg).maxHeight
+                                    }
                                 });
+
+                                // Force a reflow to ensure proper sizing
+                                modalImg.style.visibility = 'hidden';
+                                modalImg.style.display = 'none';
+                                void modalImg.offsetHeight; // Force reflow
+                                modalImg.style.display = 'block';
+                                modalImg.style.visibility = 'visible';
 
                                 function closeModal() {
                                     console.log('closeModal called');

@@ -377,18 +377,9 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-}
-
-.image-modal img {
-    max-width: 90%;
-    max-height: 90vh;
-    margin: 0;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     outline: 2px solid red; /* Debug outline */
-    transition: opacity 0.2s;
+    width: auto;
+    height: auto;
 }
 
 .close-modal {
