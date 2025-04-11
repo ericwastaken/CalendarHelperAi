@@ -348,6 +348,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                             img.alt = `Uploaded image ${index + 1}`;
 
                             // Add click handler for modal
+                            // Define showImageModal function
+                            function showImageModal(url) {
+                                console.log('showImageModal called with URL:', url);
+                                const modal = document.getElementById('imageModal');
+                                const modalImg = document.getElementById('modalImage');
+
+                                modalImg.src = url;
+                                modal.style.display = 'block';
+                                document.body.style.overflow = 'hidden';
+                            }
+
                             imageWrapper.addEventListener('click', (e) => {
                                 console.log('Preview wrapper clicked:', {
                                     target: e.target.tagName,
