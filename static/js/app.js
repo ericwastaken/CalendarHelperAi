@@ -56,11 +56,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (oldHandleEscape) {
             document.removeEventListener('keydown', oldHandleEscape);
         }
-        
+
         // Set up new event listeners
         document.addEventListener('keydown', handleEscape);
         modal._handleEscape = handleEscape;
-        
+
         modal.onclick = (e) => {
             if (e.target === modal || e.target === closeBtn) {
                 closeModal();
@@ -410,10 +410,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                             // Add click handler for modal
                             imageWrapper.addEventListener('click', (e) => {
+                                console.log('Preview wrapper clicked:', {
+                                    target: e.target.tagName,
+                                    classList: Array.from(e.target.classList),
+                                    isRemoveButton: e.target.classList.contains('remove-image')
+                                });
+
                                 // Only show modal if not clicking remove button
                                 if (!e.target.classList.contains('remove-image')) {
-                                    console.log('Preview wrapper clicked, showing modal');
-                                    showImageModal(fileUrl);
+                                    console.log('Showing modal for file URL:', fileUrl);
+                                    try {
+                                        showImageModal(fileUrl);
+                                    } catch (error) {
+                                        console.error('Error showing image modal:', error);
+                                    }
+                                } else {
+                                    console.log('Remove button clicked, skipping modal');
                                 }
                             });
 
