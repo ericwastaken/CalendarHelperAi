@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 const closeBtn = modal.querySelector('.close-modal');
 
                                 // Reset modal and image states
-                                modal.style.display = 'block';
+                                //modal.style.display = 'block'; // Moved this line
                                 modalImg.style.opacity = '0';
                                 document.body.style.overflow = 'hidden';
 
@@ -362,11 +362,23 @@ document.addEventListener('DOMContentLoaded', async function() {
                                         naturalHeight: modalImg.naturalHeight
                                     });
 
-                                    // Show image once loaded
-                                    modalImg.style.opacity = '1';
-                                    modalImg.style.visibility = 'visible';
+                                    // Show modal first
+                                    modal.style.display = 'block';
+                                    document.body.style.overflow = 'hidden';
+
+                                    // Force a reflow
+                                    void modal.offsetHeight;
+
+                                    // Show image with a slight delay to ensure modal is visible
+                                    requestAnimationFrame(() => {
+                                        modalImg.style.opacity = '1';
+                                        modalImg.style.visibility = 'visible';
+                                    });
                                 };
 
+                                // Reset image state before setting new source
+                                modalImg.style.opacity = '0';
+                                modalImg.style.visibility = 'hidden';
                                 modalImg.src = imageUrl;
 
                                 function closeModal() {
