@@ -343,9 +343,31 @@ document.addEventListener('DOMContentLoaded', async function() {
                             imageWrapper.addEventListener('click', () => {
                                 const modal = document.getElementById('imageModal');
                                 const modalImg = document.getElementById('modalImage');
+                                const closeBtn = modal.querySelector('.close-modal');
+                                
                                 modal.style.display = 'block';
                                 modalImg.src = fileUrl;
                                 document.body.style.overflow = 'hidden';
+
+                                // Ensure modal close functionality
+                                const closeModal = () => {
+                                    modal.style.display = 'none';
+                                    document.body.style.overflow = '';
+                                };
+
+                                closeBtn.onclick = closeModal;
+                                modal.onclick = (e) => {
+                                    if (e.target === modal) {
+                                        closeModal();
+                                    }
+                                };
+                                
+                                // Add escape key handler
+                                document.addEventListener('keydown', function(e) {
+                                    if (e.key === 'Escape') {
+                                        closeModal();
+                                    }
+                                });
                             });
 
                             imageWrapper.appendChild(img);
