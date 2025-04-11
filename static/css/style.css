@@ -269,9 +269,13 @@ body {
     aspect-ratio: 1;
     border: 2px solid #ddd;
     border-radius: 8px;
-    overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s;
+}
+
+.image-preview-item img {
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .image-preview-item img {
