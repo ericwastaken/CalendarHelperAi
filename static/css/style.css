@@ -29,6 +29,14 @@ body {
     position: absolute;
     top: 0;
     right: 0;
+
+.processing-message {
+    margin-top: 10px;
+    color: #666;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
     color: #666;
     font-size: 0.8rem;
 }
