@@ -345,29 +345,34 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
                                 
-                                modal.style.display = 'block';
                                 modalImg.src = fileUrl;
+                                modal.style.display = 'block';
                                 document.body.style.overflow = 'hidden';
 
-                                // Ensure modal close functionality
                                 const closeModal = () => {
                                     modal.style.display = 'none';
                                     document.body.style.overflow = '';
+                                    // Remove event listeners when closing
+                                    document.removeEventListener('keydown', handleEscape);
+                                    modal.removeEventListener('click', handleModalClick);
+                                    closeBtn.removeEventListener('click', closeModal);
                                 };
 
-                                closeBtn.onclick = closeModal;
-                                modal.onclick = (e) => {
+                                const handleEscape = (e) => {
+                                    if (e.key === 'Escape') {
+                                        closeModal();
+                                    }
+                                };
+
+                                const handleModalClick = (e) => {
                                     if (e.target === modal) {
                                         closeModal();
                                     }
                                 };
-                                
-                                // Add escape key handler
-                                document.addEventListener('keydown', function(e) {
-                                    if (e.key === 'Escape') {
-                                        closeModal();
-                                    }
-                                });
+
+                                closeBtn.addEventListener('click', closeModal);
+                                modal.addEventListener('click', handleModalClick);
+                                document.addEventListener('keydown', handleEscape);
                             });
 
                             imageWrapper.appendChild(img);
