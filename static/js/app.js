@@ -341,39 +341,46 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                             // Add click handler for modal
                             imageWrapper.addEventListener('click', () => {
+                                showImageModal(fileUrl);
+                            });
+
+                            function showImageModal(imageUrl) {
                                 const modal = document.getElementById('imageModal');
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
                                 
-                                modalImg.src = fileUrl;
+                                modalImg.src = imageUrl;
                                 modal.style.display = 'block';
                                 document.body.style.overflow = 'hidden';
 
-                                const closeModal = () => {
+                                function closeModal() {
                                     modal.style.display = 'none';
                                     document.body.style.overflow = '';
-                                    // Remove event listeners when closing
-                                    document.removeEventListener('keydown', handleEscape);
-                                    modal.removeEventListener('click', handleModalClick);
-                                    closeBtn.removeEventListener('click', closeModal);
-                                };
+                                    cleanup();
+                                }
 
-                                const handleEscape = (e) => {
+                                function handleEscape(e) {
                                     if (e.key === 'Escape') {
                                         closeModal();
                                     }
-                                };
+                                }
 
-                                const handleModalClick = (e) => {
-                                    if (e.target === modal) {
+                                function handleModalClick(e) {
+                                    if (e.target === modal || e.target === closeBtn) {
                                         closeModal();
                                     }
-                                };
+                                }
 
-                                closeBtn.addEventListener('click', closeModal);
-                                modal.addEventListener('click', handleModalClick);
+                                function cleanup() {
+                                    document.removeEventListener('keydown', handleEscape);
+                                    modal.removeEventListener('click', handleModalClick);
+                                    closeBtn.removeEventListener('click', handleModalClick);
+                                }
+
                                 document.addEventListener('keydown', handleEscape);
-                            });
+                                modal.addEventListener('click', handleModalClick);
+                                closeBtn.addEventListener('click', handleModalClick);
+                            }
 
                             imageWrapper.appendChild(img);
                             imageContainer.appendChild(imageWrapper);
