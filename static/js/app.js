@@ -331,10 +331,33 @@ document.addEventListener('DOMContentLoaded', async function() {
                             link.appendChild(img);
                             imageWrapper.appendChild(link);
 
-                            // Handle remove button clicks
+                            // Debug logging for lightbox
+                            console.log('Created lightbox link:', {
+                                href: link.href,
+                                dataset: link.dataset,
+                                parentElement: link.parentElement
+                            });
+
+                            // Handle clicks
                             imageWrapper.addEventListener('click', (e) => {
+                                console.log('Image wrapper clicked:', {
+                                    target: e.target.tagName,
+                                    classList: Array.from(e.target.classList),
+                                    isLink: e.target.closest('a') !== null,
+                                    lightboxData: e.target.closest('a')?.dataset
+                                });
+
                                 if (e.target.classList.contains('remove-image')) {
                                     console.log('Remove button clicked');
+                                } else {
+                                    // Try to find and click the lightbox link
+                                    const lightboxLink = e.target.closest('a[data-lightbox]');
+                                    if (lightboxLink) {
+                                        console.log('Triggering lightbox click');
+                                        lightboxLink.click();
+                                    } else {
+                                        console.warn('No lightbox link found for click');
+                                    }
                                 }
                             });
 
