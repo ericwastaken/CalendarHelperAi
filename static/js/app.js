@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const closeBtn = modal.querySelector('.close-modal');
 
         function closeModal() {
-            modal.style.opacity = '0';
+            modal.classList.remove('show');
             document.body.style.overflow = '';
             setTimeout(() => {
                 modal.style.display = 'none';
@@ -69,9 +69,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Show modal
         modal.style.display = 'block';
-        modal.style.opacity = '0';
         requestAnimationFrame(() => {
-            modal.style.opacity = '1';
+            modal.classList.add('show');
         });
         document.body.style.overflow = 'hidden';
 
