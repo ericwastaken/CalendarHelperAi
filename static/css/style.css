@@ -302,8 +302,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    padding: 0;
     z-index: 2;
+}
+
+.remove-image i {
+    font-size: 12px;
 }
 
 .remove-image:hover {

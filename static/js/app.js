@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-image';
-            removeBtn.innerHTML = '×';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
             removeBtn.onclick = (e) => {
                 console.log('Remove button clicked');
                 e.stopPropagation(); // Prevent event from bubbling to preview handler
