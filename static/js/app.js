@@ -30,211 +30,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     let selectedFiles = new Set();
 
-    function showImageModal(imageUrl) {
-        console.log('showImageModal called with URL:', imageUrl);
-        console.log('Called from:', new Error().stack);
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        const closeBtn = modal.querySelector('.close-modal');
-
-        // Track modal events
-        const modalEvents = [];
-        const trackEvent = (event) => {
-            const timestamp = new Date().toISOString();
-            modalEvents.push({ timestamp, event });
-            console.log('Modal Event:', { timestamp, event });
-        };
-
-        trackEvent('init');
-
-        // Log modal state before changes
-        console.log('Modal initial state:', {
-            display: modal.style.display,
-            opacity: modal.style.opacity,
-            zIndex: getComputedStyle(modal).zIndex,
-            classList: Array.from(modal.classList),
-            position: getComputedStyle(modal).position,
-            dimensions: {
-                width: modal.offsetWidth,
-                height: modal.offsetHeight,
-                viewportWidth: window.innerWidth,
-                viewportHeight: window.innerHeight
-            },
-            computedStyles: {
-                visibility: getComputedStyle(modal).visibility,
-                transform: getComputedStyle(modal).transform,
-                transition: getComputedStyle(modal).transition
-            }
-        });
-
-        function closeModal() {
-            trackEvent('close_started');
-
-            // Ensure pointer events are disabled immediately
-            modal.style.pointerEvents = 'none';
-            modal.classList.remove('show');
-            modal.style.opacity = '0';
-            document.body.style.overflow = '';
-
-            // Wait for transition with timeout fallback
-            const transitionTimeout = setTimeout(() => {
-                finishClosing();
-            }, 350); // Slightly longer than transition duration
-
-            function finishClosing() {
-                clearTimeout(transitionTimeout);
-                modal.style.display = 'none';
-                trackEvent('close_completed');
-                console.log('Modal final state:', {
-                    display: modal.style.display,
-                    opacity: modal.style.opacity,
-                    pointerEvents: modal.style.pointerEvents,
-                    classList: Array.from(modal.classList)
-                });
-            }
-
-            modal.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'opacity') {
-                    modal.removeEventListener('transitionend', handler);
-                    finishClosing();
-                }
-            });
-        }
-
-        function handleEscape(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        }
-
-        // Clean up old event listeners
-        const oldHandleEscape = modal._handleEscape;
-        if (oldHandleEscape) {
-            document.removeEventListener('keydown', oldHandleEscape);
-        }
-
-        // Set up new event listeners
-        document.addEventListener('keydown', handleEscape);
-        modal._handleEscape = handleEscape;
-
-        modal.onclick = (e) => {
-            if (e.target === modal || e.target === closeBtn) {
-                closeModal();
-            }
-        };
-
-        // Show modal
-        // Log modal state before any changes
-        console.log('Modal state before changes:', {
-            display: modal.style.display,
-            opacity: getComputedStyle(modal).opacity,
-            visibility: getComputedStyle(modal).visibility,
-            zIndex: getComputedStyle(modal).zIndex,
-            pointerEvents: getComputedStyle(modal).pointerEvents,
-            classList: Array.from(modal.classList),
-            computedDisplay: getComputedStyle(modal).display
-        });
-
-        // Reset modal state
-        modal.className = 'image-modal';
-        modal.style.cssText = ''; // Clear all styles first
-
-        // Force a repaint by accessing offsetHeight
-        modal.offsetHeight;
-
-        // Now set new styles
-        Object.assign(modal.style, {
-            display: 'block',
-            visibility: 'visible',
-            opacity: '0',
-            pointerEvents: 'none',
-            zIndex: '999999',
-            transition: 'opacity 0.3s ease-in-out'
-        });
-
-        // Force another layout recalculation
-        void modal.offsetHeight;
-
-        console.log('Initial modal setup:', {
-            display: modal.style.display,
-            opacity: getComputedStyle(modal).opacity,
-            visibility: getComputedStyle(modal).visibility,
-            transition: getComputedStyle(modal).transition
-        });
-
-        // Force reflow
-        const reflow = modal.offsetHeight;
-        console.log('Forced reflow:', reflow);
-
-        // Use double RAF for reliable transition
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                modal.classList.add('show');
-                modal.style.opacity = '1';
-                modal.style.pointerEvents = 'auto';
-
-                console.log('After show class:', {
-                    display: modal.style.display,
-                    opacity: getComputedStyle(modal).opacity,
-                    visibility: getComputedStyle(modal).visibility,
-                    transition: getComputedStyle(modal).transition,
-                    classList: Array.from(modal.classList)
-                });
-
-                // Log transition state
-                // Track transition phases
-                modal.addEventListener('transitionstart', (e) => {
-                    trackEvent('transition_start');
-                    console.log('Transition started:', {
-                        property: e.propertyName,
-                        opacity: getComputedStyle(modal).opacity,
-                        display: getComputedStyle(modal).display,
-                        elapsedTime: e.elapsedTime
-                    });
-                });
-
-                modal.addEventListener('transitionend', (e) => {
-                    trackEvent('transition_end');
-                    console.log('Transition ended:', {
-                        property: e.propertyName,
-                        opacity: getComputedStyle(modal).opacity,
-                        display: getComputedStyle(modal).display,
-                        elapsedTime: e.elapsedTime,
-                        finalState: {
-                            visibility: getComputedStyle(modal).visibility,
-                            transform: getComputedStyle(modal).transform,
-                            pointerEvents: getComputedStyle(modal).pointerEvents
-                        }
-                    });
-                });
-
-                modal.addEventListener('transitioncancel', (e) => {
-                    trackEvent('transition_cancelled');
-                    console.log('Transition cancelled:', {
-                        property: e.propertyName,
-                        opacity: getComputedStyle(modal).opacity,
-                        display: getComputedStyle(modal).display
-                    });
-                });
-            });
-        });
-
-        document.body.style.overflow = 'hidden';
-
-        // Load and display image
-        modalImg.onload = () => {
-            console.log('Image loaded:', {
-                naturalWidth: modalImg.naturalWidth,
-                naturalHeight: modalImg.naturalHeight
-            });
-            modalImg.style.opacity = '1';
-            modalImg.style.visibility = 'visible';
-        };
-
-        modalImg.style.opacity = '0';
-        modalImg.style.visibility = 'hidden';
-        modalImg.src = imageUrl;
-    }
+    // Using Lightbox2 for image modal functionality
 
     // Handle file selection
     imageInput.addEventListener('change', function(e) {
@@ -282,12 +78,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             previewItem.className = 'image-preview-item';
 
             const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
+            const fileUrl = URL.createObjectURL(file);
+            img.src = fileUrl;
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.dataset.lightbox = 'image-set';
+            link.appendChild(img);
             previewItem.onclick = (e) => {
                 if (!e.target.classList.contains('remove-image')) {
-                    showImageModal(URL.createObjectURL(file));
+                    link.click();
                 }
             };
+            previewItem.appendChild(link);
 
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-image';
