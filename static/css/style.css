@@ -380,13 +380,13 @@ body {
 }
 
 .image-modal img {
-    margin: auto;
-    display: block;
     max-width: 90%;
     max-height: 90vh;
-    position: relative;
+    margin: 0;
+    position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .close-modal {

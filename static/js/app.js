@@ -345,15 +345,30 @@ document.addEventListener('DOMContentLoaded', async function() {
                             });
 
                             function showImageModal(imageUrl) {
+                                console.log('showImageModal called with URL:', imageUrl);
                                 const modal = document.getElementById('imageModal');
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
                                 
+                                console.log('Modal elements:', {
+                                    modal: modal,
+                                    modalImg: modalImg,
+                                    closeBtn: closeBtn
+                                });
+
                                 modalImg.src = imageUrl;
                                 modal.style.display = 'block';
                                 document.body.style.overflow = 'hidden';
 
+                                console.log('Modal displayed with styles:', {
+                                    modalDisplay: modal.style.display,
+                                    imgSrc: modalImg.src,
+                                    modalZIndex: window.getComputedStyle(modal).zIndex,
+                                    bodyOverflow: document.body.style.overflow
+                                });
+
                                 function closeModal() {
+                                    console.log('closeModal called');
                                     modal.style.display = 'none';
                                     document.body.style.overflow = '';
                                     cleanup();
