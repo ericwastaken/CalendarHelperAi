@@ -324,35 +324,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                             img.className = 'preview-thumbnail';
                             img.alt = `Uploaded image ${index + 1}`;
 
-                            // Add click handler for modal
-                            // Define showImageModal function
-                            function showImageModal(url) {
-                                console.log('showImageModal called with URL:', url);
-                                const modal = document.getElementById('imageModal');
-                                const modalImg = document.getElementById('modalImage');
+                            // Add Lightbox2 functionality
+                            const link = document.createElement('a');
+                            link.href = fileUrl;
+                            link.dataset.lightbox = 'upload-preview';
+                            link.appendChild(img);
+                            imageWrapper.appendChild(link);
 
-                                modalImg.src = url;
-                                modal.style.display = 'block';
-                                document.body.style.overflow = 'hidden';
-                            }
-
+                            // Handle remove button clicks
                             imageWrapper.addEventListener('click', (e) => {
-                                console.log('Preview wrapper clicked:', {
-                                    target: e.target.tagName,
-                                    classList: Array.from(e.target.classList),
-                                    isRemoveButton: e.target.classList.contains('remove-image')
-                                });
-
-                                // Only show modal if not clicking remove button
-                                if (!e.target.classList.contains('remove-image')) {
-                                    console.log('Showing modal for file URL:', fileUrl);
-                                    try {
-                                        showImageModal(fileUrl);
-                                    } catch (error) {
-                                        console.error('Error showing image modal:', error);
-                                    }
-                                } else {
-                                    console.log('Remove button clicked, skipping modal');
+                                if (e.target.classList.contains('remove-image')) {
+                                    console.log('Remove button clicked');
                                 }
                             });
 
