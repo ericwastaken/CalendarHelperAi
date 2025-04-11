@@ -88,12 +88,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-image';
             removeBtn.innerHTML = '×';
-            removeBtn.onclick = () => {
+            removeBtn.onclick = (e) => {
+                console.log('Remove button clicked');
+                e.stopPropagation(); // Prevent event from bubbling to preview handler
                 selectedFiles.delete(file);
                 previewItem.remove();
                 updateFileCounter();
                 if (selectedFiles.size === 0) {
                     imageInput.value = '';
+                }
+            };
+
+            previewItem.onclick = (e) => {
+                console.log('Preview item clicked, showing modal');
+                if (!e.target.classList.contains('remove-image')) {
+                    showImageModal(URL.createObjectURL(file));
                 }
             };
 
@@ -346,6 +355,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                             function showImageModal(imageUrl) {
                                 console.log('showImageModal called with URL:', imageUrl);
+                                console.log('Called from:', new Error().stack);
                                 const modal = document.getElementById('imageModal');
                                 const modalImg = document.getElementById('modalImage');
                                 const closeBtn = modal.querySelector('.close-modal');
