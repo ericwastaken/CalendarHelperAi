@@ -418,12 +418,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                                     bodyOverflow: document.body.style.overflow
                                 });
 
-                                // Force a reflow to ensure proper sizing
-                                modalImg.style.visibility = 'hidden';
-                                modalImg.style.display = 'none';
-                                void modalImg.offsetHeight; // Force reflow
-                                modalImg.style.display = 'block';
-                                modalImg.style.visibility = 'visible';
+                                // Display modal first
+                                modal.style.display = 'block';
+                                document.body.style.overflow = 'hidden';
+                                
+                                // Give time for modal to be visible before showing image
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        modalImg.style.opacity = '1';
+                                        modalImg.style.visibility = 'visible';
+                                    });
+                                });
 
                                 function closeModal() {
                                     console.log('closeModal called');

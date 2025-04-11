@@ -378,6 +378,9 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     object-fit: contain;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .close-modal {
