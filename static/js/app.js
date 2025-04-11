@@ -83,28 +83,49 @@ document.addEventListener('DOMContentLoaded', async function() {
         };
 
         // Show modal
+        // Log modal state before any changes
+        console.log('Modal state before changes:', {
+            display: modal.style.display,
+            opacity: getComputedStyle(modal).opacity,
+            visibility: getComputedStyle(modal).visibility,
+            zIndex: getComputedStyle(modal).zIndex,
+            pointerEvents: getComputedStyle(modal).pointerEvents,
+            classList: Array.from(modal.classList),
+            computedDisplay: getComputedStyle(modal).display
+        });
+
+        // Set initial styles
         modal.style.display = 'block';
-        console.log('Modal display set to block');
+        modal.style.visibility = 'visible';
+        console.log('Modal display and visibility set');
         
-        // Force reflow
-        modal.offsetHeight;
+        // Force reflow and log
+        const reflow = modal.offsetHeight;
+        console.log('Forced reflow:', reflow);
         
         requestAnimationFrame(() => {
-            console.log('Modal before show class:', {
+            // Log pre-animation frame state
+            console.log('Pre-animation frame state:', {
                 display: modal.style.display,
                 opacity: getComputedStyle(modal).opacity,
+                visibility: getComputedStyle(modal).visibility,
                 zIndex: getComputedStyle(modal).zIndex,
                 pointerEvents: getComputedStyle(modal).pointerEvents,
-                stack: new Error().stack
+                transition: getComputedStyle(modal).transition,
+                classList: Array.from(modal.classList)
             });
 
             modal.classList.add('show');
+            modal.style.pointerEvents = 'auto';
             
-            console.log('Modal after show class added:', {
+            // Log post-show class state
+            console.log('Post-show class state:', {
                 display: modal.style.display,
                 opacity: getComputedStyle(modal).opacity,
+                visibility: getComputedStyle(modal).visibility,
                 zIndex: getComputedStyle(modal).zIndex,
                 pointerEvents: getComputedStyle(modal).pointerEvents,
+                transition: getComputedStyle(modal).transition,
                 classList: Array.from(modal.classList)
             });
         });

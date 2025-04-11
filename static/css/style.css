@@ -367,13 +367,15 @@ body {
     background-color: rgba(0, 0, 0, 0.9);
     overflow: hidden;
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
     pointer-events: none;
+    will-change: opacity;
 }
 
 .image-modal.show {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
 }
 
 /* Ensure consistent modal image handling */
