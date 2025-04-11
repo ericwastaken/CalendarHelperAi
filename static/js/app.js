@@ -227,25 +227,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     let sessionTimeout;
 
-    // Image modal functionality
-    originalImage.addEventListener('click', function() {
-        imageModal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    });
-
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', function() {
-            imageModal.style.display = 'none';
-            document.body.style.overflow = '';
-        });
-    });
-
-    imageModal.addEventListener('click', function(e) {
-        if (e.target === imageModal) {
-            imageModal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    });
+    // Image preview functionality handled by Lightbox2
     // Handle file and text upload
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
