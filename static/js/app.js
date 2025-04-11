@@ -30,6 +30,53 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     let selectedFiles = new Set();
 
+    function showImageModal(imageUrl) {
+        console.log('showImageModal called with URL:', imageUrl);
+        console.log('Called from:', new Error().stack);
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const closeBtn = modal.querySelector('.close-modal');
+
+        function closeModal() {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            modalImg.style.opacity = '0';
+            modalImg.style.visibility = 'hidden';
+        }
+
+        function handleEscape(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        }
+
+        // Set up event listeners
+        document.addEventListener('keydown', handleEscape);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target === closeBtn) {
+                closeModal();
+            }
+        });
+
+        // Show modal
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+
+        // Load and display image
+        modalImg.onload = () => {
+            console.log('Image loaded:', {
+                naturalWidth: modalImg.naturalWidth,
+                naturalHeight: modalImg.naturalHeight
+            });
+            modalImg.style.opacity = '1';
+            modalImg.style.visibility = 'visible';
+        };
+
+        modalImg.style.opacity = '0';
+        modalImg.style.visibility = 'hidden';
+        modalImg.src = imageUrl;
+    }
+
     // Handle file selection
     imageInput.addEventListener('change', function(e) {
         const newFiles = Array.from(e.target.files);
@@ -353,52 +400,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 showImageModal(fileUrl);
                             });
 
-                            function showImageModal(imageUrl) {
-                                console.log('showImageModal called with URL:', imageUrl);
-                                console.log('Called from:', new Error().stack);
-                                const modal = document.getElementById('imageModal');
-                                const modalImg = document.getElementById('modalImage');
-                                const closeBtn = modal.querySelector('.close-modal');
-
-                                function closeModal() {
-                                    modal.style.display = 'none';
-                                    document.body.style.overflow = '';
-                                    modalImg.style.opacity = '0';
-                                    modalImg.style.visibility = 'hidden';
-                                }
-
-                                function handleEscape(e) {
-                                    if (e.key === 'Escape') {
-                                        closeModal();
-                                    }
-                                }
-
-                                // Set up event listeners
-                                document.addEventListener('keydown', handleEscape);
-                                modal.addEventListener('click', (e) => {
-                                    if (e.target === modal || e.target === closeBtn) {
-                                        closeModal();
-                                    }
-                                });
-
-                                // Show modal
-                                modal.style.display = 'block';
-                                document.body.style.overflow = 'hidden';
-
-                                // Load and display image
-                                modalImg.onload = () => {
-                                    console.log('Image loaded:', {
-                                        naturalWidth: modalImg.naturalWidth,
-                                        naturalHeight: modalImg.naturalHeight
-                                    });
-                                    modalImg.style.opacity = '1';
-                                    modalImg.style.visibility = 'visible';
-                                };
-
-                                modalImg.style.opacity = '0';
-                                modalImg.style.visibility = 'hidden';
-                                modalImg.src = imageUrl;
-                            }
+                            
 
                             imageWrapper.appendChild(img);
                             imageContainer.appendChild(imageWrapper);
