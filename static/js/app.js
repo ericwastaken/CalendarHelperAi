@@ -356,43 +356,66 @@ document.addEventListener('DOMContentLoaded', async function() {
                                     closeBtn: closeBtn
                                 });
 
-                                // Reset modal image and ensure it's loaded
+                                console.log('Starting image load process...');
+                                
+                                // Clear any existing onload handlers
+                                modalImg.onload = null;
+                                
+                                // Set up onload handler before setting src
                                 modalImg.onload = () => {
+                                    console.log('Image loaded event fired');
+                                    console.log('Pre-display image dimensions:', {
+                                        naturalWidth: modalImg.naturalWidth,
+                                        naturalHeight: modalImg.naturalHeight,
+                                        offsetWidth: modalImg.offsetWidth,
+                                        offsetHeight: modalImg.offsetHeight,
+                                        getBoundingClientRect: modalImg.getBoundingClientRect()
+                                    });
+
                                     modal.style.display = 'block';
                                     document.body.style.overflow = 'hidden';
+                                    
                                     // Force layout recalculation
                                     modalImg.style.opacity = '0';
-                                    setTimeout(() => {
+                                    console.log('Modal computed style after display block:', {
+                                        display: window.getComputedStyle(modal).display,
+                                        visibility: window.getComputedStyle(modal).visibility,
+                                        opacity: window.getComputedStyle(modal).opacity,
+                                        position: window.getComputedStyle(modal).position,
+                                        width: window.getComputedStyle(modal).width,
+                                        height: window.getComputedStyle(modal).height
+                                    });
+
+                                    requestAnimationFrame(() => {
                                         modalImg.style.opacity = '1';
-                                    }, 50);
+                                        console.log('Post-RAF image dimensions:', {
+                                            offsetWidth: modalImg.offsetWidth,
+                                            offsetHeight: modalImg.offsetHeight,
+                                            getBoundingClientRect: modalImg.getBoundingClientRect(),
+                                            computedStyle: {
+                                                width: window.getComputedStyle(modalImg).width,
+                                                height: window.getComputedStyle(modalImg).height,
+                                                maxWidth: window.getComputedStyle(modalImg).maxWidth,
+                                                maxHeight: window.getComputedStyle(modalImg).maxHeight,
+                                                objectFit: window.getComputedStyle(modalImg).objectFit,
+                                                position: window.getComputedStyle(modalImg).position
+                                            }
+                                        });
+                                    });
                                 };
-                                
-                                modal.style.display = 'block';
+
+                                console.log('Setting image src:', imageUrl);
                                 modalImg.src = imageUrl;
-                                document.body.style.overflow = 'hidden';
 
-                                console.log('Modal displayed with styles:', {
+                                // Log initial modal state
+                                console.log('Initial modal state:', {
                                     modalDisplay: modal.style.display,
-                                    imgSrc: modalImg.src,
+                                    modalVisibility: modal.style.visibility,
                                     modalZIndex: window.getComputedStyle(modal).zIndex,
+                                    modalPosition: window.getComputedStyle(modal).position,
+                                    imgSrc: modalImg.src,
+                                    imgComplete: modalImg.complete,
                                     bodyOverflow: document.body.style.overflow
-                                });
-
-                                console.log('Image dimensions:', {
-                                    naturalWidth: modalImg.naturalWidth,
-                                    naturalHeight: modalImg.naturalHeight,
-                                    displayWidth: modalImg.offsetWidth,
-                                    displayHeight: modalImg.offsetHeight,
-                                    clientWidth: modalImg.clientWidth,
-                                    clientHeight: modalImg.clientHeight,
-                                    modalWidth: modal.offsetWidth,
-                                    modalHeight: modal.offsetHeight,
-                                    computedStyle: {
-                                        width: window.getComputedStyle(modalImg).width,
-                                        height: window.getComputedStyle(modalImg).height,
-                                        maxWidth: window.getComputedStyle(modalImg).maxWidth,
-                                        maxHeight: window.getComputedStyle(modalImg).maxHeight
-                                    }
                                 });
 
                                 // Force a reflow to ensure proper sizing
