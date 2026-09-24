@@ -1,6 +1,6 @@
 [project]
 name = "calendar-helper-ai"
-version = "1.0.0"
+version = "1.0.1"
 description = "Calendar Helper AI"
 requires-python = ">=3.11"
 dependencies = [

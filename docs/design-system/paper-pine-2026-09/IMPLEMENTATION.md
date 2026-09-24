@@ -65,3 +65,9 @@ The header renders the installed package version beneath Calendar Helper AI. The
 The brand icon, title, version, Example link, and progress steps share one sticky header at the viewport top. Its opaque surface and stacking order keep scrolled content underneath. The document itself scrolls; the main shell uses overflow clipping rather than a second scrolling container. Focus targets have scroll margins to avoid landing behind the header. Native dialogs remain above it.
 
 The v1.0.0 package was built and installed into a clean environment outside the checkout. All 17 tests passed there, and Gunicorn served the installed wheel. Real text and two-image extraction, corrections, and parsed ICS downloads passed. Safari also verified the sticky header at 320px in Add, Review, and Export, with the Terms dialog above it.
+
+## Contact link in fetched Terms content
+
+The Terms document is fetched and parsed into the dialog. Cloudflare can rewrite mailto links and inject an email decoder script, but scripts in the parsed document do not execute. This left Contact us pointing to the email-protection page in production. Version 1.0.1 wraps only the public contact paragraph in Cloudflare's documented email_off comments and uses a direct mailto link without a new-tab target. Keep this exclusion when editing the Terms HTML.
+
+Verify the deployed /static/terms.html response retains the mailto destination, then open Terms in Safari and check that Contact us opens an email draft addressed to the intended contact. Local-only checks cannot exercise the edge rewrite. See [Cloudflare email obfuscation](https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/).
