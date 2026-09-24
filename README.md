@@ -24,6 +24,10 @@ Check out a LIVE VERSION at [CalendarHelperAI.com](https://calendarhelperai.com)
 
 ## Getting Started
 
+For the DigitalOcean App Platform trial, see [DEPLOYMENT.md](DEPLOYMENT.md). The deployment configuration is in `.do/app.yaml`, with Python 3.11 selected by `.python-version` and Gunicorn startup defined in `Procfile`.
+
+Deployment instructions are maintained in DEPLOYMENT.md.
+
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/ericwastaken/calendar-helper-ai.git
