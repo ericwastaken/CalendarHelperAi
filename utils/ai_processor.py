@@ -103,8 +103,15 @@ def process_event_dates(event):
 
 def process_location_details(event):
     """Helper function to process location details for an event"""
-    event['location_name'] = event.get('location_name', '').strip()
-    event['location_address'] = event.get('location_address', '').strip()
+    event['location_name'] = (event.get('location_name') or '').strip()
+    event['location_address'] = (event.get('location_address') or '').strip()
+    if event['location_name'].lower() in {'unknown', 'none', 'n/a'}:
+        event['location_name'] = ''
+    if event['location_address'].lower() in {'unknown', 'none', 'n/a'}:
+        event['location_address'] = ''
+    if not event['location_name'] and not event['location_address']:
+        event.pop('location', None)
+        return event
 
     if event['location_name'] or event['location_address']:
         location_query = f"{event['location_name']} {event['location_address']}".strip()
@@ -154,7 +161,7 @@ def process_corrections(text, existing_events, timezone=None):
         )
 
         messages = [
-            {"role": "system", "content": CORRECTION_SYSTEM_PROMPT},
+            {"role": "system", "content": CORRECTION_SYSTEM_PROMPT + f"\nUser timezone: {timezone or 'UTC'}. Preserve timezone offsets and unchanged event details."},
             {"role": "user", "content": correction_prompt}
         ]
 
@@ -249,24 +256,6 @@ def process_image_and_text(image_data_list=None, text=None, timezone=None):
                 "content": content
             })
             
-            # Process all images in single call
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                response_format={"type": "json_object"}
-            )
-            
-            if not response.choices[0].message.content:
-                raise Exception("no_response_content")
-                
-            parsed_content = json.loads(response.choices[0].message.content)
-            events = parsed_content.get('events', [])
-            
-            # Process all events
-            for event in events:
-                event = process_event_dates(event)
-                event = process_location_details(event)
-                all_events.append(event)
         elif text:
             messages.append({
                 "role": "user",
@@ -290,8 +279,13 @@ def process_image_and_text(image_data_list=None, text=None, timezone=None):
             debug_log(f"OpenAI response content:\n{json.dumps(parsed_content, indent=2)}")
         except json.JSONDecodeError:
             debug_log(f"OpenAI response content (invalid JSON):\n{response_content}")
-        if not all_events:
-            raise Exception("no_events_found")
+        events = parsed_content.get('events')
+        if not isinstance(events, list):
+            raise ValueError("invalid_event_response")
+        for event in events:
+            event = process_event_dates(event)
+            event = process_location_details(event)
+            all_events.append(event)
 
         debug_log(f"Final processed events:\n{json.dumps({'events': all_events}, indent=2)}")
         return all_events

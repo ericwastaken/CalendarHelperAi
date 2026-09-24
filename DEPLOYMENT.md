@@ -39,7 +39,7 @@ Choose instance capacity based on measured memory use and expected concurrency. 
 - Inspect exported dates and timezones before importing into a calendar.
 - Check error recovery and resource use with representative inputs. Live extraction tests incur AI API usage.
 
-Use fictional events for validation. Prior local checks do not substitute for testing a newly deployed release.
+The [sample image guide](docs/example_images/README.md) provides fictional events for testing. The [design implementation notes](docs/design-system/paper-pine-2026-09/IMPLEMENTATION.md) record local UI validation and its limits. Neither substitutes for checks on a newly deployed release.
 
 The application does not include authentication or an access gate. Account for its public processing endpoints when configuring access and usage limits.
 

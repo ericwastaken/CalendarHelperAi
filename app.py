@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 # Configuration
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secret-key-here')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 21 * 1024 * 1024  # Five 4 MiB images plus multipart overhead
 
 # Import routes after app initialization
 logging.info("Application starting up")

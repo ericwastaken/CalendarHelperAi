@@ -1,128 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#fffefa">
+    <meta name="description" content="Turn schedules, photos, and notes into calendar events. Review, refine, and download a calendar file.">
     <title>Calendar Helper AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/favicon-16.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 </head>
 <body>
-    <div class="container">
-        <header class="app-header">
-            <h1>Calendar Helper AI</h1>
-            <p class="lead">Create calendar events from images and text using AI interpretation</p>
+    <main class="app" aria-label="Calendar Helper AI">
+        <header class="brandbar">
+            <div class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 10h16M8 3v4M16 3v4M8 14h3M13 14h3M8 17h3"/></svg></div>
+            <div class="brand">Calendar Helper <em>AI</em></div>
+            <button type="button" class="text-button" data-dialog="example">Example</button>
         </header>
-
-        <!-- Data Processing Modal -->
-        <div id="dataModal" class="modal">
-            <div class="modal-content">
-                <span class="close-modal" id="closeDataModal">&times;</span>
-                <h2>Terms of Service</h2>
-                <div id="termsContent"></div>
+        <ol class="progress" aria-label="Your progress">
+            <li class="active" data-step="1" aria-current="step">1. Add details</li>
+            <li data-step="2">2. Review</li>
+            <li data-step="3">3. Export</li>
+        </ol>
+        <div class="content" id="screen"><p>Getting your calendar helper ready...</p></div>
+        <noscript><p class="content">Please enable JavaScript to create and review calendar events.</p></noscript>
+        <footer class="foot">
+            <div class="foot-row">
+                <span>Hosted on <a href="https://m.do.co/c/a45d31d9506d" target="_blank" rel="sponsored noopener noreferrer">DigitalOcean</a></span>
+                <button type="button" class="text-button" data-dialog="terms">Terms of Service</button>
             </div>
-        </div>
-
-        <section class="upload-section" id="uploadSection">
-            <form id="uploadForm" class="text-center">
-                <p class="upload-instruction">Upload one or more images with event information and provide instructions for creating calendar items. Note, each image can contain multiple events. <a href="#" id="exampleLink">Example</a></p>
-
-                <!-- Example Modal -->
-                <div id="exampleModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close-modal" id="closeExampleModal">&times;</span>
-                        <h2>Example</h2>
-                        <div id="exampleContent"></div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <input type="file" class="form-control" id="image" name="image" accept="image/*" multiple>
-                    <small class="text-muted">Select up to 5 images</small>
-                    <div id="uploadCounter" class="upload-counter"></div>
-                    <div id="uploadLimitWarning" class="upload-limit-warning"></div>
-                    <div id="imagePreviewContainer" class="image-upload-preview"></div>
-                </div>
-                <div class="mb-3">
-                    <textarea class="form-control" id="text" name="text" rows="3" 
-                              placeholder="Enter event details or instructions..."></textarea>
-                </div>
-                <div id="promptErrorContainer" class="alert alert-danger mb-3" style="display: none;">
-                    <span id="promptErrorMessage"></span>
-                </div>
-                <div class="text-center">
-                    <button type="submit" class="button" id="processButton">Process</button>
-                </div>
-                <div class="processing-indicator" id="processingIndicator">
-                    <p class="processing-message">If your image(s) contain many appointments, for example a printed weekly or monthly calendar page, the initial analysis might take some time.</p>
-                </div>
-            </form>
-        </section>
-
-        <section class="calendar-request hidden" id="calendarRequest">
-            <h3>Calendar Request</h3>
-            <div class="request-details">
-                <div class="original-image-container hidden" id="originalImageContainer">
-                    <div class="image-preview">
-                        <img id="originalImage" src="" alt="Uploaded image" class="thumbnail">
-                    </div>
-                </div>
-                <div class="original-text-container hidden" id="originalTextContainer">
-                    <p id="originalText"></p>
-                </div>
-            </div>
-        </section>
-
-        <section class="chat-section hidden" id="chatSection">
-            <p class="text-muted">Use this chat to make corrections to the events</p>
-            <div class="chat-messages" id="chatMessages">
-                <!-- Chat messages will appear here -->
-            </div>
-            <form id="chatForm">
-                <div class="input-group mb-3">
-                    <textarea class="form-control" id="chatInput" 
-                           placeholder="Type your corrections here..."></textarea>
-                    <button class="button" type="submit">Send</button>
-                </div>
-            </form>
-        </section>
-
-        <section class="events-display hidden" id="eventsDisplay">
-            <!-- Events will be displayed here -->
-        </section>
-
-        <div class="action-buttons" id="actionButtons">
-            <button id="clearButton" class="button button-danger">Clear Session</button>
-            <button id="downloadButton" class="button">Download Calendar File</button>
-        </div>
-    </div>
-
-    <footer class="terms-footer">
-        <p class="terms-text">Using this service constitutes acceptance of our <a href="#" id="termsLink">Terms of Service</a></p>
-        <p class="terms-text">This app built with REPLIT. <a href="https://replit.com/refer/EricSoto1" target="_blank">Get your own REPLIT to begin generating and hosting apps with AI</a></p>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+            <p>By using this service, you accept our terms.</p>
+            <p>Referral link: we may receive account credit.</p>
+        </footer>
+    </main>
+    <p class="sr-only" id="status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <dialog id="modal" aria-labelledby="modal-title">
+        <button type="button" class="modal-close text-button" id="close-modal">Close</button>
+        <div id="modal-content"></div>
+    </dialog>
 </body>
 </html>
-        <!-- Error Modal -->
-        <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Error</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        We've detected an error. Please try again in a few seconds.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="button" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>

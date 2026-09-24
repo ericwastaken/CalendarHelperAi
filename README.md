@@ -16,21 +16,23 @@ This chatbot solves this problem in seconds.
 
 5️⃣ When satisfied, download a single calendar file. On phones, most phones will offer to add the appointments directly to your calendar with one tap! On computers, you will download the file then double click to open and process into your calendar.
 
-## Fun Fact
+## Hosting
 
-This app was generated and is actively maintained using REPLIT.COM. [Get your own REPLIT to begin generating and hosting apps with AI.](https://replit.com/refer/EricSoto1)
+This app is hosted on [DigitalOcean](https://www.digitalocean.com/). Development happens locally on `DEV`, with production releases from `main`.
 
 Check out a LIVE VERSION at [CalendarHelperAI.com](https://calendarhelperai.com).
 
 ## Getting Started
 
-For the DigitalOcean App Platform trial, see [DEPLOYMENT.md](DEPLOYMENT.md). The deployment configuration is in `.do/app.yaml`, with Python 3.11 selected by `.python-version` and Gunicorn startup defined in `Procfile`.
+For DigitalOcean App Platform, see [DEPLOYMENT.md](DEPLOYMENT.md). The deployment configuration is in `.do/app.yaml`, with Python 3.11 selected by `.python-version` and Gunicorn startup defined in `Procfile`.
 
-Deployment instructions are maintained in DEPLOYMENT.md.
+The [production app](https://calendarhelperai.com) is hosted on DigitalOcean. Local development uses `DEV`; reviewed releases go to `main`. See [deployment instructions](DEPLOYMENT.md) for generic setup and validation. Account-specific operations and deployment history are maintained privately.
+
+The approved UI design is documented in [docs/design-system/paper-pine-2026-09/DESIGN_SYSTEM.md](docs/design-system/paper-pine-2026-09/DESIGN_SYSTEM.md), with an interactive [design preview](docs/design-system/paper-pine-2026-09/preview.html). It keeps the application at a 460px maximum width on desktop and adapts to smaller mobile screens. The implementation is being tested locally on DEV; production releases are separate. See [design system history](docs/design-system/README.md).
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/ericwastaken/calendar-helper-ai.git
+   git clone https://github.com/ericwastaken/CalendarHelperAi.git
    ```
 2. **Set up environment variables:**
    Create a `.env` file with the following variables:
@@ -43,7 +45,7 @@ Deployment instructions are maintained in DEPLOYMENT.md.
    OPENAI_API_LEVEL=ERROR
    ```
 
-   Note: The FLASK_SECRET_KEY is only used for securing Flask's development server. This application does not use server-side sessions or store any session data. You can generate a secure key using:
+   Note: FLASK_SECRET_KEY signs Flask session cookies. Appointment results and uploads are held in the browser during the current page session; there is no server-side appointment database. You can generate a secure key using:
    ```bash
    python -c 'import secrets; print(secrets.token_hex(16))'
    ```
@@ -52,15 +54,19 @@ Deployment instructions are maintained in DEPLOYMENT.md.
 
 4. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
+   python -m pip install -e .
    ```
 
 5. **Run the application:**
    ```bash
-   python main.py
+   python -m flask --app main run --host 0.0.0.0 --port 5055 --no-debugger --no-reload
    ```
 
-The application will be available at port 5000.
+The application listens on all IPv4 interfaces at port 5055. On this computer, open http://127.0.0.1:5055; from another device, use this computer's LAN or Tailscale IPv4 address with port 5055. The debugger and reloader stay disabled for network testing. Use `DEV` for local work. Keep credentials in your ignored `.env` or process environment; never put them in this repository. Processing synthetic test requests still uses your OpenAI API account.
+
+## Example images
+
+The [sample image guide](docs/example_images/README.md) includes two realistic, AI-generated photos with fictional events for manual upload testing. The app's Example dialog uses the event-card photo served from `static/images/example-event-cards-2026-09.png`.
 
 ## Project Structure
 
@@ -72,6 +78,8 @@ The application will be available at port 5000.
 │   ├── calendar.py       # iCalendar generation
 │   └── location_service.py # Location services
 ├── static/               # Frontend assets
+├── docs/design-system/   # Versioned design systems and implementation notes
+├── docs/example_images/  # Calendar sample photos and usage guide
 └── templates/            # HTML templates
 ```
 
@@ -109,7 +117,7 @@ Once a prompt is constructed, it is sent through API calls to the OpenAI service
 
 ## Frontend Implementation
 
-The frontend is built using vanilla JavaScript and Bootstrap for styling, providing a responsive and intuitive user interface. The main workflow consists of:
+The frontend uses vanilla JavaScript, local CSS, system fonts, and native dialogs. The Paper + Pine design constrains the desktop app to 460px and adapts to narrow mobile screens. No third-party UI scripts or fonts are required. The main workflow consists of:
 
 1. **Initial Load**:
    - Fetches configuration from `/api/config`
@@ -130,7 +138,7 @@ The frontend is built using vanilla JavaScript and Bootstrap for styling, provid
    - Mobile-responsive design
    - Client-side validation for uploads
 
-The UI maintains state in memory during the session and automatically clears after one hour of inactivity or when manually cleared by the user.
+The UI maintains state in memory during the session and clears one hour after the latest successful processing or session extension. Corrections and exports extend the session, and a warning appears in the final five minutes with a Keep working action. Manual reset requires confirmation when reviewing results.
 
 ## Contributing
 

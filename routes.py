@@ -1,6 +1,7 @@
 import os
 import base64
 from flask import request, jsonify, render_template
+from werkzeug.exceptions import RequestEntityTooLarge
 from app import app
 from utils.ai_processor import process_image_and_text, process_corrections, SafetyValidationError
 from utils.calendar import generate_ics
@@ -24,11 +25,18 @@ def get_config():
 def index():
     return render_template('index.html')
 
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('icons/favicon.ico')
+
+
 @app.route('/process', methods=['POST'])
 def process():
     try:
         images = request.files.getlist('image')
         text = request.form.get('text', '').strip()
+        if not text and not images:
+            return jsonify(success=False, error_type='validation_error', user_message='Choose an image or enter an event name, date, and time.'), 400
         if not text:
             text = "Extract the events in these images."
 
@@ -84,12 +92,14 @@ def process():
             return jsonify({
                 'success': False,
                 'error_type': 'no_events',
-                'user_message': 'No events were found. Please try again.'
+                'user_message': 'Try a clearer image, or add the event name, date, and time.'
             }), 400
 
         app.logger.info(f"Successfully processed request with {len(result)} events")
         return jsonify({'success': True, 'events': result})
 
+    except RequestEntityTooLarge:
+        raise
     except SafetyValidationError as e:
         app.logger.warning(f"Safety validation error: {str(e)}")
         return jsonify({
@@ -109,8 +119,10 @@ def process():
 def correct():
     try:
         data = request.json
-        correction = data.get('correction')
+        correction = (data.get('correction') or '').strip()
         events = data.get('current_events', [])
+        if not correction or not isinstance(events, list) or not events:
+            return jsonify(success=False, error_type='validation_error', user_message='Provide a correction and the events to update.'), 400
         timezone = request.headers.get('X-Timezone', 'UTC')
 
         app.logger.debug(f"Current events before correction: {events}")
@@ -158,3 +170,8 @@ def download_ics():
             'user_message': 'Error generating calendar file'
         }), 500
 
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_large_request(error):
+    return jsonify(success=False, error_type='validation_error', user_message='Choose up to 5 images, no larger than 4 MB each.'), 413
