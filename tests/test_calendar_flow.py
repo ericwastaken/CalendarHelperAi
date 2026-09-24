@@ -1,19 +1,21 @@
 """Regression checks for the input/review/export workflow. No external API calls."""
 import io
 import json
-import os
 import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-# Tests never depend on or transmit the developer's credentials.
-os.environ['OPENAI_API_KEY'] = 'sk-local-unit-test-only'
-os.environ['DEBUG_LOGGING'] = 'false'
-from app import app
-from utils import ai_processor
-from utils.calendar import generate_ics
+from calendar_helper_ai import create_app
+from calendar_helper_ai.services import ai_processor
+from calendar_helper_ai.services.calendar import generate_ics
+
+# Inject a fake client; tests never read .env or transmit developer credentials.
+ai_client = MagicMock()
+app = create_app({'TESTING': True, 'SECRET_KEY': 'test-only',
+                  'OPENAI_API_KEY': None, 'OPENAI_CLIENT': ai_client,
+                  'DEBUG_LOGGING': False})
 from icalendar import Calendar
 
 EVENT = {
@@ -33,7 +35,7 @@ class ExtractionTests(unittest.TestCase):
 
     def test_text_and_image_use_one_extraction_and_return_events(self):
         for images in ([], [{'data': 'synthetic-base64', 'filename': 'test.png'}]):
-            with self.subTest(images=bool(images)), app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_processor.client.chat.completions, 'create', return_value=ai_response([EVENT])) as create:
+            with self.subTest(images=bool(images)), app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_client.chat.completions, 'create', return_value=ai_response([EVENT])) as create:
                 result = ai_processor.process_image_and_text(images, 'October 2, 2026, 10 AM', 'America/New_York')
                 self.assertEqual(result[0]['title'], EVENT['title'])
                 self.assertNotIn('location', result[0])
@@ -41,12 +43,12 @@ class ExtractionTests(unittest.TestCase):
 
 
     def test_no_events_is_a_valid_empty_result(self):
-        with app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_processor.client.chat.completions, 'create', return_value=ai_response([])):
+        with app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_client.chat.completions, 'create', return_value=ai_response([])):
             self.assertEqual(ai_processor.process_image_and_text([], 'No appointments', 'UTC'), [])
 
 
     def test_malformed_model_result_is_not_success(self):
-        with app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_processor.client.chat.completions, 'create', return_value=ai_response('invalid')):
+        with app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_client.chat.completions, 'create', return_value=ai_response('invalid')):
             with self.assertRaises(Exception):
                 ai_processor.process_image_and_text([], 'An event', 'UTC')
 
@@ -59,21 +61,21 @@ class EndpointTests(unittest.TestCase):
 
 
     def test_empty_input_does_not_call_ai(self):
-        with patch('routes.process_image_and_text') as process:
+        with patch('calendar_helper_ai.routes.process_image_and_text') as process:
             response = self.client.post('/process', data={})
             self.assertEqual(response.status_code, 400)
             process.assert_not_called()
 
 
     def test_empty_result_is_actionable(self):
-        with patch('routes.process_image_and_text', return_value=[]):
+        with patch('calendar_helper_ai.routes.process_image_and_text', return_value=[]):
             response = self.client.post('/process', data={'text': 'No calendar events here'})
             self.assertEqual(response.status_code, 400)
             self.assertEqual(response.json['error_type'], 'no_events')
 
 
     def test_later_oversized_image_rejected_before_ai(self):
-        with patch('routes.process_image_and_text') as process:
+        with patch('calendar_helper_ai.routes.process_image_and_text') as process:
             response = self.client.post('/process', data={'image': [(io.BytesIO(b'small'), 'first.png'), (io.BytesIO(b'0' * (4 * 1024 * 1024 + 1)), 'second.png')]})
             self.assertEqual(response.status_code, 400)
             self.assertIn('second.png', response.json['user_message'])
@@ -84,7 +86,7 @@ class EndpointTests(unittest.TestCase):
 
 
     def test_five_four_megabyte_files_fit_request_limit(self):
-        with patch('routes.process_image_and_text', return_value=[EVENT]) as process:
+        with patch('calendar_helper_ai.routes.process_image_and_text', return_value=[EVENT]) as process:
             files = [(io.BytesIO(b'0' * (4 * 1024 * 1024)), f'{i}.png') for i in range(5)]
             response = self.client.post('/process', data={'image': files})
             self.assertEqual(response.status_code, 200)
@@ -101,7 +103,7 @@ class EndpointTests(unittest.TestCase):
 
 
     def test_blank_correction_preserves_events(self):
-        with patch('routes.process_corrections') as correct:
+        with patch('calendar_helper_ai.routes.process_corrections') as correct:
             response = self.client.post('/correct', json={'correction': ' ', 'current_events': [EVENT]})
             self.assertEqual(response.status_code, 400)
             correct.assert_not_called()

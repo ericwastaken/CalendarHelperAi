@@ -1,19 +1,16 @@
-import os
 import base64
-from flask import request, jsonify, render_template
+from flask import Blueprint, current_app, request, jsonify, render_template
 from werkzeug.exceptions import RequestEntityTooLarge
-from app import app
-from utils.ai_processor import process_image_and_text, process_corrections, SafetyValidationError
-from utils.calendar import generate_ics
-from utils.location_service import get_client_ip, get_location_from_ip
-from utils.config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES, APP_VERSION
-import uuid
+from .services.ai_processor import process_image_and_text, process_corrections, SafetyValidationError
+from .services.calendar import generate_ics
+from .config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES, APP_VERSION
 
-from utils.ai_processor import SafetyValidationError
+bp = Blueprint("calendar", __name__)
 
-@app.route('/api/config')
+
+@bp.route('/api/config')
 def get_config():
-    debug_logging = os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true'
+    debug_logging = current_app.config['DEBUG_LOGGING']
     return jsonify({
         'maxImageSize': MAX_IMAGE_SIZE,
         'allowedImageTypes': list(ALLOWED_IMAGE_TYPES),
@@ -21,16 +18,18 @@ def get_config():
         'debug_logging': debug_logging
     })
 
-@app.route('/')
+
+@bp.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', app_version=APP_VERSION)
 
-@app.route('/favicon.ico')
+
+@bp.route('/favicon.ico')
 def favicon():
-    return app.send_static_file('icons/favicon.ico')
+    return current_app.send_static_file('icons/favicon.ico')
 
 
-@app.route('/process', methods=['POST'])
+@bp.route('/process', methods=['POST'])
 def process():
     try:
         images = request.files.getlist('image')
@@ -95,27 +94,28 @@ def process():
                 'user_message': 'Try a clearer image, or add the event name, date, and time.'
             }), 400
 
-        app.logger.info(f"Successfully processed request with {len(result)} events")
+        current_app.logger.info(f"Successfully processed request with {len(result)} events")
         return jsonify({'success': True, 'events': result})
 
     except RequestEntityTooLarge:
         raise
     except SafetyValidationError as e:
-        app.logger.warning(f"Safety validation error: {str(e)}")
+        current_app.logger.warning(f"Safety validation error: {str(e)}")
         return jsonify({
             'success': False,
             'error_type': 'unsafe_prompt',
             'user_message': str(e)
         }), 400
     except Exception as e:
-        app.logger.error(f"Unexpected error in process: {str(e)}", exc_info=True)
+        current_app.logger.error(f"Unexpected error in process: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error_type': 'processing_error',
             'user_message': 'An unexpected error occurred. Please try again.'
         }), 500
 
-@app.route('/correct', methods=['POST'])
+
+@bp.route('/correct', methods=['POST'])
 def correct():
     try:
         data = request.json
@@ -125,14 +125,14 @@ def correct():
             return jsonify(success=False, error_type='validation_error', user_message='Provide a correction and the events to update.'), 400
         timezone = request.headers.get('X-Timezone', 'UTC')
 
-        app.logger.debug(f"Current events before correction: {events}")
+        current_app.logger.debug(f"Current events before correction: {events}")
         updated_events = process_corrections(correction, events, timezone)
-        app.logger.debug(f"Updated events after correction: {updated_events}")
+        current_app.logger.debug(f"Updated events after correction: {updated_events}")
         return jsonify({'success': True, 'events': updated_events})
 
     except SafetyValidationError as e:
         error_message = str(e)
-        app.logger.warning(f"Safety validation error: {error_message}")
+        current_app.logger.warning(f"Safety validation error: {error_message}")
         return jsonify({
             'success': False,
             'error_type': 'unsafe_prompt',
@@ -140,14 +140,15 @@ def correct():
         }), 400
 
     except Exception as e:
-        app.logger.error(f"Process error: {str(e)}", exc_info=True)
+        current_app.logger.error(f"Process error: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error_type': 'processing_error', 
             'user_message': 'An unexpected error occurred. Please try again.'
         }), 500
 
-@app.route('/download-ics', methods=['POST'])
+
+@bp.route('/download-ics', methods=['POST'])
 def download_ics():
     try:
         events = request.json.get('events', [])
@@ -163,7 +164,7 @@ def download_ics():
         return jsonify({'success': True, 'ics_content': ics_content})
 
     except Exception as e:
-        app.logger.error(f"Error generating ICS: {str(e)}", exc_info=True)
+        current_app.logger.error(f"Error generating ICS: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error_type': 'processing_error',
@@ -171,7 +172,6 @@ def download_ics():
         }), 500
 
 
-
-@app.errorhandler(RequestEntityTooLarge)
+@bp.app_errorhandler(RequestEntityTooLarge)
 def handle_large_request(error):
     return jsonify(success=False, error_type='validation_error', user_message='Choose up to 5 images, no larger than 4 MB each.'), 413

@@ -32,7 +32,7 @@ Do not widen review results, correction fields, action bars, or legal content to
 
 ## Foundation tokens
 
-`tokens.css` records this design version's foundation tokens. The active application token block is in `static/css/style.css`; keep these values aligned when changing this system. The self-contained preview duplicates the colors and key geometry so it also works when copied alone.
+`tokens.css` records this design version's foundation tokens. The active application token block is in `src/calendar_helper_ai/static/css/style.css`; keep these values aligned when changing this system. The self-contained preview duplicates the colors and key geometry so it also works when copied alone.
 
 | Role | Value | Use |
 |---|---|---|
@@ -67,7 +67,7 @@ Small text is reserved for supplementary copy. Dates, times, event names, errors
 
 ## State inventory and proposed behavior
 
-The “Current behavior” column below combines source inspection of `templates/index.html`, `static/js/app.js`, and `routes.py` with parent-task API tests on September 24, 2026. It is not a claim that every branch has been reproduced in the live browser. The preview is deliberately deterministic and uses invented event content.
+The “Current behavior” column below combines source inspection of `src/calendar_helper_ai/templates/index.html`, `src/calendar_helper_ai/static/js/app.js`, and `src/calendar_helper_ai/routes.py` with parent-task API tests on September 24, 2026. It is not a claim that every branch has been reproduced in the live browser. The preview is deliberately deterministic and uses invented event content.
 
 | State | Current behavior | Design proposal |
 |---|---|---|
@@ -175,3 +175,7 @@ Parent live API tests confirmed image extraction (2 synthetic events), a targete
 Static checks passed: inline JavaScript syntax, all 16 render functions in a lightweight DOM stub, correction state preserved through export/return, export blocked during pending correction, no external runtime assets, and no em dashes. Calculated contrast: body 12.92:1, muted text 5.97:1, primary button 8.12:1, review notice 6.87:1, error notice 6.40:1, and control border 3.76:1 against the relevant surface.
 
 These static checks do not validate actual layout or browser interaction. Safari desktop and responsive-mode verification is recorded in IMPLEMENTATION.md. The prototype is a design reference; local implementation and production deployment remain separate.
+
+## Header behavior in v1.0.0
+
+Keep the icon, name, small installed-version label, Example link, and all three progress steps together in a sticky header. Event review and correction content scroll below the opaque header on desktop and mobile. The name/version block stays within the icon height.

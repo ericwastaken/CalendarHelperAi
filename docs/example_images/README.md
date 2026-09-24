@@ -9,6 +9,6 @@ These realistic photos were generated with the built-in imagegen tool on Septemb
 
 Choose either image in the app, review its events, optionally make a correction, then download the calendar file. The invented venues are not intended as verified business listings; review any AI-enriched addresses.
 
-The first image is an identical copy of [`static/images/example-event-cards-2026-09.png`](../../static/images/example-event-cards-2026-09.png), which powers the app's **Example** dialog. Keep those copies synchronized if replacing the event-card photo. The original JPG and non-calendar fixtures were removed.
+The first image is an identical copy of [`src/calendar_helper_ai/static/images/example-event-cards-2026-09.png`](../../src/calendar_helper_ai/static/images/example-event-cards-2026-09.png), which powers the app's **Example** dialog. Keep those copies synchronized if replacing the event-card photo. The original JPG and non-calendar fixtures were removed.
 
 Generation prompts: [event invitations](../design-system/paper-pine-2026-09/SAMPLE_IMAGE.md), [appointment reminder](../design-system/paper-pine-2026-09/APPOINTMENT_IMAGE.md).

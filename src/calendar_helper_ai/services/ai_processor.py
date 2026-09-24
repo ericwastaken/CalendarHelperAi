@@ -1,45 +1,32 @@
-import os
 import logging
-from openai import OpenAI
+from flask import current_app
 import json
 from datetime import datetime, timedelta
+
 
 class SafetyValidationError(Exception):
     """Custom exception for safety validation failures"""
     pass
 
-# Configure OpenAI logging based on environment variables
-openai_http_level = os.environ.get('OPENAI_HTTP_CLIENT_LEVEL', 'ERROR').upper()
-openai_api_level = os.environ.get('OPENAI_API_LEVEL', 'ERROR').upper()
 
-# Set OpenAI logging levels
-logging.getLogger("openai._base_client").setLevel(getattr(logging, openai_http_level, logging.ERROR))
-logging.getLogger("openai._streaming").setLevel(getattr(logging, openai_api_level, logging.ERROR))
-logging.getLogger("openai._http_client").setLevel(getattr(logging, openai_http_level, logging.ERROR))
+def get_openai_client():
+    """Use the client owned by the current application, with no import-time setup."""
+    client = current_app.extensions.get('openai')
+    if client is None:
+        raise RuntimeError('OPENAI_API_KEY is required for event processing')
+    return client
 
-# the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-# do not change this unless explicitly requested by the user
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
-if not OPENAI_API_KEY.startswith('sk-'):
-    raise ValueError("Invalid OpenAI API key format")
-try:
-    client = OpenAI(api_key=OPENAI_API_KEY)
-except Exception as e:
-    logging.error(f"Error initializing OpenAI client: {str(e)}")
-    raise ValueError("Failed to initialize OpenAI client")
 
 def validate_prompt_safety(text):
     """Validate if the prompt is safe and calendar-related."""
-    from utils.prompts import SAFETY_VALIDATION_PROMPT
+    from ..prompts import SAFETY_VALIDATION_PROMPT
     messages = [
         {"role": "system", "content": SAFETY_VALIDATION_PROMPT},
         {"role": "user", "content": f"Is this prompt safe and calendar-related? Prompt: {text}"}
     ]
 
     try:
-        response = client.chat.completions.create(
+        response = get_openai_client().chat.completions.create(
             model="gpt-4o",
             messages=messages,
             response_format={"type": "json_object"}
@@ -52,26 +39,24 @@ def validate_prompt_safety(text):
         return False, "Safety validation failed"
 
 
-# Set up debug logging based on environment variable
-DEBUG_LOGGING = os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true'
-
 def debug_log(message):
-    if DEBUG_LOGGING:
-        logging.debug(message)
+    if current_app.config['DEBUG_LOGGING']:
+        current_app.logger.debug(message)
+
 
 def lookup_address_details(location):
     """Look up detailed address information using OpenAI."""
     if not location or location.lower() == 'unknown':
         return None
 
-    from utils.prompts import ADDRESS_LOOKUP_PROMPT
+    from ..prompts import ADDRESS_LOOKUP_PROMPT
     messages = [
         {"role": "system", "content": ADDRESS_LOOKUP_PROMPT},
         {"role": "user", "content": f"Look up the full address for: {location}"}
     ]
 
     try:
-        response = client.chat.completions.create(
+        response = get_openai_client().chat.completions.create(
             model="gpt-4o",
             messages=messages,
             response_format={"type": "json_object"}
@@ -87,6 +72,7 @@ def lookup_address_details(location):
         debug_log(f"Error looking up address: {e}")
         return None
 
+
 def process_event_dates(event):
     """Helper function to process and validate event dates"""
     start_time = event.get('start_time', '')
@@ -100,6 +86,7 @@ def process_event_dates(event):
         datetime.fromisoformat(end_time.replace('Z', '+00:00'))
 
     return event
+
 
 def process_location_details(event):
     """Helper function to process location details for an event"""
@@ -129,6 +116,7 @@ def process_location_details(event):
             event['location'] = f"{event['location_name']} - {event['location_address']}" if event['location_name'] else event['location_address']
     return event
 
+
 def process_corrections(text, existing_events, timezone=None):
     try:
         # First validate the prompt safety
@@ -154,7 +142,7 @@ def process_corrections(text, existing_events, timezone=None):
             formatted_events.append(formatted_event)
         debug_log(f"Formatted events for correction: {json.dumps(formatted_events, indent=2)}")
 
-        from utils.prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
+        from ..prompts import CORRECTION_SYSTEM_PROMPT, CORRECTION_USER_PROMPT
         correction_prompt = CORRECTION_USER_PROMPT.format(
             events_json=json.dumps(formatted_events, indent=2),
             correction_text=text
@@ -168,7 +156,7 @@ def process_corrections(text, existing_events, timezone=None):
         debug_log("Processing correction with correction prompt")
         debug_log(f"Sending messages to OpenAI: {json.dumps(messages, indent=2)}")
 
-        response = client.chat.completions.create(
+        response = get_openai_client().chat.completions.create(
             model="gpt-4o",
             messages=messages,
             response_format={"type": "json_object"}
@@ -196,6 +184,7 @@ def process_corrections(text, existing_events, timezone=None):
         logging.error(f"Error in correction process: {error_type}")
         raise
 
+
 def process_image_and_text(image_data_list=None, text=None, timezone=None):
     try:
         # Validate prompt safety
@@ -214,12 +203,12 @@ def process_image_and_text(image_data_list=None, text=None, timezone=None):
             current_dt = datetime.now(ZoneInfo(timezone))
 
         # Get system prompt and insert current context
-        from utils.prompts import CALENDAR_SYSTEM_PROMPT
+        from ..prompts import CALENDAR_SYSTEM_PROMPT
         from flask import session
 
         # Insert date context
         location = session.get('location', {})
-        from utils.prompts import DATE_PROMPT_TEMPLATE, LOCATION_PROMPT_TEMPLATE
+        from ..prompts import DATE_PROMPT_TEMPLATE, LOCATION_PROMPT_TEMPLATE
 
         current_date_prompt = DATE_PROMPT_TEMPLATE.format(
             year=current_dt.year,
@@ -263,7 +252,7 @@ def process_image_and_text(image_data_list=None, text=None, timezone=None):
             })
 
         # Call OpenAI API
-        response = client.chat.completions.create(
+        response = get_openai_client().chat.completions.create(
             model="gpt-4o",
             messages=messages,
             response_format={"type": "json_object"}

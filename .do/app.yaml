@@ -17,7 +17,7 @@ services:
       instance_size_slug: apps-s-1vcpu-0.5gb
       instance_count: 1
       http_port: 8080
-      run_command: gunicorn --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /dev/shm --bind 0.0.0.0:$PORT main:app
+      run_command: gunicorn --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /dev/shm --bind 0.0.0.0:$PORT 'calendar_helper_ai:create_app()'
       # Omitted to retain the platform default used by the live trial.
       # An explicit HTTP health check can be introduced as a separate change.
       envs:

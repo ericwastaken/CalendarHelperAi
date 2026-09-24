@@ -1,21 +1,21 @@
 # Implementation and verification
 
-September 24, 2026. Version 0.11.0, implemented locally on `DEV`. This document does not establish a production release. The design was approved before implementation.
+September 24, 2026. Paper + Pine was initially implemented on DEV as 0.11.0. The package reorganization and visible version label are included in the v1.0.0 release. The design was approved before implementation; deployment checks are separate from the original UI checks below.
 
 ## Source map
 
 | Component | Application source | Contract |
 |---|---|---|
-| Shell, progress, footer, dialog | `templates/index.html` | One 460px column; Hosted on DigitalOcean and Terms of Service share one row |
-| Tokens and responsive styles | `static/css/style.css` | Paper + Pine palette, system fonts, 320px reflow, focus states and reduced motion |
-| Workflow and client state | `static/js/app.js` | Add details, processing, review, correction and export; recoverable failures retain work |
-| Sample walkthrough | `static/example-images-and-prompts.html` | Real sample upload asset, two fictional events, correction and export instructions |
-| Sample photography | `static/images/example-event-cards-2026-09.png` | AI-generated image, disclosed in the walkthrough; [prompt and provenance](SAMPLE_IMAGE.md) |
-| Favicon | `static/icons/`, template links and `/favicon.ico` | Approved Checked date mark, SVG/PNG/ICO and Apple touch icon |
-| Full legal text | `static/terms.html` | Existing copy loaded into the native dialog |
-| Input and endpoint validation | `routes.py`, `app.py` | Five images, 4 MiB each, 21 MiB request envelope; typed empty-result errors |
-| Extraction and corrections | `utils/ai_processor.py` | One extraction per request; text-only results returned; timezone included in corrections |
-| Calendar serialization | `utils/calendar.py` | Preserve aware instants and repeated DST hours; reject invalid ranges |
+| Shell, progress, footer, dialog | `src/calendar_helper_ai/templates/index.html` | One 460px column; Hosted on DigitalOcean and Terms of Service share one row; title and small version fit within the 32px icon height |
+| Tokens and responsive styles | `src/calendar_helper_ai/static/css/style.css` | Paper + Pine palette, system fonts, 320px reflow, focus states and reduced motion |
+| Workflow and client state | `src/calendar_helper_ai/static/js/app.js` | Add details, processing, review, correction and export; recoverable failures retain work |
+| Sample walkthrough | `src/calendar_helper_ai/static/example-images-and-prompts.html` | Real sample upload asset, two fictional events, correction and export instructions |
+| Sample photography | `src/calendar_helper_ai/static/images/example-event-cards-2026-09.png` | AI-generated image, disclosed in the walkthrough; [prompt and provenance](SAMPLE_IMAGE.md) |
+| Favicon | `src/calendar_helper_ai/static/icons/`, template links and `/favicon.ico` | Approved Checked date mark, SVG/PNG/ICO and Apple touch icon |
+| Full legal text | `src/calendar_helper_ai/static/terms.html` | Existing copy loaded into the native dialog |
+| Input and endpoint validation | `src/calendar_helper_ai/routes.py`, `src/calendar_helper_ai/__init__.py` | Five images, 4 MiB each, 21 MiB request envelope; typed empty-result errors |
+| Extraction and corrections | `src/calendar_helper_ai/services/ai_processor.py` | One extraction per request; text-only results returned; timezone included in corrections |
+| Calendar serialization | `src/calendar_helper_ai/services/calendar.py` | Preserve aware instants and repeated DST hours; reject invalid ranges |
 
 The application uses local CSS and native browser controls. Bootstrap, jQuery and Lightbox are no longer required. `preview.html` remains a standalone design reference with synthetic states, not a second application implementation. `tokens.css` is the dated token reference; keep the application's token block aligned with it.
 
@@ -43,7 +43,7 @@ The in-memory session expires after one hour without an extension. Successful ex
 | Recovery | Stopping the local server reproduced correction and export connection errors; drafts/events survived and retry succeeded after restart |
 | No events | Real image with no appointments returned typed `no_events`; UI retained the image and offered useful guidance |
 | Dialogs and reset | Image preview, example, full terms, Escape/focus return and cancel/confirm reset exercised |
-| Backend regression suite | 13 tests pass: extraction count, text-only result, empty/malformed results, request/file limits, correction validation, aware timezone and DST serialization |
+| Backend regression suite | 17 tests pass, including installed-package assets, independent factory configuration, route registration, and: extraction count, text-only result, empty/malformed results, request/file limits, correction validation, aware timezone and DST serialization |
 | Static checks | JavaScript syntax and Git whitespace checks pass |
 
 The test suite makes no external API requests. Run it with `.venv/bin/python -m unittest discover -s tests -v`. Live extraction checks do use the configured AI service.
@@ -55,3 +55,13 @@ Safari responsive mode is not physical iPhone testing. The one-hour expiry was i
 ## Future design changes
 
 Create a new sibling folder named `<design-name>-YYYY-MM` when adopting a different system. Keep this dated reference intact, link the new active system from `docs/design-system/README.md`, and update the application README. Record changed tokens, component behavior and actual test results together. Keep private management records and credentials outside these public documents.
+
+## Version label
+
+The header renders the installed package version beneath Calendar Helper AI. The title uses an 18px line height and the 10px version text uses a 12px line height, giving a 30px lockup beside the 32px icon. The label is server-rendered so it does not depend on the config request. See the [release procedure](../../deployment.md#release-procedure).
+
+## Sticky header
+
+The brand icon, title, version, Example link, and progress steps share one sticky header at the viewport top. Its opaque surface and stacking order keep scrolled content underneath. The document itself scrolls; the main shell uses overflow clipping rather than a second scrolling container. Focus targets have scroll margins to avoid landing behind the header. Native dialogs remain above it.
+
+The v1.0.0 package was built and installed into a clean environment outside the checkout. All 17 tests passed there, and Gunicorn served the installed wheel. Real text and two-image extraction, corrections, and parsed ICS downloads passed. Safari also verified the sticky header at 320px in Add, Review, and Export, with the Terms dialog above it.

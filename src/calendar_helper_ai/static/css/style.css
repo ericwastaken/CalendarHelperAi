@@ -112,7 +112,21 @@ textarea::placeholder {
     display:flex;
     align-items:center;
     gap:10px}
+.app-header {
+    position:sticky;
+    top:0;
+    z-index:10;
+    background:var(--surface);
+    padding-bottom:20px;
+    border-bottom:1px solid var(--border)}
+.app-header .progress {
+    margin-bottom:0}
+.content {
+    scroll-margin-top:160px}
+.content :is(h1, textarea, button, summary) {
+    scroll-margin-top:160px}
 .brandmark {
+    flex-shrink:0;
     height:32px;
     width:32px;
     background:var(--primary);
@@ -123,7 +137,17 @@ textarea::placeholder {
 .brandmark svg {
     width:21px;
     height:21px}
+.brand-lockup {
+    min-width:0;
+    white-space:nowrap}
+.app-version {
+    display:block;
+    font-size:10px;
+    line-height:12px;
+    color:var(--muted);
+    letter-spacing:.3px}
 .brand {
+    line-height:18px;
     font-size:15px;
     font-weight:720;
     letter-spacing:-.3px}
@@ -575,6 +599,7 @@ dialog .paper span {
     padding-left:16px;
     padding-right:16px}
 .brand {
+    line-height:18px;
     font-size:14px}
 .foot-row {
     display:flex}

@@ -2,7 +2,7 @@
 
 Generated September 24, 2026 with the built-in imagegen tool. The scene and events are fictional. The example dialog identifies the image as AI-generated.
 
-Asset: [`example-event-cards-2026-09.png`](../../../static/images/example-event-cards-2026-09.png), 1536 x 1024 pixels. Keep the source text readable when making replacement assets. A matching copy is available at `docs/example_images/example-calendar-image-01.png` for manual upload testing. Keep these copies identical. The outdated calendar images and unrelated test images were removed at Eric's request.
+Asset: [`example-event-cards-2026-09.png`](../../../src/calendar_helper_ai/static/images/example-event-cards-2026-09.png), 1536 x 1024 pixels. Keep the source text readable when making replacement assets. A matching copy is available at `docs/example_images/example-calendar-image-01.png` for manual upload testing. Keep these copies identical. The outdated calendar images and unrelated test images were removed at Eric's request.
 
 ## Generation prompt
 
