@@ -1,11 +1,12 @@
 # Set the two empty SECRET values in DigitalOcean before deploying.
 # Never commit actual credentials to this file.
+# This template mirrors the Safari-created trial; preserve live secrets on updates.
 name: calendarhelperai
 region: nyc
 features:
     - buildpack-stack=ubuntu-22
 services:
-    - name: web
+    - name: calendarhelperai
       github:
           repo: ericwastaken/CalendarHelperAi
           branch: codex/app-platform
@@ -16,10 +17,8 @@ services:
       instance_count: 1
       http_port: 8080
       run_command: gunicorn --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /dev/shm --bind 0.0.0.0:$PORT main:app
-      health_check:
-          http_path: /api/config
-          initial_delay_seconds: 10
-          timeout_seconds: 5
+      # Omitted to retain the platform default used by the live trial.
+      # An explicit HTTP health check can be introduced as a separate change.
       envs:
           - key: OPENAI_API_KEY
             scope: RUN_TIME
@@ -44,7 +43,7 @@ services:
 ingress:
     rules:
         - component:
-              name: web
+              name: calendarhelperai
           match:
               path:
                   prefix: /
