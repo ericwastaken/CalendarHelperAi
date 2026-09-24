@@ -1,6 +1,7 @@
 # Set the two empty SECRET values in DigitalOcean before deploying.
 # Never commit actual credentials to this file.
-# This template mirrors the Safari-created trial; preserve live secrets on updates.
+# Production deploys main. Preserve live secrets and custom domains on updates.
+# This creation template does not include the live custom-domain bindings.
 name: calendarhelperai
 region: nyc
 features:
@@ -9,7 +10,7 @@ services:
     - name: calendarhelperai
       github:
           repo: ericwastaken/CalendarHelperAi
-          branch: codex/app-platform
+          branch: main
           deploy_on_push: false
       source_dir: /
       environment_slug: python
