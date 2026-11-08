@@ -30,10 +30,13 @@ def create_app(test_config=None):
 
     client = app.config.get('OPENAI_CLIENT')
     if client is None and app.config['OPENAI_API_KEY']:
-        client = OpenAI(api_key=app.config['OPENAI_API_KEY'])
+        client = OpenAI(api_key=app.config['OPENAI_API_KEY'], timeout=45, max_retries=1)
     app.extensions['openai'] = client
 
     from .routes import bp
     app.register_blueprint(bp)
-    app.logger.info('Application starting up')
+    from .observability import install_logging, log_event
+    install_logging(app)
+    with app.app_context():
+        log_event('application_started')
     return app

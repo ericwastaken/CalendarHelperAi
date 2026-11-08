@@ -746,3 +746,8 @@ button, a {
         margin-right: 16px;
     }
 }
+
+/* Explicit time review shares the existing form and event-card styling. */
+.time-review { margin-top: 1rem; display: grid; gap: .5rem; }
+.field input, .field select { width: 100%; box-sizing: border-box; padding: .75rem; border: 1px solid #c8cec7; border-radius: .5rem; font: inherit; color: inherit; background: #fffefa; }
+[hidden] { display: none !important; }

@@ -44,7 +44,9 @@ Use fictional data from the [sample guide](example_images/README.md). Live check
 3. Correct one event and confirm other events remain intact.
 4. Download and parse the ICS before importing it anywhere. Check timezone and corrected times.
 5. Exercise invalid input, reset cancellation/confirmation, and recovery from a failed correction/export.
-6. Repeat core extraction, correction, export, and static-asset checks after deployment.
+6. Test a date-only appointment: export stays disabled until its time is set or an all-day reminder is chosen. Check real midnight remains timed, and a missing end time requires confirmation of its suggested duration. Verify date-only ICS values and exclusive end dates.
+7. Simulate provider authentication, quota, connection, timeout and malformed-response errors offline; verify reference IDs and payload-free logs.
+8. Repeat core extraction, correction, export, and static-asset checks after deployment.
 
 The dated [design implementation notes](design-system/paper-pine-2026-09/IMPLEMENTATION.md) distinguish completed checks from remaining limits. Safari responsive mode is not a substitute for physical-device or cross-browser testing.
 

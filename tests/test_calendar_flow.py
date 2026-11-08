@@ -19,7 +19,7 @@ app = create_app({'TESTING': True, 'SECRET_KEY': 'test-only',
 from icalendar import Calendar
 
 EVENT = {
-    'title': 'Design review', 'description': 'Synthetic event',
+    'title': 'Design review', 'description': 'Synthetic event', 'time_status': 'timed',
     'start_time': '2026-10-02T14:00:00+00:00',
     'end_time': '2026-10-02T15:00:00+00:00',
     'location_name': 'unknown', 'location_address': '',
@@ -27,7 +27,7 @@ EVENT = {
 
 
 def ai_response(events):
-    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({'events': events})))])
+    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({'outcome': 'events', 'events': events})))])
 
 
 class ExtractionTests(unittest.TestCase):
@@ -35,20 +35,20 @@ class ExtractionTests(unittest.TestCase):
 
     def test_text_and_image_use_one_extraction_and_return_events(self):
         for images in ([], [{'data': 'synthetic-base64', 'filename': 'test.png'}]):
-            with self.subTest(images=bool(images)), app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_client.chat.completions, 'create', return_value=ai_response([EVENT])) as create:
+            with self.subTest(images=bool(images)), app.test_request_context('/'), patch.object(ai_client.chat.completions, 'create', return_value=ai_response([EVENT])) as create:
                 result = ai_processor.process_image_and_text(images, 'October 2, 2026, 10 AM', 'America/New_York')
                 self.assertEqual(result[0]['title'], EVENT['title'])
-                self.assertNotIn('location', result[0])
+                self.assertFalse(result[0].get('location'))
                 self.assertEqual(create.call_count, 1)
 
 
     def test_no_events_is_a_valid_empty_result(self):
-        with app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_client.chat.completions, 'create', return_value=ai_response([])):
+        with app.test_request_context('/'), patch.object(ai_client.chat.completions, 'create', return_value=ai_response([])):
             self.assertEqual(ai_processor.process_image_and_text([], 'No appointments', 'UTC'), [])
 
 
     def test_malformed_model_result_is_not_success(self):
-        with app.test_request_context('/'), patch.object(ai_processor, 'validate_prompt_safety', return_value=(True, '')), patch.object(ai_client.chat.completions, 'create', return_value=ai_response('invalid')):
+        with app.test_request_context('/'), patch.object(ai_client.chat.completions, 'create', return_value=ai_response('invalid')):
             with self.assertRaises(Exception):
                 ai_processor.process_image_and_text([], 'An event', 'UTC')
 

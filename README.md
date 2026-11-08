@@ -33,7 +33,7 @@ Open http://127.0.0.1:5055. Other devices can use your computer's LAN or Tailsca
 
 1. Choose up to five images, each no larger than 4 MiB, or enter event details as text.
 2. Select **Find my events** and check the dates, times, and locations.
-3. Enter any corrections, then select **Download calendar file**.
+3. Enter any corrections. For **Time not provided**, set a time or explicitly choose an all-day reminder. Confirm any suggested duration, then select **Download calendar file**.
 4. Open or import the downloaded file in your calendar app and confirm the destination calendar.
 
 The **Example** button includes a sample photo and walkthrough. More fictional fixtures are in the [sample image guide](docs/example_images/README.md).

@@ -71,3 +71,8 @@ The v1.0.0 package was built and installed into a clean environment outside the 
 The Terms document is fetched and parsed into the dialog. Cloudflare can rewrite mailto links and inject an email decoder script, but scripts in the parsed document do not execute. This left Contact us pointing to the email-protection page in production. Version 1.0.1 wraps only the public contact paragraph in Cloudflare's documented email_off comments and uses a direct mailto link without a new-tab target. Keep this exclusion when editing the Terms HTML.
 
 Verify the deployed /static/terms.html response retains the mailto destination, then open Terms in Safari and check that Contact us opens an email draft addressed to the intended contact. Local-only checks cannot exercise the edge rewrite. See [Cloudflare email obfuscation](https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/).
+
+
+## v1.1.0 time review
+
+Event cards distinguish timed events, missing times, and all-day events/reminders. Missing times and unconfirmed suggested durations block Download with an explanatory notice. Each card exposes a date/time editor using the existing modal and form styling. The editor offers explicit timed or all-day reminder modes and retains entered values after recoverable validation failures. Corrections preserve the existing draft on failure. Operational error messages include a request reference for support.

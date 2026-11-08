@@ -1,22 +1,40 @@
+"""HTTP boundary validation and stable, payload-free error responses."""
 import base64
-from flask import Blueprint, current_app, request, jsonify, render_template
-from werkzeug.exceptions import RequestEntityTooLarge
-from .services.ai_processor import process_image_and_text, process_corrections, SafetyValidationError
+import logging
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from flask import Blueprint, request, jsonify, render_template
+from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
+from .services.ai_processor import process_image_and_text, process_corrections, ProcessingError
+from .services.events import EventValidationError, resolve_event_time
 from .services.calendar import generate_ics
+from .observability import log_event
 from .config import MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES, APP_VERSION
 
-bp = Blueprint("calendar", __name__)
+bp = Blueprint('calendar', __name__)
+
+
+def user_timezone():
+    timezone = request.headers.get('X-Timezone', 'UTC')
+    try:
+        ZoneInfo(timezone)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise EventValidationError('Choose a valid calendar timezone.') from None
+    return timezone
+
+
+def json_body():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        raise EventValidationError('Send a valid calendar request.')
+    return data
 
 
 @bp.route('/api/config')
 def get_config():
-    debug_logging = current_app.config['DEBUG_LOGGING']
-    return jsonify({
-        'maxImageSize': MAX_IMAGE_SIZE,
-        'allowedImageTypes': list(ALLOWED_IMAGE_TYPES),
-        'version': APP_VERSION,
-        'debug_logging': debug_logging
-    })
+    from flask import current_app
+    return jsonify(maxImageSize=MAX_IMAGE_SIZE, allowedImageTypes=list(ALLOWED_IMAGE_TYPES),
+                   version=APP_VERSION, debug_logging=current_app.config['DEBUG_LOGGING'])
 
 
 @bp.route('/')
@@ -26,152 +44,86 @@ def index():
 
 @bp.route('/favicon.ico')
 def favicon():
+    from flask import current_app
     return current_app.send_static_file('icons/favicon.ico')
 
 
 @bp.route('/process', methods=['POST'])
 def process():
-    try:
-        images = request.files.getlist('image')
-        text = request.form.get('text', '').strip()
-        if not text and not images:
-            return jsonify(success=False, error_type='validation_error', user_message='Choose an image or enter an event name, date, and time.'), 400
-        if not text:
-            text = "Extract the events in these images."
-
-        if len(images) > 5:
-            return jsonify({
-                'success': False,
-                'error_type': 'validation_error',
-                'user_message': 'Please select up to 5 images only'
-            }), 400
-
-        image_data_list = []
-        total_size = 0
-        
-        if images:
-            for image in images:
-                # Validate file size
-                image.seek(0, 2)
-                size = image.tell()
-                image.seek(0)
-                total_size += size
-
-                if size > MAX_IMAGE_SIZE:
-                    return jsonify({
-                        'success': False,
-                        'error_type': 'validation_error',
-                        'user_message': f'Please limit each image to 4mb. {image.filename} is too large.'
-                    }), 400
-
-                if image.content_type not in ALLOWED_IMAGE_TYPES:
-                    return jsonify({
-                        'success': False,
-                        'error_type': 'validation_error',
-                        'user_message': f'Invalid file type: {image.filename}. Please use png, jpg, jpeg, or tiff images only.'
-                    }), 400
-
-                # Store image data with filename for tracking
-                image_data_list.append({
-                    'data': base64.b64encode(image.read()).decode('utf-8'),
-                    'filename': image.filename
-                })
-
-        if total_size > (MAX_IMAGE_SIZE * 5):
-            return jsonify({
-                'success': False,
-                'error_type': 'validation_error',
-                'user_message': 'Total size of all images exceeds the limit'
-            }), 400
-
-        timezone = request.headers.get('X-Timezone', 'UTC')
-        result = process_image_and_text(image_data_list, text, timezone)
-
-        if not result:
-            return jsonify({
-                'success': False,
-                'error_type': 'no_events',
-                'user_message': 'Try a clearer image, or add the event name, date, and time.'
-            }), 400
-
-        current_app.logger.info(f"Successfully processed request with {len(result)} events")
-        return jsonify({'success': True, 'events': result})
-
-    except RequestEntityTooLarge:
-        raise
-    except SafetyValidationError as e:
-        current_app.logger.warning(f"Safety validation error: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error_type': 'unsafe_prompt',
-            'user_message': str(e)
-        }), 400
-    except Exception as e:
-        current_app.logger.error(f"Unexpected error in process: {str(e)}", exc_info=True)
-        return jsonify({
-            'success': False,
-            'error_type': 'processing_error',
-            'user_message': 'An unexpected error occurred. Please try again.'
-        }), 500
+    images = request.files.getlist('image')
+    text = request.form.get('text', '').strip()
+    if not text and not images:
+        raise EventValidationError('Choose an image or enter an event name, date, and time.')
+    if len(images) > 5:
+        raise EventValidationError('Please select up to 5 images only.')
+    image_data_list = []
+    for image in images:
+        data = image.read(MAX_IMAGE_SIZE + 1)
+        if len(data) > MAX_IMAGE_SIZE:
+            # Filenames can contain personal data; do not put them in logs.
+            raise EventValidationError(f'Please limit each image to 4mb. {image.filename} is too large.')
+        if image.content_type not in ALLOWED_IMAGE_TYPES or not data:
+            raise EventValidationError('Choose a nonempty PNG, JPG, JPEG, or TIFF image.')
+        image_data_list.append({'data': base64.b64encode(data).decode('ascii'),
+                                'filename': image.filename, 'mime_type': image.content_type})
+    result = process_image_and_text(image_data_list, text, user_timezone())
+    if not result:
+        return jsonify(success=False, error_type='no_events',
+                       user_message='No appointments were found. Try a clearer image or add event details.'), 400
+    return jsonify(success=True, events=result)
 
 
 @bp.route('/correct', methods=['POST'])
 def correct():
-    try:
-        data = request.json
-        correction = (data.get('correction') or '').strip()
-        events = data.get('current_events', [])
-        if not correction or not isinstance(events, list) or not events:
-            return jsonify(success=False, error_type='validation_error', user_message='Provide a correction and the events to update.'), 400
-        timezone = request.headers.get('X-Timezone', 'UTC')
+    data = json_body()
+    correction = data.get('correction')
+    events = data.get('current_events')
+    if not isinstance(correction, str) or not correction.strip() or not isinstance(events, list) or not events:
+        raise EventValidationError('Provide a correction and the events to update.')
+    result = process_corrections(correction.strip(), events, user_timezone())
+    if not result:
+        return jsonify(success=False, error_type='no_events', user_message='No updated events were returned. Your previous events are unchanged.'), 400
+    return jsonify(success=True, events=result)
 
-        current_app.logger.debug(f"Current events before correction: {events}")
-        updated_events = process_corrections(correction, events, timezone)
-        current_app.logger.debug(f"Updated events after correction: {updated_events}")
-        return jsonify({'success': True, 'events': updated_events})
 
-    except SafetyValidationError as e:
-        error_message = str(e)
-        current_app.logger.warning(f"Safety validation error: {error_message}")
-        return jsonify({
-            'success': False,
-            'error_type': 'unsafe_prompt',
-            'user_message': error_message
-        }), 400
-
-    except Exception as e:
-        current_app.logger.error(f"Process error: {str(e)}", exc_info=True)
-        return jsonify({
-            'success': False,
-            'error_type': 'processing_error', 
-            'user_message': 'An unexpected error occurred. Please try again.'
-        }), 500
+@bp.route('/resolve-time', methods=['POST'])
+def resolve_time():
+    data = json_body()
+    result = resolve_event_time(data.get('event'), data.get('mode'), user_timezone(),
+                                data.get('start_local'), data.get('end_local'), data.get('date'))
+    return jsonify(success=True, event=result)
 
 
 @bp.route('/download-ics', methods=['POST'])
 def download_ics():
-    try:
-        events = request.json.get('events', [])
-        if not events:
-            return jsonify({
-                'success': False,
-                'error_type': 'no_events',
-                'user_message': 'No events found to download'
-            }), 400
+    events = json_body().get('events')
+    if not isinstance(events, list) or not events:
+        raise EventValidationError('No events found to download.')
+    return jsonify(success=True, ics_content=generate_ics(events, user_timezone()))
 
-        timezone = request.headers.get('X-Timezone', 'UTC')
-        ics_content = generate_ics(events, timezone)
-        return jsonify({'success': True, 'ics_content': ics_content})
 
-    except Exception as e:
-        current_app.logger.error(f"Error generating ICS: {str(e)}", exc_info=True)
-        return jsonify({
-            'success': False,
-            'error_type': 'processing_error',
-            'user_message': 'Error generating calendar file'
-        }), 500
+@bp.errorhandler(ProcessingError)
+def processing_error(error):
+    log_event('processing_failed', logging.WARNING, error_type=error.kind, status=error.status)
+    return jsonify(success=False, error_type=error.kind, user_message=error.message), error.status
+
+
+@bp.errorhandler(EventValidationError)
+def validation_error(error):
+    log_event('validation_failed', logging.WARNING, error_type='validation_error')
+    return jsonify(success=False, error_type='validation_error', user_message=str(error)), 400
 
 
 @bp.app_errorhandler(RequestEntityTooLarge)
 def handle_large_request(error):
     return jsonify(success=False, error_type='validation_error', user_message='Choose up to 5 images, no larger than 4 MB each.'), 413
+
+
+@bp.errorhandler(Exception)
+def unexpected_error(error):
+    if isinstance(error, (ValueError, TypeError, KeyError, AttributeError)):
+        return jsonify(success=False, error_type='validation_error', user_message='Check the event dates and times, then try again.'), 400
+    if isinstance(error, HTTPException):
+        return jsonify(success=False, error_type='validation_error', user_message='The calendar request could not be read.'), error.code
+    log_event('unexpected_failure', logging.ERROR, error_type='internal_error', exception_class=type(error).__name__)
+    return jsonify(success=False, error_type='internal_error', user_message='An unexpected error occurred. Please try again.'), 500

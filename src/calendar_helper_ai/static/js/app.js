@@ -49,24 +49,38 @@
     }
 
     function eventCard(event, index) {
-        const start = new Date(event.start_time);
-        const end = new Date(event.end_time);
+        const timed = event.time_status === 'timed' || (!event.time_status && event.start_time);
         const dateOptions = { timeZone: timezone, weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
         const timeOptions = { timeZone: timezone, hour: 'numeric', minute: '2-digit', timeZoneName: 'short' };
-        const date = start.toLocaleDateString(undefined, dateOptions);
-        const sameDay = date === end.toLocaleDateString(undefined, dateOptions);
-        const time = `${start.toLocaleTimeString(undefined, timeOptions)} to ${sameDay ? '' : `${end.toLocaleDateString(undefined, dateOptions)}, `}${end.toLocaleTimeString(undefined, timeOptions)}`;
+        let date = event.date ? new Date(`${event.date}T12:00:00Z`).toLocaleDateString(undefined, { ...dateOptions, timeZone: 'UTC' }) : 'Date not provided';
+        let time = event.time_status === 'all_day' ? (event.all_day_source === 'user' ? 'All-day reminder' : 'All-day event') : 'Time not provided';
+        if (timed) {
+            const start = new Date(event.start_time);
+            const end = new Date(event.end_time);
+            date = start.toLocaleDateString(undefined, dateOptions);
+            const sameDay = date === end.toLocaleDateString(undefined, dateOptions);
+            time = `${start.toLocaleTimeString(undefined, timeOptions)} to ${sameDay ? '' : `${end.toLocaleDateString(undefined, dateOptions)}, `}${end.toLocaleTimeString(undefined, timeOptions)}`;
+        } else if (event.time_status === 'all_day' && event.end_date) {
+            const last = new Date(`${event.end_date}T12:00:00Z`);
+            last.setUTCDate(last.getUTCDate() - 1);
+            if (last.toISOString().slice(0, 10) !== event.date) date += ` to ${last.toLocaleDateString(undefined, { ...dateOptions, timeZone: 'UTC' })}`;
+        }
+        const unresolved = event.time_status === 'missing';
+        const assumed = event.duration_assumed && !event.duration_confirmed;
+        const controls = `<div class="time-review">${unresolved ? '<p class="hint">Choose a time or save this as an all-day reminder before downloading.</p>' : ''}${assumed ? `<p class="hint">No end time was provided. The one-hour duration is a suggestion.</p><button type="button" class="secondary" data-confirm-duration="${index}" ${busy ? 'disabled' : ''}>Use suggested duration</button>` : ''}<button type="button" class="text-button" data-edit-time="${index}" ${busy ? 'disabled' : ''}>${unresolved ? 'Set time or all-day reminder' : 'Edit date and time'}</button></div>`;
         let location = (event.location || [event.location_name, event.location_address].filter(Boolean).join(', ')).trim();
         if (/^(unknown|none|n\/a)[\s,\-]*$/i.test(location)) location = '';
         const changed = previousEvents.length && JSON.stringify(previousEvents[index]) !== JSON.stringify(event);
-        return `<article class="event"><div class="date-label">${escape(date)}</div><h3>${escape(event.title || 'Untitled event')}</h3><p class="time">${escape(time)}</p>${location ? `<p class="location"><a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(location)}" target="_blank" rel="noopener noreferrer">${escape(location)}</a></p>` : ''}${event.description ? `<p class="description">${escape(event.description)}</p>` : ''}${changed ? '<span class="badge changed">Updated</span>' : ''}</article>`;
+        return `<article class="event"><div class="date-label">${escape(date)}</div><h3>${escape(event.title || 'Untitled event')}</h3><p class="time">${escape(time)}</p>${location ? `<p class="location"><a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(location)}" target="_blank" rel="noopener noreferrer">${escape(location)}</a></p>` : ''}${event.description ? `<p class="description">${escape(event.description)}</p>` : ''}${controls}${changed ? '<span class="badge changed">Updated</span>' : ''}</article>`;
     }
+
+    const hasUnresolvedTimes = () => events.some(event => event.time_status === 'missing' || (event.duration_assumed && !event.duration_confirmed));
 
     function reviewView() {
         return intro('Your calendar draft', 'A little more organized.', `We found ${eventCount()}. Give ${events.length === 1 ? 'it' : 'them'} a quick look, then make ${events.length === 1 ? 'it' : 'them'} yours.`, true) +
             `<details class="source"><summary>Your request / ${files.length ? `${files.length} ${files.length === 1 ? 'image' : 'images'}${details.trim() ? ' + instructions' : ''}` : 'text details'}</summary>${details.trim() ? `<p>${escape(details)}</p>` : ''}${files.length ? thumbnails(false) : ''}</details>` +
             notice('A quick check before you export', 'AI can miss a detail. Check dates, times, and especially addresses.', '') +
-            `<div class="section-head"><h2>${eventCount()}</h2><p>${escape(timezone)}</p></div><section id="eventsDisplay" aria-label="Your events">${events.map(eventCard).join('')}</section><section class="correction" aria-labelledby="correction-heading"><h2 id="correction-heading">Need to change something?</h2><p>Tell us what to fix. We will update the events above.</p>${messages.length ? `<div class="chat-log" role="log" aria-label="Corrections" tabindex="0">${messages.map(message => `<div class="bubble ${message.role}"><strong>${message.role === 'user' ? 'You' : 'Calendar Helper'}</strong>${escape(message.text)}</div>`).join('')}</div>` : ''}${correctionError ? notice('That correction did not go through.', correctionError, 'error', 'correction-error') : ''}<form id="chatForm"><div class="field"><label for="chatInput">Your correction</label><textarea id="chatInput" ${busy ? 'disabled' : ''} ${correctionError ? 'aria-describedby="correction-error" aria-invalid="true"' : ''} placeholder="Move dinner to 7 pm and keep it two hours long.">${escape(correction)}</textarea></div><button type="submit" class="secondary" ${busy ? 'disabled' : ''}>${busy === 'correcting' ? 'Updating events...' : 'Update events'}</button></form></section><section class="export">${exportError ? notice('We could not prepare your file.', exportError) : ''}<button type="button" class="primary" id="downloadButton" data-action="export" ${busy ? 'disabled' : ''}>${busy === 'exporting' ? 'Preparing calendar...' : 'Download calendar file'}</button><p class="fineprint">An .ics file for Apple, Google, or Outlook Calendar.</p><button type="button" class="text-button reset" data-dialog="reset" ${busy ? 'disabled' : ''}>Start over</button></section>`;
+            `<div class="section-head"><h2>${eventCount()}</h2><p>${escape(timezone)}</p></div><section id="eventsDisplay" aria-label="Your events">${events.map(eventCard).join('')}</section><section class="correction" aria-labelledby="correction-heading"><h2 id="correction-heading">Need to change something?</h2><p>Tell us what to fix. We will update the events above.</p>${messages.length ? `<div class="chat-log" role="log" aria-label="Corrections" tabindex="0">${messages.map(message => `<div class="bubble ${message.role}"><strong>${message.role === 'user' ? 'You' : 'Calendar Helper'}</strong>${escape(message.text)}</div>`).join('')}</div>` : ''}${correctionError ? notice('That correction did not go through.', correctionError, 'error', 'correction-error') : ''}<form id="chatForm"><div class="field"><label for="chatInput">Your correction</label><textarea id="chatInput" ${busy ? 'disabled' : ''} ${correctionError ? 'aria-describedby="correction-error" aria-invalid="true"' : ''} placeholder="Move dinner to 7 pm and keep it two hours long.">${escape(correction)}</textarea></div><button type="submit" class="secondary" ${busy ? 'disabled' : ''}>${busy === 'correcting' ? 'Updating events...' : 'Update events'}</button></form></section><section class="export">${hasUnresolvedTimes() ? notice('A time needs your review', 'Set missing times, choose an all-day reminder, or confirm suggested durations before downloading.', '') : ''}${exportError ? notice('We could not prepare your file.', exportError) : ''}<button type="button" class="primary" id="downloadButton" data-action="export" ${busy || hasUnresolvedTimes() ? 'disabled' : ''}>${busy === 'exporting' ? 'Preparing calendar...' : 'Download calendar file'}</button><p class="fineprint">An .ics file for Apple, Google, or Outlook Calendar.</p><button type="button" class="text-button reset" data-dialog="reset" ${busy ? 'disabled' : ''}>Start over</button></section>`;
     }
 
     function exportedView() {
@@ -138,7 +152,8 @@
             let data;
             try { data = await response.json(); } catch { throw new Error('The server returned an unreadable response. Your details are still here; please try again.'); }
             if (!response.ok || !data.success) {
-                const error = new Error(data.user_message || 'We could not complete that request. Please try again.');
+                const reference = data.request_id || response.headers.get('X-Request-ID');
+                const error = new Error((data.user_message || 'We could not complete that request. Please try again.') + (reference ? ` Reference: ${reference}` : ''));
                 error.kind = data.error_type;
                 throw error;
             }
@@ -151,7 +166,7 @@
     }
 
     function validateEvents(data) {
-        if (!Array.isArray(data) || !data.length || data.some(event => !event || typeof event !== 'object' || !Number.isFinite(Date.parse(event.start_time)) || !Number.isFinite(Date.parse(event.end_time)))) {
+        if (!Array.isArray(data) || !data.length || data.some(event => !event || typeof event !== 'object' || ((event.time_status === 'missing' || event.time_status === 'all_day') ? (event.date !== null && event.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(event.date)) : (!Number.isFinite(Date.parse(event.start_time)) || !Number.isFinite(Date.parse(event.end_time)))))) {
             throw new Error('We could not read the event dates in that response. Please try again with the date and time included.');
         }
         return data;
@@ -210,7 +225,7 @@
     }
 
     async function exportEvents() {
-        if (busy || !events.length) return;
+        if (busy || !events.length || hasUnresolvedTimes()) return;
         busy = 'exporting'; exportError = ''; keepWorking(); render(); announce('Preparing your calendar file.');
         let succeeded = false;
         try {
@@ -225,6 +240,38 @@
         finally {
             busy = false; keepWorking(); render(succeeded);
             if (!succeeded) document.querySelector('[data-action="export"]').focus({ preventScroll: true });
+        }
+    }
+
+    function openTimeEditor(index, opener) {
+        const event = events[index];
+        const parts = value => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)).split(' ') : [];
+        const start = parts(event.start_time);
+        const end = parts(event.end_time);
+        const allDay = event.time_status === 'all_day';
+        dialogOpener = opener;
+        modalContent.innerHTML = `<h2 id="modal-title">Set this event's time</h2><p>${escape(event.title)} / ${escape(timezone)}</p><form id="timeForm" data-index="${index}"><div class="field"><label for="timeMode">Save as</label><select id="timeMode" name="mode"><option value="timed" ${allDay ? '' : 'selected'}>Appointment with a time</option><option value="all_day" ${allDay ? 'selected' : ''}>All-day reminder</option></select></div><div class="field"><label for="eventDate">Date</label><input id="eventDate" name="date" type="date" value="${escape(start[0] || event.date || '')}" required></div><div id="clockFields" ${allDay ? 'hidden' : ''}><div class="field"><label for="startClock">Start time</label><input id="startClock" name="start" type="time" value="${escape(start[1] || '')}" ${allDay ? '' : 'required'}></div><div class="field"><label for="endDate">End date</label><input id="endDate" name="end_date" type="date" value="${escape(end[0] || event.date || '')}" ${allDay ? '' : 'required'}></div><div class="field"><label for="endClock">End time</label><input id="endClock" name="end" type="time" value="${escape(end[1] || '')}" ${allDay ? '' : 'required'}></div></div><div id="timeError"></div><button class="primary" type="submit">Save event time</button></form>`;
+        modal.showModal();
+    }
+
+    async function resolveTime(index, changes, button) {
+        if (busy) return;
+        busy = 'resolving';
+        if (button) button.disabled = true;
+        try {
+            const data = await request('/resolve-time', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: events[index], ...changes }) });
+            previousEvents = [...events];
+            events[index] = validateEvents([data.event])[0];
+            exportError = ''; keepWorking();
+            if (modal.open) modal.close();
+            announce('Event time updated.');
+        } catch (error) {
+            if (modal.open) document.querySelector('#timeError').innerHTML = notice('Check the time', error.message);
+            else exportError = error.message;
+        } finally {
+            busy = false;
+            if (button) button.disabled = false;
+            render();
         }
     }
 
@@ -262,15 +309,27 @@
         if (event.target.id === 'chatInput') { correction = event.target.value; keepWorking(); }
     });
     document.addEventListener('change', event => {
+        if (event.target.id === 'timeMode') {
+            const allDay = event.target.value === 'all_day';
+            document.querySelector('#clockFields').hidden = allDay;
+            document.querySelectorAll('#clockFields input').forEach(input => { input.required = !allDay; });
+        }
         if (event.target.id === 'image' && !busy) addFiles(Array.from(event.target.files));
     });
     document.addEventListener('submit', event => {
+        if (event.target.id === 'timeForm') {
+            event.preventDefault();
+            const data = new FormData(event.target);
+            resolveTime(Number(event.target.dataset.index), { mode: data.get('mode'), date: data.get('date'), start_local: `${data.get('date')}T${data.get('start')}`, end_local: `${data.get('end_date')}T${data.get('end')}` }, event.target.querySelector('button[type=submit]'));
+        }
         if (event.target.id === 'uploadForm') { event.preventDefault(); processRequest(); }
         if (event.target.id === 'chatForm') { event.preventDefault(); correctEvents(); }
     });
     document.addEventListener('click', event => {
-        const trigger = event.target.closest('[data-action], [data-dialog], [data-image], [data-remove]');
+        const trigger = event.target.closest('[data-action], [data-dialog], [data-image], [data-remove], [data-edit-time], [data-confirm-duration]');
         if (!trigger || trigger.disabled) return;
+        if (trigger.dataset.editTime !== undefined && !busy) return openTimeEditor(Number(trigger.dataset.editTime), trigger);
+        if (trigger.dataset.confirmDuration !== undefined && !busy) return resolveTime(Number(trigger.dataset.confirmDuration), { mode: 'confirm_duration' }, trigger);
         if (trigger.dataset.dialog) return openDialog(trigger.dataset.dialog, trigger);
         if (trigger.dataset.image !== undefined) return openDialog('image', trigger, Number(trigger.dataset.image));
         if (trigger.dataset.remove !== undefined && !busy) {
