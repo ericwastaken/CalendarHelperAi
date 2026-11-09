@@ -12,7 +12,8 @@ Keep the debugger off for LAN and Tailscale testing. Restart the server after co
 
 ## Container development
 
-Use the application-owned collector through Compose as described in [container logging](container-logging.md). Set a dedicated `APP_LOG_DIR` before every Compose command. Native Flask/Gunicorn runs above remain available, but do not include Fluent Bit.
+Use the application-owned collector through Compose as described in [container logging](container-logging.md). Set a dedicated `APP_LOG_DIR` for the standard Compose file. The standalone
+`compose.logging-disabled.yaml` requires no log directory. Native Flask/Gunicorn runs above remain available, but do not include Fluent Bit.
 
 ## Offline tests
 
@@ -29,12 +30,17 @@ Tests inject fake AI clients and do not load `.env`. They cover extraction and c
 uv build
 ```
 
-Install the wheel from `dist/` into a fresh environment and run the tests from a directory outside this checkout. This catches missing package data and accidental reliance on the source directory. The wheel contains application code, templates, and runtime assets; detailed docs and design previews remain in the repository/source distribution.
+Install the wheel from `dist/` into a fresh environment using the locked dependencies,
+then run the tests from a directory outside this checkout. Export those dependencies
+with `uv export --frozen --no-dev --no-emit-project --format requirements-txt` and
+pass the resulting requirements file to the installer alongside the wheel.
+Unconstrained wheel installation can select a different SDK generation and is not
+the verified runtime. This catches missing package data and accidental reliance on the source directory. The wheel contains application code, templates, and runtime assets; detailed docs and design previews remain in the repository/source distribution.
 
 Run the production entry point locally with a macOS-compatible temporary directory:
 
 ```sh
-uv run gunicorn --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /tmp --bind 127.0.0.1:5056 'calendar_helper_ai:create_app()'
+uv run gunicorn --access-logfile /dev/null --error-logfile /dev/null --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /tmp --bind 127.0.0.1:5056 'calendar_helper_ai:create_app()'
 ```
 
 The container also uses `/tmp`; its Dockerfile installs locked dependencies from
@@ -61,3 +67,15 @@ The dated [design implementation notes](design-system/paper-pine-2026-09/IMPLEME
 Keep README focused on installing and using the app. Put architecture, API, configuration, and substantial implementation explanations in `docs`. Update source mappings when files move. New design systems get `docs/design-system/<name>-YYYY-MM/`; keep previous versions as historical references.
 
 The two event-card image copies under `docs/example_images` and the package's `static/images` must stay identical. Private operations, account identifiers, live deployment records, support tickets, and credential references must not enter public documentation.
+
+
+## Logging change review
+
+Changes to routes, AI clients, logging or the process runtime must preserve the
+[privacy contract](logging-privacy.md). Use fictional canaries to check stdout,
+stderr and spool files, including the real SDK with an offline HTTP transport.
+Test enabled file output and disabled container behavior without S3 credentials.
+Review configuration defaults, both Compose files, Dockerfile, creation template
+and docs together. A new event/field must pass a privacy review and have tests;
+never add free-text fields as a debugging shortcut. A changed deployment still
+needs production delivery checks.

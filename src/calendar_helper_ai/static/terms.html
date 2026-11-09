@@ -6,53 +6,36 @@
 </head>
 <body>
     <div class="modal-body">
-        <p>
-            <h2 id="-1-consent-and-scope-of-use-"><strong>1. Consent and Scope of Use</strong></h2>
-            <p>By using this service, you grant us a worldwide, irrevocable license to analyze and process your uploaded images and text <strong>solely</strong> for the purpose of generating calendar items and a calendar file. You explicitly consent to this processing and acknowledge that this service does not provide long-term storage of your data.  </p>
-            <h2 id="-2-data-retention-and-processing-"><strong>2. Data Retention and Processing</strong></h2>
-            <ul>
-            <li>Your <strong>image and text are stored only temporarily</strong> in active memory and are <strong>not logged, permanently stored, or shared beyond OpenAI’s processing</strong>.  </li>
-            <li>The calendar file is <strong>generated on-demand</strong> and is not retained on our servers after creation.  </li>
-            <li>Your <strong>image is processed in server memory temporarily</strong> and displayed back to you via browser memory; it is <strong>not stored server-side</strong>.  </li>
-            <li><strong>All data is deleted automatically at the end of your session.</strong>  </li>
-            </ul>
-            <h2 id="-3-third-party-processing-and-data-sharing-"><strong>3. Third-Party Processing and Data Sharing</strong></h2>
-            <ul>
-            <li>To process your request, your image and text are transmitted to <strong>OpenAI</strong>, which acts as a data processor.  </li>
-            <li>OpenAI&#39;s terms and privacy policies govern their handling of your data.  </li>
-            <li>We <strong>do not sell, share, or retain any of your personal data</strong> beyond session-based processing.  </li>
-            </ul>
-            <h2 id="-4-your-rights-under-gdpr-eu-ccpa-california-and-lgpd-brazil-"><strong>4. Your Rights Under GDPR (EU), CCPA (California), and LGPD (Brazil)</strong></h2>
-            <p>If you are located in the <strong>European Economic Area (EEA), California, or Brazil</strong>, you have the right to:  </p>
-            <ul>
-            <li><strong>Withdraw consent</strong> at any time before the session ends.  </li>
-            <li><strong>Request access</strong> to any personal data that we process.  </li>
-            <li><strong>Request correction or deletion</strong> of any data we hold (note: as we do not store data beyond the session, no retained data exists after your session ends).  </li>
-            <li><strong>Opt-out of data processing</strong> (California’s “Do Not Sell My Data” rule does not apply, as we do not store or sell data).  </li>
-            </ul>
-            <p>To exercise these rights, you may discontinue using the service at any time, as all data is removed at the end of the session.  </p>
-            <h2 id="-5-disclaimer-and-limitation-of-liability-"><strong>5. Disclaimer and Limitation of Liability</strong></h2>
-            <ul>
-            <li>This service is provided <strong>&quot;as is&quot; and without warranty</strong> of any kind.  </li>
-            <li>We are <strong>not liable for any loss, damages, or claims</strong> arising from the use of this service, including inaccuracies in generated calendar events.  </li>
-            <li>You are responsible for verifying any calendar data before use.  </li>
-            </ul>
-            <h2 id="-6-compliance-with-data-protection-laws-"><strong>6. Compliance with Data Protection Laws</strong></h2>
-            <p>This service is designed to comply with:  </p>
-            <ul>
-            <li><strong>General Data Protection Regulation (GDPR - EU)</strong>  </li>
-            <li><strong>California Consumer Privacy Act (CCPA - U.S.)</strong>  </li>
-            <li><strong>Lei Geral de Proteção de Dados (LGPD - Brazil)</strong>  </li>
-            </ul>
-            <p>We <strong>do not collect, store, or sell personal data</strong>, ensuring compliance with these regulations.  </p>
-            <h2 id="-7-updates-to-this-policy-"><strong>7. Updates to This Policy</strong></h2>
-            <p>This policy may be updated from time to time. Any material changes will be reflected here, and continued use of the service implies acceptance of the updated terms.  </p>
-            
-<!-- This document is fetched into a dialog, where injected decoder scripts do not run. -->
-<!--email_off--><p>If you have any questions or concerns, please <a href="mailto:hello+calendarAI@ericsoto.net">contact us</a>.</p><!--/email_off-->
+        <h2><strong>1. Your Content and Processing</strong></h2>
+        <p>You authorize us to process the images and text you submit solely to extract, review, correct and export calendar events. We send this content to OpenAI to perform those operations. You retain your rights in your submitted content. Only submit content you are entitled to provide. We do not sell your content.</p>
 
-            <h2 id="-8-source-code-availability-"><strong>8. Source Code Availability</strong></h2>
-            <p>This app's source code is available for inspection on GitHub at <a href="https://github.com/ericwastaken/CalendarHelperAi/" target="_blank">https://github.com/ericwastaken/CalendarHelperAi/</a></p>
+        <h2><strong>2. Storage and Retention</strong></h2>
+        <p>The application does not maintain a database of your appointments. Upload processing may use temporary server files as well as memory. Browser drafts clear when you refresh, close the page or the session expires. Calendar files are generated on demand and are not saved to an application archive; downloaded files remain on your device.</p>
+        <p>Our hosting and AI providers have separate retention policies. Ending a session does not guarantee deletion of their records or of existing operational logs.</p>
+
+        <h2><strong>3. Operational Logs</strong></h2>
+        <p>Application operational logs exclude personal content, including submitted text, images, filenames, appointment details and client IP addresses. They contain limited technical metadata such as random request IDs, processing timestamps, status codes, counts and durations. These logs help diagnose failures without recording your appointments.</p>
+        <p>Hosting-provider infrastructure logs are separate from these application logs and may include connection information. Operators of self-hosted copies can disable application logging completely; they control their own hosting and retention settings.</p>
+
+        <h2><strong>4. Cookies and Third-Party Processing</strong></h2>
+        <p>This application does not set advertising or analytics cookies. Our hosting security layer uses Cloudflare's <code>__cf_bm</code> cookie to help protect against automated abuse. Cloudflare states that it expires after 30 minutes of inactivity. Your appointment drafts are held in browser memory, not cookies. See <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener noreferrer">Cloudflare's cookie information</a> for details.</p>
+        <p>OpenAI processes submitted content to extract or correct events. Its handling of API data is described in <a href="https://developers.openai.com/api/docs/guides/your-data" target="_blank" rel="noopener noreferrer">OpenAI's API data controls documentation</a>. Hosting providers also process requests to deliver this service. Provider retention is governed by their applicable policies and agreements; this service does not promise zero retention by those providers.</p>
+
+        <h2><strong>5. Accuracy and Availability</strong></h2>
+        <p>AI can misread dates, times and other details. Review every event before importing it. This service does not add events to your calendar automatically and does not guarantee reminders or attendance at an appointment.</p>
+        <p>The service is provided as is and as available, without guarantees of uninterrupted operation or accurate results. To the extent permitted by applicable law, we disclaim warranties and liability for losses arising from use of the service. Nothing in these terms excludes rights or liability that applicable law does not allow us to exclude.</p>
+
+        <h2><strong>6. Privacy Questions and Requests</strong></h2>
+        <p>Depending on where you live, you may have rights concerning your personal data. You can stop submitting content at any time. For questions or requests about access, correction, deletion or other applicable privacy rights, contact us below. Stopping use does not undo processing already performed or override provider retention obligations.</p>
+
+        <h2><strong>7. Updates</strong></h2>
+        <p>We may update these terms as the service changes. Changes will be reflected on this page. Review the current terms before using the service.</p>
+
+        <!-- This document is fetched into a dialog, where injected decoder scripts do not run. -->
+        <!--email_off--><p>If you have any questions or concerns, please <a href="mailto:hello+calendarAI@ericsoto.net">contact us</a>.</p><!--/email_off-->
+
+        <h2><strong>8. Source Code Availability</strong></h2>
+        <p>The source code and technical documentation are available on <a href="https://github.com/ericwastaken/CalendarHelperAi/" target="_blank" rel="noopener noreferrer">GitHub</a>. Self-hosted copies may use different providers, settings or code; their operators are responsible for explaining their own data practices.</p>
     </div>
 </body>
 </html>

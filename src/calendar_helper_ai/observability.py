@@ -1,10 +1,10 @@
-"""Small, allowlisted operational records. Never log user or provider payloads."""
+"""Operational records with fixed values and no user/provider payloads."""
 import json
 import logging
 from logging.handlers import RotatingFileHandler
+import math
 import os
 from pathlib import Path
-import re
 import time
 import sys
 from datetime import datetime, timezone
@@ -13,51 +13,137 @@ from uuid import uuid4
 from flask import current_app, g, request
 from .config import APP_VERSION
 
-FIELDS = {'stage', 'outcome', 'elapsed_ms', 'image_count', 'event_count', 'status',
-          'error_type', 'exception_class', 'provider_status', 'provider_code',
-          'provider_request_id', 'model'}
+EVENTS = frozenset({'application_started', 'request_finished', 'processing_started',
+                    'provider_completed', 'provider_failed', 'request_rejected',
+                    'processing_failed', 'validation_failed', 'unexpected_failure'})
+ENUM_FIELDS = {
+    'stage': frozenset({'initialize', 'extract', 'correct', 'calendar.process',
+                        'calendar.correct', 'calendar.resolve_time', 'calendar.download_ics'}),
+    'outcome': frozenset({'events', 'no_events', 'unsupported', 'success', 'failure'}),
+    'error_type': frozenset({'provider_configuration', 'provider_error', 'provider_timeout',
+                            'provider_connection', 'provider_authentication', 'provider_quota',
+                            'provider_rate_limit', 'invalid_model_response', 'unsupported_request',
+                            'validation_error', 'internal_error', 'no_events'}),
+    'provider_code': frozenset({'insufficient_quota', 'rate_limit_exceeded', 'invalid_api_key',
+                               'model_not_found', 'context_length_exceeded', 'invalid_request_error',
+                               'server_error', 'content_policy_violation'}),
+    'exception_class': frozenset({'APIError', 'APIStatusError', 'APIConnectionError',
+                                 'APITimeoutError', 'APIResponseValidationError',
+                                 'AuthenticationError', 'PermissionDeniedError', 'BadRequestError',
+                                 'NotFoundError', 'ConflictError', 'UnprocessableEntityError',
+                                 'RateLimitError', 'InternalServerError', 'ValueError', 'TypeError',
+                                 'KeyError', 'AttributeError', 'IndexError', 'RuntimeError',
+                                 'TimeoutError', 'ConnectionError', 'OSError', 'EventValidationError',
+                                 'ProcessingError', 'SafetyValidationError', 'OtherError'}),
+    'model': frozenset({'gpt-4o'}),
+}
+INTEGER_FIELDS = {'image_count': (0, 5), 'event_count': (0, 10000),
+                  'status': (100, 599), 'provider_status': (100, 599)}
+LEVELS = frozenset({logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL})
+DEPENDENCY_LOGGERS = ('openai', 'httpx', 'httpcore', 'urllib3', 'requests', 'werkzeug',
+                      'flask', 'dotenv', 'asyncio', 'py.warnings')
+_RECORD_TOKEN = object()
+
+
+class StructuredEventFilter(logging.Filter):
+
+
+    def filter(self, record):
+        # A JSON-looking message, framework exception, or arbitrary logger call
+        # is not an operational event. Only this module's emitter holds the token.
+        return (getattr(record, '_calendar_record_token', None) is _RECORD_TOKEN
+                and isinstance(getattr(record, '_calendar_record', None), dict))
 
 
 class JsonFormatter(logging.Formatter):
 
 
     def format(self, record):
-        return record.getMessage()
+        # Do not use Formatter.format: it appends exception/stack text.
+        return json.dumps(record._calendar_record, separators=(',', ':'), allow_nan=False)
+
+
+def safe_provider_code(value):
+    return value if type(value) is str and value in ENUM_FIELDS['provider_code'] else None
+
+
+def safe_fields(fields):
+    safe = {}
+    for key, allowed in ENUM_FIELDS.items():
+        value = fields.get(key)
+        if type(value) is str and value in allowed:
+            safe[key] = value
+        elif key == 'exception_class' and value is not None:
+            safe[key] = 'OtherError'
+    for key, (minimum, maximum) in INTEGER_FIELDS.items():
+        value = fields.get(key)
+        if type(value) is int and minimum <= value <= maximum:
+            safe[key] = value
+    elapsed = fields.get('elapsed_ms')
+    if type(elapsed) in (int, float) and 0 <= elapsed <= 3600000 and math.isfinite(elapsed):
+        safe['elapsed_ms'] = round(elapsed)
+    return safe
 
 
 def log_event(event, level=logging.INFO, **fields):
+    if not current_app.config['LOGGING_ENABLED'] or type(event) is not str or event not in EVENTS:
+        return
+    level = level if type(level) is int and level in LEVELS else logging.INFO
     record = {'event': event, 'event_id': uuid4().hex, 'schema_version': 1,
-              'version': APP_VERSION, 'level': logging.getLevelName(level),
+              'version': APP_VERSION, 'level': {20: 'INFO', 30: 'WARNING', 40: 'ERROR', 50: 'CRITICAL'}[level],
               'timestamp': datetime.now(timezone.utc).isoformat(),
-              'request_id': getattr(g, 'request_id', None)}
-    record.update({key: value for key, value in fields.items() if key in FIELDS})
-    current_app.logger.log(level, json.dumps(record, separators=(',', ':')))
+              'request_id': getattr(g, '_operational_request_id', None)}
+    record.update(safe_fields(fields))
+    current_app.logger.log(level, json.dumps(record, separators=(',', ':'), allow_nan=False),
+                           extra={'_calendar_record_token': _RECORD_TOKEN,
+                                  '_calendar_record': record})
 
 
-def safe_identifier(value):
-    return value if isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9_-]{1,100}', value) else None
+def suppress_dependency_logging():
+    # Legacy verbose settings must never let SDK HTTP bodies, URLs or exception
+    # strings escape through root logging. Silence existing children as well as
+    # the parents inherited by children created later by these libraries.
+    names = set(DEPENDENCY_LOGGERS)
+    names.update(name for name in logging.Logger.manager.loggerDict
+                 if any(name.startswith(prefix + '.') for prefix in DEPENDENCY_LOGGERS))
+    for name in names:
+        logger = logging.getLogger(name)
+        logger.handlers = [logging.NullHandler()]
+        logger.propagate = False
+        logger.setLevel(logging.CRITICAL + 1)
+        logger.disabled = True
 
 
 def install_logging(app):
+    suppress_dependency_logging()
     for previous in app.logger.handlers:
         previous.close()
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(JsonFormatter())
-    app.logger.handlers = [handler]
-    # Only allowlisted operational events use this dedicated spool. Server and
-    # third-party diagnostics stay on stdout/stderr, outside the archive.
-    spool = os.environ.get('APP_LOG_FILE')
-    if spool:
-        Path(spool).parent.mkdir(parents=True, exist_ok=True)
-        archive = RotatingFileHandler(spool, maxBytes=1024 * 1024, backupCount=10)
-        archive.setFormatter(JsonFormatter())
-        app.logger.addHandler(archive)
+    app.logger.handlers = []
+    if app.config['LOGGING_ENABLED']:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(JsonFormatter())
+        handler.addFilter(StructuredEventFilter())
+        app.logger.addHandler(handler)
+        spool = os.environ.get('APP_LOG_FILE')
+        if spool:
+            try:
+                Path(spool).parent.mkdir(parents=True, exist_ok=True)
+                archive = RotatingFileHandler(spool, maxBytes=1024 * 1024, backupCount=10)
+            except OSError:
+                raise RuntimeError('Operational log storage is unavailable.') from None
+            archive.setFormatter(JsonFormatter())
+            archive.addFilter(StructuredEventFilter())
+            app.logger.addHandler(archive)
+    else:
+        # Avoid logging.lastResort writing free-text warnings to stderr.
+        app.logger.addHandler(logging.NullHandler())
     app.logger.propagate = False
     app.logger.setLevel(logging.INFO)
 
     @app.before_request
     def begin_request():
-        g.request_id = uuid4().hex
+        g._operational_request_id = uuid4().hex
+        g.request_id = g._operational_request_id
         g.started_at = time.monotonic()
 
     @app.after_request

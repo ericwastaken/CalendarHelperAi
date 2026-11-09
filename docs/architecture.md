@@ -25,6 +25,7 @@ uv.lock                         Locked dependency resolution
 .python-version                 Python runtime selection
 Dockerfile                      Application image with Gunicorn and Fluent Bit
 compose.yaml                    Local development mounts and ports
+compose.logging-disabled.yaml   Standalone local container without log collection
 container/                      Process supervision, collector config and health probe
 Procfile                        Legacy buildpack Gunicorn entry point
 .do/app.yaml                    Generic creation template
@@ -65,4 +66,21 @@ Drafts, images, correction history, and results live in JavaScript memory. Refre
 
 The application sends submitted text and images to OpenAI. It does not write appointment records to an application database. Browser downloads are saved by the user, and service providers may retain requests or logs according to their own policies. Server upload handling may spool larger multipart files to temporary storage. This is not a guarantee of memory-only processing or regulatory compliance.
 
-Operational logs are allowlisted JSON records on stdout with timestamps, level, version, request ID, stage, counts, timings and safe provider identifiers. Prompts, images, filenames, event details and raw provider errors are never logged by the processing code, even with the legacy debug flag enabled. Successful readiness probes do not produce application request logs. Provider/platform access logs are separate. Native log retention depends on the hosting provider; a durable destination must be configured separately. Flask session cookies are signed, not encrypted. No authentication or rate-limit middleware is currently included. See [configuration](configuration.md) and [deployment](deployment.md) when operating a public instance.
+Operational logs contain only validated operational metadata, never submitted
+personal content. The app filters ordinary free-text log messages and suppresses
+payload-capable dependency diagnostics. The supplied container disables Gunicorn
+access/error logs, which could otherwise contain client IPs or request fragments.
+Read [logging privacy](logging-privacy.md) for the exact contract, schema and
+boundaries. `LOGGING_ENABLED=false` disables the operational stream and container
+collector completely; readiness and request IDs continue to work. Successful
+readiness probes do not produce application request logs. Configure retention for
+local output and remote objects separately. Hosting-provider access logs and AI
+provider retention are outside this application's controls.
+
+The current app does not use Flask sessions or set cookies, and the frontend does
+not use localStorage, sessionStorage or tracking scripts. A configured Flask
+signing key does not itself create a cookie. Hosting/CDN security cookies are
+separate; operators must inspect their deployed responses and disclose those
+cookies. No authentication or rate-limit
+middleware is currently included. See [configuration](configuration.md) and
+[deployment](deployment.md) when operating a public instance.

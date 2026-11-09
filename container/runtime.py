@@ -9,6 +9,7 @@ import sys
 import time
 
 ROOT = Path('/tmp/runtime')
+LOGS = Path('/logs')
 STOP = False
 
 
@@ -19,11 +20,20 @@ def value(name, default=None):
     return result
 
 
+def logging_enabled():
+    setting = os.environ.get('LOGGING_ENABLED', 'true').strip().lower()
+    if setting not in {'true', 'false'}:
+        raise ValueError('LOGGING_ENABLED must be true or false')
+    return setting == 'true'
+
+
 def configure():
+    if not logging_enabled():
+        return False
     ROOT.mkdir(parents=True, exist_ok=True)
     for directory in ('spool', 'state', 'output'):
-        Path('/logs', directory).mkdir(parents=True, exist_ok=True)
-    if os.environ.get('APP_LOG_FILE') != '/logs/spool/events.jsonl':
+        (LOGS / directory).mkdir(parents=True, exist_ok=True)
+    if os.environ.get('APP_LOG_FILE') != str(LOGS / 'spool/events.jsonl'):
         raise ValueError('Container APP_LOG_FILE must be /logs/spool/events.jsonl')
     project, environment = value('LOG_PROJECT'), value('LOG_ENV')
     instance = value('LOG_INSTANCE', os.environ.get('HOSTNAME', 'unknown'))
@@ -97,6 +107,7 @@ def configure():
         raise ValueError('LOG_OUTPUT must be file or s3')
     (ROOT / 'fluent-bit.conf').write_text(config)
     (ROOT / 'parsers.conf').write_text('[PARSER]\n    Name app_json\n    Format json\n')
+    return True
 
 
 def stopping(signum, frame):
@@ -104,7 +115,7 @@ def stopping(signum, frame):
     STOP = True
 
 
-def drain(process, timeout):
+def drain(process, timeout, emit_diagnostics=True):
     if process is None or process.poll() is not None:
         return
     process.terminate()
@@ -113,33 +124,60 @@ def drain(process, timeout):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait()
-        print('runtime: child exceeded shutdown deadline', flush=True)
+        if emit_diagnostics:
+            print('runtime: child exceeded shutdown deadline', flush=True)
+
+
+def app_environment(enabled):
+    environment = os.environ.copy()
+    environment['LOGGING_ENABLED'] = 'true' if enabled else 'false'
+    # Only the collector needs object-storage credentials. Do not give the
+    # application worker access to its log writer credential.
+    for key in ('AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN'):
+        environment.pop(key, None)
+    if not enabled:
+        environment.pop('APP_LOG_FILE', None)
+        for key in list(environment):
+            if key.startswith('LOG_S3_'):
+                environment.pop(key)
+    return environment
 
 
 def main():
-    configure()
+    global STOP
+    STOP = False
+    enabled = configure()
+    # Readiness metadata is required in both modes. It contains PIDs, not logs.
+    ROOT.mkdir(parents=True, exist_ok=True)
     signal.signal(signal.SIGTERM, stopping)
     signal.signal(signal.SIGINT, stopping)
     collector_cmd = ['/fluent-bit/bin/fluent-bit', '-c', str(ROOT / 'fluent-bit.conf')]
     collector = app = None
     code = 0
     try:
-        collector = subprocess.Popen(collector_cmd)
-        time.sleep(1)
-        if collector.poll() is not None:
-            raise RuntimeError('Collector failed to start')
+        if enabled:
+            collector = subprocess.Popen(collector_cmd)
+            time.sleep(1)
+            if collector.poll() is not None:
+                raise RuntimeError('Collector failed to start')
         # One worker owns the rotating log file. Do not increase workers without
         # replacing the spool with a multiprocess-safe transport.
+        # Gunicorn's native diagnostics can contain request lines and client IPs.
+        # The structured app logger owns enabled operational records instead.
         app = subprocess.Popen(['gunicorn', '--workers', '1', '--worker-class', 'gthread',
                                 '--threads', '2', '--timeout', '120', '--graceful-timeout', '20',
+                                '--access-logfile', '/dev/null', '--error-logfile', '/dev/null',
                                 '--worker-tmp-dir', '/tmp', '--bind', '0.0.0.0:' + value('PORT', '8080'),
-                                'calendar_helper_ai:create_app()'])
+                                'calendar_helper_ai:create_app()'],
+                               env=app_environment(enabled),
+                               stdout=None if enabled else subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
         restarts = []
         while not STOP:
             if app.poll() is not None:
                 code = app.returncode or 1
                 break
-            if collector.poll() is not None:
+            if enabled and collector.poll() is not None:
                 (ROOT / 'pids.json').unlink(missing_ok=True)
                 restarts = [t for t in restarts if time.monotonic() - t < 60]
                 if len(restarts) >= 3:
@@ -147,18 +185,27 @@ def main():
                 restarts.append(time.monotonic())
                 print('runtime: restarting failed collector', flush=True)
                 collector = subprocess.Popen(collector_cmd)
+            pids = {'app': app.pid}
+            if enabled:
+                pids['collector'] = collector.pid
             temporary = ROOT / 'pids.tmp'
-            temporary.write_text(json.dumps({'app': app.pid, 'collector': collector.pid}))
+            temporary.write_text(json.dumps(pids))
             temporary.replace(ROOT / 'pids.json')
             time.sleep(0.5)
     finally:
         (ROOT / 'pids.json').unlink(missing_ok=True)
-        drain(app, 22)
-        # Tail gets a final opportunity to read writes made while requests drained.
-        time.sleep(2)
-        drain(collector, 15)
+        drain(app, 22, emit_diagnostics=enabled)
+        if enabled:
+            # Tail gets a final opportunity to read writes made while requests drained.
+            time.sleep(2)
+            drain(collector, 15)
     return code
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:
+        # No exception repr, configuration value, request data or traceback.
+        print('runtime: configuration or startup failed', file=sys.stderr, flush=True)
+        sys.exit(1)

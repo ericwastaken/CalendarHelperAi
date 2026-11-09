@@ -10,7 +10,11 @@ ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/jpg', 'image/png', 'image/tiff'}
 
 def environment_config():
     """Read runtime settings when creating an app, rather than during imports."""
+    enabled = os.environ.get('LOGGING_ENABLED', 'true').strip().lower()
+    if enabled not in {'true', 'false'}:
+        raise ValueError('LOGGING_ENABLED must be true or false.')
     return {
+        'LOGGING_ENABLED': enabled == 'true',
         'SECRET_KEY': os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32),
         'OPENAI_API_KEY': os.environ.get('OPENAI_API_KEY'),
         'MAX_CONTENT_LENGTH': 21 * 1024 * 1024,

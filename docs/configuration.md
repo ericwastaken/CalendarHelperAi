@@ -4,7 +4,11 @@ Container logging is configured separately from application behavior. See
 [container logging](container-logging.md) for `LOG_OUTPUT`, environment identity,
 S3 destinations and secret injection. `APP_LOG_FILE` optionally enables the
 allowlisted rotating operational spool; the container fixes it to
-`/logs/spool/events.jsonl`. Native runs retain stdout-only logging by default.
+`/logs/spool/events.jsonl`. Native runs retain stdout-only operational logging by default.
+`LOGGING_ENABLED=false` disables application operational output and, in the
+container, the collector and its writes/uploads. Restart or redeploy to apply it.
+See [full disable instructions](container-logging.md#disable-logging-completely)
+and the [logging privacy contract](logging-privacy.md).
 
 Runtime values come from the process environment. A local `.env` in the launch directory is loaded by the factory without overriding existing environment variables. `.env` is ignored by Git; `.env.example` contains blank placeholders only. Never commit credentials or exported live app specifications.
 
@@ -12,9 +16,10 @@ Runtime values come from the process environment. A local `.env` in the launch d
 |---|---|---|
 | `OPENAI_API_KEY` | None | Required for real extraction and corrections; not needed to serve the UI or run offline tests |
 | `FLASK_SECRET_KEY` | Random per application instance | Flask cookie-signing key; set a stable random secret for deployment |
-| `DEBUG_LOGGING` | `false` | Legacy runtime flag exposed in config; processing logs remain allowlisted and contain no payloads |
-| `OPENAI_HTTP_CLIENT_LEVEL` | `ERROR` | OpenAI client/base-client log level |
-| `OPENAI_API_LEVEL` | `ERROR` | OpenAI streaming log level |
+| `LOGGING_ENABLED` | `true` | Master operational logging switch; accepts only true/false, case-insensitive; false disables stdout, spool and container collector |
+| `DEBUG_LOGGING` | `false` | Legacy runtime flag exposed in config; does not enable payload diagnostics or disable operational logging |
+| `OPENAI_HTTP_CLIENT_LEVEL` | `ERROR` | Deprecated compatibility value, ignored; dependency diagnostics are suppressed |
+| `OPENAI_API_LEVEL` | `ERROR` | Deprecated compatibility value, ignored; dependency diagnostics are suppressed |
 | `PORT` | Supplied by hosting provider | Gunicorn bind port in the production command |
 
 Configure secrets and logging flags with `RUN_TIME` scope on App Platform. `SESSION_SECRET` is not read. `DEBUG_LOG_IMAGE` is a legacy setting with no active code path; it may remain false in older deployment specifications.

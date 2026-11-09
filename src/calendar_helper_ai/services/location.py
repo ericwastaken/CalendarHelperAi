@@ -1,7 +1,6 @@
 
 import requests
 from flask import request
-import logging
 
 
 def get_client_ip():
@@ -25,6 +24,7 @@ def get_location_from_ip(ip):
                     'longitude': data.get('lon'),
                     'region': data.get('regionName')
                 }
-    except Exception as e:
-        logging.error(f"Error getting location from IP: {e}")
+    except Exception:
+        # Exception messages can contain the requested IP or response body.
+        pass
     return None

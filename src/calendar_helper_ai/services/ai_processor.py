@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from flask import current_app
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
-from ..observability import log_event, safe_identifier
+from ..observability import log_event, safe_provider_code
 from ..prompts import CALENDAR_SYSTEM_PROMPT, CORRECTION_SYSTEM_PROMPT
 from .events import normalize_event
 
@@ -47,7 +47,7 @@ def call_model(messages, stage):
         raise
     except Exception as error:
         status = getattr(error, 'status_code', None)
-        code = safe_identifier(getattr(error, 'code', None))
+        code = safe_provider_code(getattr(error, 'code', None))
         kind, http_status = 'provider_error', 502
         message = 'The event service could not complete this request. Please try again.'
         if isinstance(error, APITimeoutError):
@@ -65,10 +65,9 @@ def call_model(messages, stage):
                 message = 'The event service is temporarily at capacity. Please try again later.'
         log_event('provider_failed', logging.ERROR, stage=stage, error_type=kind,
                   exception_class=type(error).__name__, provider_status=status,
-                  provider_code=code, provider_request_id=safe_identifier(getattr(error, 'request_id', None)),
+                  provider_code=code,
                   elapsed_ms=round((time.monotonic() - started) * 1000))
         raise ProcessingError(kind, message, http_status) from None
-    provider_id = safe_identifier(getattr(response, '_request_id', None))
     try:
         parsed = json.loads(response.choices[0].message.content)
         if not isinstance(parsed, dict) or parsed.get('outcome') not in {'events', 'no_events', 'unsupported'}:
@@ -83,13 +82,13 @@ def call_model(messages, stage):
             raise ValueError('Missing time classification')
         events = [normalize_event(event) for event in parsed['events']]
     except SafetyValidationError:
-        log_event('request_rejected', logging.WARNING, stage=stage, outcome='unsupported', provider_request_id=provider_id)
+        log_event('request_rejected', logging.WARNING, stage=stage, outcome='unsupported')
         raise
     except (ValueError, TypeError, KeyError, AttributeError, IndexError):
-        log_event('provider_failed', logging.ERROR, stage=stage, error_type='invalid_model_response', provider_request_id=provider_id)
+        log_event('provider_failed', logging.ERROR, stage=stage, error_type='invalid_model_response')
         raise ProcessingError('invalid_model_response', 'We could not read the event service response. Your details are still here; please try again.') from None
     log_event('provider_completed', stage=stage, outcome=parsed['outcome'], event_count=len(events),
-              provider_request_id=provider_id, elapsed_ms=round((time.monotonic() - started) * 1000), model='gpt-4o')
+              elapsed_ms=round((time.monotonic() - started) * 1000), model='gpt-4o')
     return events
 
 

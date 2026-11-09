@@ -19,24 +19,24 @@ def create_app(test_config=None):
     if test_config is not None:
         app.config.update(test_config)
 
-    logging.basicConfig(format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
-    app.logger.setLevel(logging.DEBUG if app.config['DEBUG_LOGGING'] else logging.INFO)
-    for name, setting in (
-        ('openai._base_client', 'OPENAI_HTTP_CLIENT_LEVEL'),
-        ('openai._http_client', 'OPENAI_HTTP_CLIENT_LEVEL'),
-        ('openai._streaming', 'OPENAI_API_LEVEL'),
-    ):
-        logging.getLogger(name).setLevel(getattr(logging, app.config[setting], logging.ERROR))
+    from .observability import install_logging, log_event
+    install_logging(app)
 
     client = app.config.get('OPENAI_CLIENT')
     if client is None and app.config['OPENAI_API_KEY']:
-        client = OpenAI(api_key=app.config['OPENAI_API_KEY'], timeout=45, max_retries=1)
+        try:
+            client = OpenAI(api_key=app.config['OPENAI_API_KEY'], timeout=45, max_retries=1)
+        except Exception as error:
+            # SDK initialization diagnostics can embed configuration or payloads.
+            # Keep the app available with its existing generic configuration error.
+            with app.app_context():
+                log_event('provider_failed', logging.ERROR, stage='initialize',
+                          error_type='provider_configuration', exception_class=type(error).__name__)
+            client = None
     app.extensions['openai'] = client
 
     from .routes import bp
     app.register_blueprint(bp)
-    from .observability import install_logging, log_event
-    install_logging(app)
     with app.app_context():
         log_event('application_started')
     return app

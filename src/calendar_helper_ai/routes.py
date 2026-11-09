@@ -119,7 +119,7 @@ def handle_large_request(error):
     return jsonify(success=False, error_type='validation_error', user_message='Choose up to 5 images, no larger than 4 MB each.'), 413
 
 
-@bp.errorhandler(Exception)
+@bp.app_errorhandler(Exception)
 def unexpected_error(error):
     if isinstance(error, (ValueError, TypeError, KeyError, AttributeError)):
         return jsonify(success=False, error_type='validation_error', user_message='Check the event dates and times, then try again.'), 400

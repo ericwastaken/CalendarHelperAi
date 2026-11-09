@@ -33,7 +33,10 @@ docker compose up --build -d
 
 Compose reads the ignored `.env` file or exported credentials. Logs stay in your
 selected local directory; no cloud credentials are needed. See
-[container logging](docs/container-logging.md) for storage, querying and production routing.
+[container logging](docs/container-logging.md) for storage, querying, production routing
+and [complete disable instructions](docs/container-logging.md#disable-logging-completely).
+Application operational logs exclude personal data and submitted content; see the
+[privacy contract and its scope](docs/logging-privacy.md).
 
 For a lightweight native run without the container collector:
 
@@ -67,7 +70,7 @@ The automated tests use fake AI clients and make no external API calls. See [dev
 - [API](docs/api.md) and [configuration](docs/configuration.md)
 - [Development and testing](docs/development.md)
 - [DigitalOcean deployment](docs/deployment.md)
-- [Container runtime and logging](docs/container-logging.md)
+- [Container runtime and logging](docs/container-logging.md) and [logging privacy](docs/logging-privacy.md)
 - [Design systems](docs/design-system/README.md)
 
 Licensed under the [MIT License](LICENSE).

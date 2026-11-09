@@ -22,6 +22,9 @@ services:
       health_check:
           http_path: /api/config
       envs:
+          - key: LOGGING_ENABLED
+            scope: RUN_TIME
+            value: "true"
           - key: LOG_ENV
             scope: RUN_TIME
             value: prod

@@ -18,6 +18,7 @@ The Dockerfile installs the project and locked dependencies using uv and package
 Keep these runtime settings for normal operation:
 
 ```text
+LOGGING_ENABLED=true
 DEBUG_LOGGING=false
 DEBUG_LOG_IMAGE=false
 OPENAI_HTTP_CLIENT_LEVEL=ERROR
@@ -28,7 +29,7 @@ Keep `.env`, credentials, private operational records and exported specification
 
 ## Release procedure
 
-1. Increase `[project].version` in `pyproject.toml` before each release. Use a patch for fixes, a minor version for compatible features, or a major version for a substantial milestone or breaking changes. The application-owned logging/container release is **v1.2.0**.
+1. Increase `[project].version` in `pyproject.toml` before each release. Use a patch for fixes, a minor version for compatible features, or a major version for a substantial milestone or breaking changes. The logging privacy and full-disable patch is **v1.2.1**.
 2. Run `uv lock` and `uv sync --locked`. The installed package version drives both `/api/config` and the small version label below the app title; never edit separate version strings in HTML or Python. Versioned CSS/JavaScript/icon URLs refresh assets on release.
 3. Run the offline suite, build and verify the package, and exercise the local Safari workflow described in [development](development.md).
 4. Commit the release on DEV and merge the tested changes into main. Push the intended source commit before requesting deployment.
@@ -50,6 +51,8 @@ Choose instance capacity based on measured memory use and expected concurrency. 
 - Confirm JavaScript and CSS load, and HTTPS works on every configured hostname.
 - Process a synthetic image and a text-only request, review the extracted events, apply a correction and download an ICS file.
 - Inspect exported dates and timezones before importing into a calendar.
+- With logging enabled, correlate synthetic request IDs in private output files or S3 objects, verify fields against the privacy schema and check collector failures. With logging disabled, verify no collector, application log writes or uploads; health and request IDs must still work.
+- If scale to zero is enabled, observe actual sleep and subsequent wake. A configured timeout or healthy deployment alone does not prove sleep or final-buffer delivery.
 - Check error recovery and resource use with representative inputs. Live extraction tests incur AI API usage.
 
 The [sample image guide](example_images/README.md) provides fictional events for testing. The [design implementation notes](design-system/paper-pine-2026-09/IMPLEMENTATION.md) record local UI validation and its limits. Neither substitutes for checks on a newly deployed release.
@@ -62,3 +65,14 @@ The application does not include authentication or an access gate. Account for i
 - [App specification](https://docs.digitalocean.com/products/app-platform/reference/app-spec/)
 - [Custom domains](https://docs.digitalocean.com/products/app-platform/how-to/manage-domains/)
 - [Pricing](https://docs.digitalocean.com/products/app-platform/details/pricing/)
+
+
+## Disable application logging
+
+Set `LOGGING_ENABLED=false` with `RUN_TIME` scope and redeploy the same entrypoint.
+The app runs without Fluent Bit; S3 destination settings and writer credentials
+are no longer required and can be removed from this service. Preserve unrelated
+secrets and live configuration. Follow the [complete disable and verification
+procedure](container-logging.md#disable-logging-completely). Existing log objects
+are retained until explicitly deleted or expired; hosting-provider logs are
+controlled separately.

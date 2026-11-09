@@ -1,0 +1,18 @@
+# Standalone variant: use -f compose.logging-disabled.yaml only, not as an override.
+name: calendarhelperai
+services:
+    app:
+        build: .
+        image: calendarhelperai:dev
+        ports:
+            - "0.0.0.0:${APP_HOST_PORT:-5055}:8080"
+        environment:
+            OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+            FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-}
+            DEBUG_LOGGING: "false"
+            LOGGING_ENABLED: "false"
+        logging:
+            driver: none
+        mem_limit: 512m
+        cpus: 1
+        stop_grace_period: 45s

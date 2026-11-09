@@ -14,10 +14,10 @@ COPY container /app/container
 COPY tests /app/tests
 RUN /fluent-bit/bin/fluent-bit --version && \
     useradd --uid 10001 --create-home app && \
-    mkdir -p /logs/spool /logs/state /logs/output /tmp/runtime && \
+    mkdir -p /logs /tmp/runtime && \
     chown -R app:app /logs /tmp/runtime
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
-    PORT=8080 LOG_PROJECT=calendarhelperai LOG_ENV=dev LOG_OUTPUT=file \
+    PORT=8080 LOG_PROJECT=calendarhelperai LOG_ENV=dev LOG_OUTPUT=file LOGGING_ENABLED=true \
     APP_LOG_FILE=/logs/spool/events.jsonl
 USER app
 EXPOSE 8080
