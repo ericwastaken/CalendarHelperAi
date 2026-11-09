@@ -37,7 +37,9 @@ Run the production entry point locally with a macOS-compatible temporary directo
 uv run gunicorn --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /tmp --bind 127.0.0.1:5056 'calendar_helper_ai:create_app()'
 ```
 
-App Platform uses `/dev/shm` instead of `/tmp`. Its Python buildpack consumes the root `pyproject.toml`, `uv.lock`, and `.python-version`. Keep package-manager metadata at the repository root.
+The container also uses `/tmp`; its Dockerfile installs locked dependencies from
+root packaging metadata. The command above exercises Gunicorn alone. Use Compose
+to test the complete supervised application and collector runtime.
 
 ## Safari release checks
 

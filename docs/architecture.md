@@ -23,11 +23,20 @@ docs/                           Detailed documentation and design history
 pyproject.toml                  Package metadata, dependencies, build configuration
 uv.lock                         Locked dependency resolution
 .python-version                 Python runtime selection
-Procfile                        Production Gunicorn entry point
+Dockerfile                      Application image with Gunicorn and Fluent Bit
+compose.yaml                    Local development mounts and ports
+container/                      Process supervision, collector config and health probe
+Procfile                        Legacy buildpack Gunicorn entry point
 .do/app.yaml                    Generic creation template
 ```
 
 The `src` layout separates importable code from repository tools and documentation. Install the package with `uv sync --locked`; do not rely on setting `PYTHONPATH`. Static files and templates are package data included in the wheel. Browser URLs remain `/static/...` even though the files live beneath `src`.
+
+The container owns its Fluent Bit collector. The supervised runtime routes the
+same operational event stream to local files in dev or a configured remote bucket
+in production. A separate local DuckDB workspace reads those files; it is not an
+application dependency. See [container logging](container-logging.md) for the
+schema, process lifecycle, buffering and durability limits.
 
 ## Application creation
 
