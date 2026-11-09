@@ -751,3 +751,9 @@ button, a {
 .time-review { margin-top: 1rem; display: grid; gap: .5rem; }
 .field input, .field select { width: 100%; box-sizing: border-box; padding: .75rem; border: 1px solid #c8cec7; border-radius: .5rem; font: inherit; color: inherit; background: #fffefa; }
 [hidden] { display: none !important; }
+
+.clock-field { border: 0; padding: 0; margin-inline: 0; min-width: 0; }
+.clock-field legend { margin-bottom: .5rem; font-weight: 600; }
+.clock-inputs { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: .5rem; }
+.clock-inputs > div { min-width: 0; }
+.clock-inputs label { font-size: .8rem; }

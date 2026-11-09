@@ -76,3 +76,7 @@ Verify the deployed /static/terms.html response retains the mailto destination, 
 ## v1.1.0 time review
 
 Event cards distinguish timed events, missing times, and all-day events/reminders. Missing times and unconfirmed suggested durations block Download with an explanatory notice. Each card exposes a date/time editor using the existing modal and form styling. The editor offers explicit timed or all-day reminder modes and retains entered values after recoverable validation failures. Corrections preserve the existing draft on failure. Operational error messages include a request reference for support.
+
+## v1.1.1 time entry defaults
+
+The time editor uses labeled hour, minute, and AM/PM controls. Blank times select AM while leaving the hour and minute empty and required, so the interface does not invent an appointment time. Existing times retain their hour, minute, and AM/PM, including noon and midnight. This replaces the native time input because Safari does not expose a separate default for its AM/PM segment.

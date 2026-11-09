@@ -243,6 +243,17 @@
         }
     }
 
+    function clockFields(name, label, value, required) {
+        const [hour, minute] = value ? value.split(':').map(Number) : [];
+        const period = hour >= 12 ? 'PM' : 'AM';
+        return `<fieldset class="field clock-field"><legend>${label}</legend><div class="clock-inputs"><div><label for="${name}Hour">Hour</label><input id="${name}Hour" name="${name}_hour" type="number" inputmode="numeric" min="1" max="12" step="1" placeholder="hh" value="${hour === undefined ? '' : hour % 12 || 12}" ${required ? 'required' : ''}></div><div><label for="${name}Minute">Minute</label><input id="${name}Minute" name="${name}_minute" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="mm" value="${minute === undefined ? '' : String(minute).padStart(2, '0')}" ${required ? 'required' : ''}></div><div><label for="${name}Period">AM/PM</label><select id="${name}Period" name="${name}_period"><option value="AM" ${period === 'AM' ? 'selected' : ''}>AM</option><option value="PM" ${period === 'PM' ? 'selected' : ''}>PM</option></select></div></div></fieldset>`;
+    }
+
+    function clockValue(data, name) {
+        const hour = Number(data.get(`${name}_hour`)) % 12 + (data.get(`${name}_period`) === 'PM' ? 12 : 0);
+        return `${String(hour).padStart(2, '0')}:${String(data.get(`${name}_minute`)).padStart(2, '0')}`;
+    }
+
     function openTimeEditor(index, opener) {
         const event = events[index];
         const parts = value => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)).split(' ') : [];
@@ -250,7 +261,7 @@
         const end = parts(event.end_time);
         const allDay = event.time_status === 'all_day';
         dialogOpener = opener;
-        modalContent.innerHTML = `<h2 id="modal-title">Set this event's time</h2><p>${escape(event.title)} / ${escape(timezone)}</p><form id="timeForm" data-index="${index}"><div class="field"><label for="timeMode">Save as</label><select id="timeMode" name="mode"><option value="timed" ${allDay ? '' : 'selected'}>Appointment with a time</option><option value="all_day" ${allDay ? 'selected' : ''}>All-day reminder</option></select></div><div class="field"><label for="eventDate">Date</label><input id="eventDate" name="date" type="date" value="${escape(start[0] || event.date || '')}" required></div><div id="clockFields" ${allDay ? 'hidden' : ''}><div class="field"><label for="startClock">Start time</label><input id="startClock" name="start" type="time" value="${escape(start[1] || '')}" ${allDay ? '' : 'required'}></div><div class="field"><label for="endDate">End date</label><input id="endDate" name="end_date" type="date" value="${escape(end[0] || event.date || '')}" ${allDay ? '' : 'required'}></div><div class="field"><label for="endClock">End time</label><input id="endClock" name="end" type="time" value="${escape(end[1] || '')}" ${allDay ? '' : 'required'}></div></div><div id="timeError"></div><button class="primary" type="submit">Save event time</button></form>`;
+        modalContent.innerHTML = `<h2 id="modal-title">Set this event's time</h2><p>${escape(event.title)} / ${escape(timezone)}</p><form id="timeForm" data-index="${index}"><div class="field"><label for="timeMode">Save as</label><select id="timeMode" name="mode"><option value="timed" ${allDay ? '' : 'selected'}>Appointment with a time</option><option value="all_day" ${allDay ? 'selected' : ''}>All-day reminder</option></select></div><div class="field"><label for="eventDate">Date</label><input id="eventDate" name="date" type="date" value="${escape(start[0] || event.date || '')}" required></div><div id="clockFields" ${allDay ? 'hidden' : ''}>${clockFields('start', 'Start time', start[1], !allDay)}<div class="field"><label for="endDate">End date</label><input id="endDate" name="end_date" type="date" value="${escape(end[0] || event.date || '')}" ${allDay ? '' : 'required'}></div>${clockFields('end', 'End time', end[1], !allDay)}</div><div id="timeError"></div><button class="primary" type="submit">Save event time</button></form>`;
         modal.showModal();
     }
 
@@ -320,7 +331,7 @@
         if (event.target.id === 'timeForm') {
             event.preventDefault();
             const data = new FormData(event.target);
-            resolveTime(Number(event.target.dataset.index), { mode: data.get('mode'), date: data.get('date'), start_local: `${data.get('date')}T${data.get('start')}`, end_local: `${data.get('end_date')}T${data.get('end')}` }, event.target.querySelector('button[type=submit]'));
+            resolveTime(Number(event.target.dataset.index), { mode: data.get('mode'), date: data.get('date'), start_local: `${data.get('date')}T${clockValue(data, 'start')}`, end_local: `${data.get('end_date')}T${clockValue(data, 'end')}` }, event.target.querySelector('button[type=submit]'));
         }
         if (event.target.id === 'uploadForm') { event.preventDefault(); processRequest(); }
         if (event.target.id === 'chatForm') { event.preventDefault(); correctEvents(); }
