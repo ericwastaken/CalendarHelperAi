@@ -10,6 +10,10 @@ uv run flask --app calendar_helper_ai run --host 0.0.0.0 --port 5055 --no-debugg
 
 Keep the debugger off for LAN and Tailscale testing. Restart the server after code changes because this command intentionally disables automatic reload. Changes belong on DEV; tested releases go to main. Production deployment is a separate operation.
 
+## Container development
+
+Use the application-owned collector through Compose as described in [container logging](container-logging.md). Set a dedicated `APP_LOG_DIR` before every Compose command. Native Flask/Gunicorn runs above remain available, but do not include Fluent Bit.
+
 ## Offline tests
 
 ```sh

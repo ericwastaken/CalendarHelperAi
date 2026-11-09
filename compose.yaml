@@ -1,0 +1,20 @@
+name: calendarhelperai
+services:
+    app:
+        build: .
+        image: calendarhelperai:dev
+        ports:
+            - "0.0.0.0:${APP_HOST_PORT:-5055}:8080"
+        environment:
+            OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+            FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-}
+            DEBUG_LOGGING: "false"
+            LOG_PROJECT: calendarhelperai
+            LOG_ENV: dev
+            LOG_OUTPUT: file
+            LOG_INSTANCE: ${LOG_INSTANCE:-local}
+        volumes:
+            - ${APP_LOG_DIR:?Set APP_LOG_DIR to this project dev runtime directory}:/logs
+        mem_limit: 512m
+        cpus: 1
+        stop_grace_period: 45s

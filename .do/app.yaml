@@ -1,4 +1,4 @@
-# Set the two empty SECRET values in DigitalOcean before deploying.
+# Set empty runtime configuration and SECRET values before deploying.
 # Never commit actual credentials to this file.
 # Production deploys main. Preserve live secrets and custom domains on updates.
 # This creation template does not include the live custom-domain bindings.
@@ -13,14 +13,41 @@ services:
           branch: main
           deploy_on_push: false
       source_dir: /
-      environment_slug: python
+      dockerfile_path: Dockerfile
       instance_size_slug: apps-s-1vcpu-0.5gb
       instance_count: 1
       http_port: 8080
-      run_command: gunicorn --workers 1 --worker-class gthread --threads 2 --timeout 120 --worker-tmp-dir /dev/shm --bind 0.0.0.0:$PORT 'calendar_helper_ai:create_app()'
-      # Omitted to retain the platform default used by the live trial.
-      # An explicit HTTP health check can be introduced as a separate change.
+      # Use the image ENTRYPOINT: it supervises Gunicorn and Fluent Bit.
+      # Do not override it with a Gunicorn-only run_command.
+      health_check:
+          http_path: /api/config
       envs:
+          - key: LOG_ENV
+            scope: RUN_TIME
+            value: prod
+          - key: LOG_OUTPUT
+            scope: RUN_TIME
+            value: s3
+          - key: LOG_S3_BUCKET
+            scope: RUN_TIME
+            value: ""
+          - key: LOG_S3_ENDPOINT
+            scope: RUN_TIME
+            value: ""
+          - key: LOG_S3_REGION
+            scope: RUN_TIME
+            value: ""
+          - key: LOG_S3_PREFIX
+            scope: RUN_TIME
+            value: calendarhelperai/prod
+          - key: AWS_ACCESS_KEY_ID
+            scope: RUN_TIME
+            type: SECRET
+            value: ""
+          - key: AWS_SECRET_ACCESS_KEY
+            scope: RUN_TIME
+            type: SECRET
+            value: ""
           - key: OPENAI_API_KEY
             scope: RUN_TIME
             type: SECRET

@@ -1,5 +1,11 @@
 # Configuration
 
+Container logging is configured separately from application behavior. See
+[container logging](container-logging.md) for `LOG_OUTPUT`, environment identity,
+S3 destinations and secret injection. `APP_LOG_FILE` optionally enables the
+allowlisted rotating operational spool; the container fixes it to
+`/logs/spool/events.jsonl`. Native runs retain stdout-only logging by default.
+
 Runtime values come from the process environment. A local `.env` in the launch directory is loaded by the factory without overriding existing environment variables. `.env` is ignored by Git; `.env.example` contains blank placeholders only. Never commit credentials or exported live app specifications.
 
 | Variable | Default | Purpose |

@@ -1,6 +1,9 @@
 """Small, allowlisted operational records. Never log user or provider payloads."""
 import json
 import logging
+from logging.handlers import RotatingFileHandler
+import os
+from pathlib import Path
 import re
 import time
 import sys
@@ -23,7 +26,8 @@ class JsonFormatter(logging.Formatter):
 
 
 def log_event(event, level=logging.INFO, **fields):
-    record = {'event': event, 'version': APP_VERSION, 'level': logging.getLevelName(level),
+    record = {'event': event, 'event_id': uuid4().hex, 'schema_version': 1,
+              'version': APP_VERSION, 'level': logging.getLevelName(level),
               'timestamp': datetime.now(timezone.utc).isoformat(),
               'request_id': getattr(g, 'request_id', None)}
     record.update({key: value for key, value in fields.items() if key in FIELDS})
@@ -35,9 +39,19 @@ def safe_identifier(value):
 
 
 def install_logging(app):
+    for previous in app.logger.handlers:
+        previous.close()
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JsonFormatter())
     app.logger.handlers = [handler]
+    # Only allowlisted operational events use this dedicated spool. Server and
+    # third-party diagnostics stay on stdout/stderr, outside the archive.
+    spool = os.environ.get('APP_LOG_FILE')
+    if spool:
+        Path(spool).parent.mkdir(parents=True, exist_ok=True)
+        archive = RotatingFileHandler(spool, maxBytes=1024 * 1024, backupCount=10)
+        archive.setFormatter(JsonFormatter())
+        app.logger.addHandler(archive)
     app.logger.propagate = False
     app.logger.setLevel(logging.INFO)
 

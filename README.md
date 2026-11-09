@@ -23,6 +23,20 @@ uv run python -c 'import secrets; print(secrets.token_hex(32))'
 
 ## Run locally
 
+For the application container with its own Fluent Bit collector:
+
+```sh
+export APP_LOG_DIR="/absolute/path/to/your/project/dev/logs"
+mkdir -p "$APP_LOG_DIR"
+docker compose up --build -d
+```
+
+Compose reads the ignored `.env` file or exported credentials. Logs stay in your
+selected local directory; no cloud credentials are needed. See
+[container logging](docs/container-logging.md) for storage, querying and production routing.
+
+For a lightweight native run without the container collector:
+
 ```sh
 uv run flask --app calendar_helper_ai run --host 0.0.0.0 --port 5055 --no-debugger --no-reload
 ```
@@ -53,6 +67,7 @@ The automated tests use fake AI clients and make no external API calls. See [dev
 - [API](docs/api.md) and [configuration](docs/configuration.md)
 - [Development and testing](docs/development.md)
 - [DigitalOcean deployment](docs/deployment.md)
+- [Container runtime and logging](docs/container-logging.md)
 - [Design systems](docs/design-system/README.md)
 
 Licensed under the [MIT License](LICENSE).

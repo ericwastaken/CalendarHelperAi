@@ -9,6 +9,7 @@ Start with the root [README](../README.md) to install and run the app.
 | [Configuration](configuration.md) | Runtime settings, upload limits, version, logging |
 | [Development](development.md) | DEV workflow, tests, package builds, Safari checks |
 | [Deployment](deployment.md) | Generic DigitalOcean App Platform setup and release validation |
+| [Container logging](container-logging.md) | App-owned Fluent Bit, dev file mounts, production S3, shutdown and durability |
 | [Design systems](design-system/README.md) | Dated design references, tokens, previews, implementation notes |
 | [Sample images](example_images/README.md) | Fictional calendars and expected extraction results |
 | [Legacy hosting](legacy/replit/README.md) | Archived Replit configuration and original artwork |
