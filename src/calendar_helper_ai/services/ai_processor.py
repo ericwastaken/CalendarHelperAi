@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from flask import current_app
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
-from ..observability import log_event, safe_provider_code
+from ..observability import configured_model_label, log_event, log_provider_usage, safe_provider_code
 from ..prompts import CALENDAR_SYSTEM_PROMPT, CORRECTION_SYSTEM_PROMPT
 from .events import normalize_event
 
@@ -41,7 +41,7 @@ def call_model(messages, stage):
     started = time.monotonic()
     try:
         response = get_openai_client().chat.completions.create(
-            model='gpt-4o', messages=messages, response_format={'type': 'json_object'},
+            model=current_app.config['OPENAI_MODEL'], messages=messages, response_format={'type': 'json_object'},
             timeout=45)
     except ProcessingError:
         raise
@@ -68,6 +68,7 @@ def call_model(messages, stage):
                   provider_code=code,
                   elapsed_ms=round((time.monotonic() - started) * 1000))
         raise ProcessingError(kind, message, http_status) from None
+    log_provider_usage(response, stage)
     try:
         parsed = json.loads(response.choices[0].message.content)
         if not isinstance(parsed, dict) or parsed.get('outcome') not in {'events', 'no_events', 'unsupported'}:
@@ -88,7 +89,7 @@ def call_model(messages, stage):
         log_event('provider_failed', logging.ERROR, stage=stage, error_type='invalid_model_response')
         raise ProcessingError('invalid_model_response', 'We could not read the event service response. Your details are still here; please try again.') from None
     log_event('provider_completed', stage=stage, outcome=parsed['outcome'], event_count=len(events),
-              elapsed_ms=round((time.monotonic() - started) * 1000), model='gpt-4o')
+              elapsed_ms=round((time.monotonic() - started) * 1000), model=configured_model_label())
     return events
 
 

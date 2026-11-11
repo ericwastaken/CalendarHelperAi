@@ -24,6 +24,12 @@ git diff --check
 
 Tests inject fake AI clients and do not load `.env`. They cover extraction and correction routing, upload boundaries, empty results, timezone/DST export, application isolation, and packaged routes/assets. Use these tests without real credentials.
 
+Model/usage tests exercise the real SDK through an offline HTTP transport. They
+verify `OPENAI_MODEL` forwarding for images and corrections, bounded token counts,
+rejected-response usage, missing metadata, unlisted model privacy and full logging
+disable. An override passing offline tests proves wiring, not the alternate
+model's real availability or accuracy; a real model change needs local fixtures.
+
 ## Package verification
 
 ```sh

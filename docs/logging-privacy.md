@@ -33,6 +33,7 @@ installed application `version`, `level`, and an approved `event` name.
 |---|---|
 | `application_started` | Application factory initialized |
 | `processing_started` | Extraction began; image count |
+| `provider_usage` | API response received; configured model category and available numeric token counts, before calendar validation |
 | `provider_completed` | Model call completed; outcome, event count, elapsed time, model |
 | `provider_failed` | Categorized provider failure, timing and optional HTTP status/code |
 | `request_rejected` | Model classified a non-calendar request |
@@ -43,7 +44,7 @@ installed application `version`, `level`, and an approved `event` name.
 
 Optional fields are `stage`, `outcome`, `elapsed_ms`, `image_count`, `event_count`,
 `status`, `error_type`, `exception_class`, `provider_status`, `provider_code`, and
-`model`. String values are finite approved categories; numeric values are bounded.
+`model`, `input_tokens`, `output_tokens`, and `cached_input_tokens`. String values are finite approved categories; numeric values are bounded.
 Unknown fields and invalid values are dropped. The exact approved categories and
 bounds live in [observability.py](../src/calendar_helper_ai/observability.py).
 A new category requires a code change and privacy review.
@@ -53,6 +54,34 @@ summaries. Health, page and static-asset requests are quiet. Fluent Bit adds
 `project`, `environment`, `service`, `instance` and may add its own `date` timestamp.
 No client identity is added. Join related events by `request_id`, and deduplicate
 retries by `event_id`; several events per request are expected.
+
+## Token usage accounting
+
+Version 1.3.0 adds one `provider_usage` event per returned Chat Completions response,
+for extraction and correction. It reads only `usage.prompt_tokens`,
+`usage.completion_tokens` and `usage.prompt_tokens_details.cached_tokens`, mapping
+them to `input_tokens`, `output_tokens` and `cached_input_tokens`. Counts must be
+actual integers from 0 through 1,000,000,000; booleans, strings, fractions, negatives
+and larger values are discarded. Missing usage remains absent, not a fabricated
+zero. Cached input is included in input tokens and is omitted if input is missing
+or the cached count exceeds it. Never add cached input to the input total.
+
+Usage is emitted before interpreting the calendar answer, so an unsupported or
+malformed answer can still have usage. Exceptions without a response have no
+fabricated usage event. The SDK may retry, and interruptions or buffer loss may
+hide consumption; these records are diagnostic rather than a billing ledger.
+Only `provider_usage` carries token counts, avoiding double counting successful
+requests through `provider_completed`. Deduplicate by event ID before summing.
+OpenAI usage/cost reports remain authoritative for billing. No dollar estimate
+is logged, and a usage event with missing counts does not prove zero cost.
+
+Model labels describe the configured ID, not the provider's returned snapshot.
+Approved labels are `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`,
+`gpt-4.1-nano` and `other`. This is a privacy vocabulary, not a claim that those
+models are currently available or tested. Unlisted operator-supplied IDs map to
+`other`; arbitrary configuration/provider strings never enter logs. New optional
+fields preserve schema version 1; readers of older logs should use nullable
+integer columns. `LOGGING_ENABLED=false` suppresses usage events as well.
 
 ## Enforcement
 

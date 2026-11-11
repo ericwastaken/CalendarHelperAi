@@ -22,6 +22,9 @@ services:
       health_check:
           http_path: /api/config
       envs:
+          - key: OPENAI_MODEL
+            scope: RUN_TIME
+            value: gpt-4o
           - key: LOGGING_ENABLED
             scope: RUN_TIME
             value: "true"

@@ -1,11 +1,19 @@
 """Runtime configuration and public upload limits."""
 import os
+import re
 import secrets
 from importlib.metadata import version
 
 APP_VERSION = version('calendar-helper-ai')
 MAX_IMAGE_SIZE = 4 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/jpg', 'image/png', 'image/tiff'}
+
+
+def validate_model(value):
+    """Accept an operator-supplied model ID without echoing invalid configuration."""
+    if type(value) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,127}', value):
+        raise ValueError('OPENAI_MODEL must be a nonempty model ID of at most 128 characters.')
+    return value
 
 
 def environment_config():
@@ -17,6 +25,7 @@ def environment_config():
         'LOGGING_ENABLED': enabled == 'true',
         'SECRET_KEY': os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32),
         'OPENAI_API_KEY': os.environ.get('OPENAI_API_KEY'),
+        'OPENAI_MODEL': validate_model(os.environ.get('OPENAI_MODEL', 'gpt-4o').strip()),
         'MAX_CONTENT_LENGTH': 21 * 1024 * 1024,
         'DEBUG_LOGGING': os.environ.get('DEBUG_LOGGING', 'false').lower() == 'true',
         'OPENAI_HTTP_CLIENT_LEVEL': os.environ.get('OPENAI_HTTP_CLIENT_LEVEL', 'ERROR').upper(),

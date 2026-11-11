@@ -13,7 +13,7 @@ from uuid import uuid4
 from flask import current_app, g, request
 from .config import APP_VERSION
 
-EVENTS = frozenset({'application_started', 'request_finished', 'processing_started',
+EVENTS = frozenset({'application_started', 'request_finished', 'processing_started', 'provider_usage',
                     'provider_completed', 'provider_failed', 'request_rejected',
                     'processing_failed', 'validation_failed', 'unexpected_failure'})
 ENUM_FIELDS = {
@@ -35,10 +35,13 @@ ENUM_FIELDS = {
                                  'KeyError', 'AttributeError', 'IndexError', 'RuntimeError',
                                  'TimeoutError', 'ConnectionError', 'OSError', 'EventValidationError',
                                  'ProcessingError', 'SafetyValidationError', 'OtherError'}),
-    'model': frozenset({'gpt-4o'}),
+    'model': frozenset({'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini',
+                        'gpt-4.1-nano', 'other'}),
 }
 INTEGER_FIELDS = {'image_count': (0, 5), 'event_count': (0, 10000),
-                  'status': (100, 599), 'provider_status': (100, 599)}
+                  'status': (100, 599), 'provider_status': (100, 599),
+                  'input_tokens': (0, 1000000000), 'output_tokens': (0, 1000000000),
+                  'cached_input_tokens': (0, 1000000000)}
 LEVELS = frozenset({logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL})
 DEPENDENCY_LOGGERS = ('openai', 'httpx', 'httpcore', 'urllib3', 'requests', 'werkzeug',
                       'flask', 'dotenv', 'asyncio', 'py.warnings')
@@ -65,6 +68,26 @@ class JsonFormatter(logging.Formatter):
 
 def safe_provider_code(value):
     return value if type(value) is str and value in ENUM_FIELDS['provider_code'] else None
+
+
+def configured_model_label():
+    """Never turn arbitrary configuration or provider model strings into log text."""
+    model = current_app.config['OPENAI_MODEL']
+    return model if model in ENUM_FIELDS['model'] else 'other'
+
+
+def log_provider_usage(response, stage):
+    """Count one returned API response, even if its calendar payload is rejected."""
+    usage = getattr(response, 'usage', None)
+    fields = safe_fields({
+        'input_tokens': getattr(usage, 'prompt_tokens', None),
+        'output_tokens': getattr(usage, 'completion_tokens', None),
+        'cached_input_tokens': getattr(getattr(usage, 'prompt_tokens_details', None), 'cached_tokens', None),
+    })
+    # Cached tokens are a subset of input tokens, not additional consumption.
+    if 'input_tokens' not in fields or fields.get('cached_input_tokens', 0) > fields['input_tokens']:
+        fields.pop('cached_input_tokens', None)
+    log_event('provider_usage', stage=stage, model=configured_model_label(), **fields)
 
 
 def safe_fields(fields):

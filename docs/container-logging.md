@@ -22,6 +22,13 @@ Each event has a unique `event_id`; related events share `request_id`. Deduplica
 by event ID, never request ID. `schema_version` is 1. Collector identity includes
 `project`, `environment`, `service` and `instance`.
 
+Version 1.3.0 adds optional numeric token counts on `provider_usage` events.
+They travel through the same file/S3 pipeline and are absent in older records.
+Readers with explicit schemas must add nullable integer `input_tokens`,
+`output_tokens` and `cached_input_tokens` columns. Sum usage events after event-ID
+deduplication; cached input is a subset of input. See
+[usage accounting](logging-privacy.md#token-usage-accounting) for coverage limits.
+
 The file handler assumes one Gunicorn worker. Threads share its lock. Do not raise
 worker count without replacing the spool with a multiprocess-safe transport.
 

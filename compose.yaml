@@ -7,6 +7,7 @@ services:
             - "0.0.0.0:${APP_HOST_PORT:-5055}:8080"
         environment:
             OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+            OPENAI_MODEL: ${OPENAI_MODEL-gpt-4o}
             FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-}
             DEBUG_LOGGING: "false"
             LOGGING_ENABLED: ${LOGGING_ENABLED:-true}

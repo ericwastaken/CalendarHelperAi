@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from openai import OpenAI
 
-from .config import environment_config
+from .config import environment_config, validate_model
 
 
 def create_app(test_config=None):
@@ -18,6 +18,7 @@ def create_app(test_config=None):
     app.config.from_mapping(environment_config())
     if test_config is not None:
         app.config.update(test_config)
+    app.config['OPENAI_MODEL'] = validate_model(app.config['OPENAI_MODEL'])
 
     from .observability import install_logging, log_event
     install_logging(app)
