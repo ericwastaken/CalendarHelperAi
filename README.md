@@ -65,6 +65,7 @@ The automated tests use fake AI clients and make no external API calls. See [dev
 
 ## Documentation
 
+- [Agent instructions](AGENTS.md)
 - [Documentation index](docs/README.md)
 - [Architecture and repository layout](docs/architecture.md)
 - [API](docs/api.md) and [configuration](docs/configuration.md)
